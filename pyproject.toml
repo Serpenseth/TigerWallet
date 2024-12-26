@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tigerwallet"
-version = "1.0"
+version = "1.1"
 authors = [
   { name="Serpenseth", email="enkisaur@tutanota.com" },
 ]
