@@ -47,10 +47,12 @@ You can install it by issuing the following command:
 pip install setuptools
 ```
 If you already have `setuptools` on your device, make sure that it's up to date by using:
+
 **Linux/Mac**
 ```
 python3 -m pip install --upgrade setuptools
 ```
+
 **Windows**
 ```
 py -m pip install --upgrade setuptools
@@ -66,10 +68,12 @@ Now use the `cd` command to change the directory to the TigerWallet folder that 
 cd pathtofolder/TigerWallet-1.0
 ```
 Build the package using:
+
 **Linux/Mac**
 ```
 python3 -m build .
 ```
+
 **Windows**
 ```
 py -m build .
@@ -89,8 +93,8 @@ tigerwallet
 ```
 to run the program.
 
+# Contact
+All comments are welcome!
 
-All comments, both positive, and negative, are welcome! Please email them to me!
-
-Contact me at: <enkisaur@tutanota.com>
+Contact: <enkisaur@tutanota.com>
 
