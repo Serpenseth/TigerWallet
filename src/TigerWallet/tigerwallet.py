@@ -22,7 +22,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
     I'm going to polish up the code as time goes on. Sorry for the mess!
 '''
 
-# ===Version1.0=== #
+# ===Version1.1=== #
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from PyQt6.QtWidgets import (
@@ -6016,7 +6016,7 @@ def main():
                     w3.eth.get_balance(self.address), 'ether'))[:17] + ' ETH'
 
             self.is_valid_erc20_address = False
-            self.lblsize = [74, 30]
+            self.lblsize = [78, 30]
 
             self.sendlabel = QLabel('Send crypto', self.box2)
             self.sendlabel.setFixedSize(210, 50)
@@ -6047,6 +6047,7 @@ def main():
                     pal.setColor(
                         QtGui.QPalette.ColorRole.ButtonText, QtGui.QColor('#b0c4de')
                     )
+
                 elif globalvar.configs['theme'] == 'default_light':
                     pal.setColor(
                         QtGui.QPalette.ColorRole.ButtonText, QtGui.QColor('black')
@@ -6069,7 +6070,7 @@ def main():
             '''
             self.assetlbl = QLabel('Asset:', self.box2)
             self.assetlbl.resize(*self.lblsize)
-            self.assetlbl.move(48,176)
+            self.assetlbl.move(48, 182)
 
             '''
                 Display user balance of chosen asset
@@ -6139,18 +6140,18 @@ def main():
 
             self.typeaddr = QLineEdit(self.box2)
             self.typeaddr.setPlaceholderText(' ERC-20 address')
-            self.typeaddr.resize(400, 30)
+            self.typeaddr.resize(400, 32)
             self.typeaddr.move(134, 260)
             self.typeaddr.setMaxLength(42)
             self.typeaddr.textChanged.connect(_validate_address)
 
             self.sendtolbl = QLabel('Send to:', self.box2)
             self.sendtolbl.resize(*self.lblsize)
-            self.sendtolbl.move(48,  256)
+            self.sendtolbl.move(48,  258)
 
             self.errlabel = QLabel(self.box2)
             self.errlabel.resize(400, 40)
-            self.errlabel.move(190, 284)
+            self.errlabel.move(190, 286)
 
             # Amount
             self.amount = QLineEdit(self.box2)
@@ -6168,7 +6169,7 @@ def main():
 
             self.amountlbl = QLabel('Amount:', self.box2)
             self.amountlbl.resize(*self.lblsize)
-            self.amountlbl.move(48, 326)
+            self.amountlbl.move(48, 327)
 
             self.slider = QSlider(Qt.Orientation.Horizontal, self.box2)
             self.slider.setRange(0, 100)
@@ -6213,7 +6214,7 @@ def main():
             self.gasfeelbl.move(48, 396)
 
             self.gasfee = QLineEdit(self.box2)
-            self.gasfee.resize(400, 30)
+            self.gasfee.resize(400, 32)
             self.gasfee.move(134, 398)
             self.gasfee.setPlaceholderText(' Fetching gas price...')
             self.gasfee.setEnabled(False)
@@ -8117,7 +8118,7 @@ def main():
                     + 'border-radius: 4px;'
                     + 'background: transparent;'
                     + 'color: #b0c4de;}'
-                    + 'QAbstractItemView {selection-background-color: transparent;'
+                    'QComboBox QAbstractItemView {background: #1e1e1e;'
                     + 'color: #b0c4de;'
                     + 'border: 2px solid #778ba5;'
                     + 'border-radius: 4px;'
@@ -8130,6 +8131,7 @@ def main():
                     'border-radius: 4px;'
                     'color: #b0c4de;'
                     'font: 18px;}'
+                    'QComboBox QAbstractItemView {background: #1e1e1e;}'
                 )
 
             self.typeaddr.setStyleSheet(
@@ -8329,7 +8331,7 @@ def main():
                     + 'border-radius: 4px;'
                     + 'background: transparent;'
                     + 'color: black;}'
-                    + 'QAbstractItemView {selection-background-color: transparent;'
+                     'QComboBox QAbstractItemView {background: #eff1f3;'
                     + 'color: black;'
                     + 'border: 2px solid #778ba5;'
                     + 'border-radius: 4px;'
@@ -8342,6 +8344,7 @@ def main():
                     'border-radius: 4px;'
                     'color: black;'
                     'font: 18px;}'
+                    'QComboBox QAbstractItemView {background: #eff1f3;}'
                 )
 
             self.typeaddr.setStyleSheet(
