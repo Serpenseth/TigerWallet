@@ -1,0 +1,2 @@
+include src/TigerWallet/images/*
+include src/TigerWallet/.env
