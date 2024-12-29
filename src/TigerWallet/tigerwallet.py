@@ -22,7 +22,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
     I'm going to polish up the code as time goes on. Sorry for the mess!
 '''
 
-# ===Version1.1=== #
+# ===Version1.2=== #
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from PyQt6.QtWidgets import (
@@ -82,9 +82,9 @@ from eth_account import Account
 # Required for `Web3.contract` functions
 from hexbytes import HexBytes
 
-import os
-
 def main():
+    TigerWalletVersion = "1.2"
+
     s = requests.Session()
     s.mount(
         'https://',
@@ -199,7 +199,7 @@ def main():
     # Center window
     def align_to_center(window):
         '''
-        Windows seems to be the only one that seeems that automatically
+        Windows seems to be the only one that automatically
         aligns every Qt window to the center of the screen.
 
         This function is for Linux/Mac.
@@ -283,7 +283,7 @@ def main():
 
             self.conf_file = self.dest_path + 'conf.json'
             self.configs = {
-                'version': '1.0',
+                'version': TigerWalletVersion,
                 'wallets': [],
                 'rpc': 'https://ethereum-rpc.publicnode.com',
                 'currency': 'USD',
@@ -609,7 +609,7 @@ def main():
             # Donation icon
             self.donate_blue = QIcon(globalvar.imgfolder + 'icons8-donate-blue.png')
 
-            self.arrow_down = QIcon(globalvar.imgfolder + 'icons8-arrow-down-blue.png')
+            self.about_blue = QIcon(globalvar.imgfolder + 'icons8-question-mark-blue.png')
 
     TigerWalletImage = TigerWalletImage()
 
@@ -2987,7 +2987,7 @@ def main():
 
             self.cont.emit(len(globalvar.assets_addr))
 
-    #
+    # visual changes in 1.2
     class AssetLoadingBar(QWidget):
         '''
             Loads assets, so that user doesn't
@@ -3019,8 +3019,7 @@ def main():
                 self.barstyle = """
                     QProgressBar{
                         color: black;
-                        border: 1px solid #b0c4de;
-                        border-radius: 8px;
+                        border-radius: 0px;
                         background: transparent;
                     }
 
@@ -3054,7 +3053,7 @@ def main():
         # Loading label
         def init_loading_label(self):
             self.img_holder = QLabel(self)
-            self.img_holder.resize(680,350)
+            self.img_holder.resize(680 ,350)
             self.tiger_pic = QPixmap(
                TigerWalletImage.loading_bg
             )
@@ -3062,23 +3061,23 @@ def main():
             self.img_holder.setPixmap(self.tiger_pic)
 
             self.label = QLabel("Loading assets...", self)
-            self.label.resize(680, 200)
+            self.label.resize(680, 216)
             self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         # Progress bar
         def init_progressbar(self):
             self.bar = QProgressBar(self)
-            self.bar.resize(420, 25)
+            self.bar.resize(420, 11)
             self.bar.setRange(0, len(globalvar.assets_addr))
             self.bar.setValue(0)
-            self.bar.move(QtCore.Qt.AlignmentFlag.AlignCenter, 152)
+            self.bar.move(QtCore.Qt.AlignmentFlag.AlignCenter, 180)
             self.bar.setTextVisible(False)
 
         def init_asset_label(self):
             self.label2 = QLabel(self)
             self.label2.resize(680, 30)
             self.label2.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-            self.label2.move(0, 210)
+            self.label2.move(0, 220)
 
         # Thread creation
         def init_thread(self):
@@ -3339,7 +3338,7 @@ def main():
             self.verify = QPushButton(self)
 
             if not globalvar.from_experienced:
-                self.verify.setText('Verify password')
+                self.verify.setText(' Verify password')
                 self.verify.setIcon(TigerWalletImage.pkey_blue)
             else:
                 self.verify.setText('Login')
@@ -3454,6 +3453,7 @@ def main():
             self.master = master
             self.init_window()
             self.init_options()
+            self.init_about()
 
             if 'default' in globalvar.configs['theme']:
                 # The border that fills up space
@@ -3463,63 +3463,28 @@ def main():
                     + 'background: transparent;'
                 )
 
+                self.close_about.setStyleSheet(
+                    "QPushButton{background-color:  #b0c4de;"
+                    + "border-radius: 8px;"
+                    + "font-size: 18px;"
+                    + "color: black;"
+                    + "padding : 7px;}"
+                    + "QPushButton::hover{background-color: #99badd;}"
+                )
+
             if globalvar.configs['theme'] == 'default_dark':
-                self.setStyleSheet('background-color: #111212;')
-
-                self.close_settings_window.setStyleSheet(
-                    "QPushButton{background-color:  transparent;"
-                    + 'font-size: 15px;'
-                    + 'color: #eff1f3;'
-                    + "border-radius: 8px;}"
-                    + "QPushButton::hover{background-color: #363636;}"
-                )
-
-                self.list_.setStyleSheet(
-                     "QListWidget {font-size: 20px;"
-                    + 'color: #eff1f3;'
-                    + 'padding: 7px;'
-                    + 'border: transparent;'
-                    + 'background: transparent;}'
-                    + 'QListView::item:hover{color: #99badd;}'
-                )
-
-                self.settingslbl.setStyleSheet(
-                    'font-size: 30px;'
-                    + 'color: #6495ed;'
-                    + 'background: #111212;'
-                )
+                self.apply_dark_mode()
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.setStyleSheet('background-color: #eaeaeb;')
-
-                self.close_settings_window.setStyleSheet(
-                    "QPushButton{background-color:  transparent;"
-                    + 'font-size: 15px;'
-                    + 'color: black;'
-                    + "border-radius: 8px;}"
-                    + "QPushButton::hover{background-color: #adb4bf;}"
-                )
-
-                self.list_.setStyleSheet(
-                    "QListWidget {font-size: 20px;"
-                    + 'color: black;'
-                    + 'padding: 7px;'
-                    + 'border: transparent;'
-                    + 'background: transparent;}'
-                    + 'QListView::item:hover{color: #363636;}'
-                )
-
-                self.settingslbl.setStyleSheet(
-                    'font-size: 30px;'
-                    + 'color: #6495ed;'
-                    + 'background: #eaeaeb;'
-                )
+                self.apply_light_mode()
 
         def init_window(self):
             self.setWindowTitle('TigerWallet  -  Settings')
             self.setFixedWidth(600)
             self.setFixedHeight(500)
+
             align_to_center(self)
+            add_round_corners(self)
 
             self.border = QLabel(self)
             self.border.resize(578, 438)
@@ -3531,8 +3496,12 @@ def main():
             self.list_.setHorizontalScrollBarPolicy(
                 QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
             )
+
+            # Fixes first item being highlighted on Linux
+            self.list_.setFocusPolicy(
+                QtCore.Qt.FocusPolicy.NoFocus
+            )
             self.list_.setIconSize(QSize(32, 32))
-            self.list_.setCurrentRow(-1)
 
             self.settingslbl = QLabel('Settings', self)
             self.settingslbl.resize(148, 40)
@@ -3551,19 +3520,13 @@ def main():
                 lambda: [
                     self.hide(),
                     self.master.default_btn6_style(),
-                    self.master.btn6.setEnabled(True)
+                    self.master.sidebar_button[5].setEnabled(True)
                 ]
             )
 
-            add_round_corners(self)
-
         #
         def init_options(self):
-            '''
-                First option gets selected automatically on Linux.
-                Setting row to -1 removes the selection.
-            '''
-            self.list_.setCurrentRow(-1)
+
             self.list_.clearSelection()
 
             self.options = {
@@ -3571,6 +3534,7 @@ def main():
                 'pass': QListWidgetItem('      Change password'),
                 'show_pkey': QListWidgetItem('      Show private key'),
                 'create_wallet': QListWidgetItem('      Create new wallet'),
+                'about': QListWidgetItem('      About TigerWallet')
             }
 
             for option in self.options:
@@ -3581,6 +3545,7 @@ def main():
             self.options['pass'].setIcon(TigerWalletImage.pass_blue)
             self.options['show_pkey'].setIcon(TigerWalletImage.pkey_blue)
             self.options['create_wallet'].setIcon(TigerWalletImage.wallet_blue)
+            self.options['about'].setIcon(TigerWalletImage.about_blue)
 
             def user_choice(item):
                 if item.text() == self.options['rpc'].text():
@@ -3597,7 +3562,6 @@ def main():
 
                     self.master.thread.quit()
                     self.master.worker.quit()
-                    self.master._th.quit()
                     self.master._gasupdate.quit()
                     self.master.update_price_worker.quit()
                     self.master.update_price_thread.quit()
@@ -3616,7 +3580,256 @@ def main():
                     self.vp = ValidatePassword()
                     self.vp.show()
 
+                elif item.text() == self.options['about'].text():
+                    self.list_.clearSelection()
+                    self.launch_about_window()
+
             self.list_.itemClicked.connect(user_choice)
+
+        def init_about(self):
+            from PyQt6.QtWidgets import QTabWidget
+            from PyQt6.QtCore import QT_VERSION_STR
+
+            self.about_parent = QWidget(self)
+            self.about_parent.resize(570, 430)
+            self.about_parent.move(10, 50)
+
+            self.tabs = QTabWidget(parent=self.about_parent)
+            self.tabs.resize(500, 300)
+            self.tabs.move(22, 56)
+
+            self.about = QWidget()
+            self.author = QWidget()
+            self.thanks = QWidget()
+
+            self.tabs.addTab(self.about, 'About')
+            self.tabs.addTab(self.author, 'Author')
+            self.tabs.addTab(self.thanks, 'Thank you to')
+
+            y_coords = [70, 110, 150]
+
+            # About tab
+            self.about_item = [QLabel(self.tabs) for i in range(3)]
+            self.about_item[0].setText(f'Version: {TigerWalletVersion}')
+            self.about_item[1].setText(f'Python version: {sys.version_info[0]}')
+            self.about_item[2].setText(f'Qt version: {QT_VERSION_STR}')
+
+            for i in range(3):
+                self.about_item[i].resize(430, 30)
+                self.about_item[i].move(13, y_coords[i])
+
+            # Author tab
+            self.author_item = [QLabel(self.tabs) for i in range(3)]
+            self.author_item[0].setText('Author: Serpenseth')
+            self.author_item[1].setText('Email: serpenseth@tuta.io')
+            self.author_item[2].setText('GitHub: https://github.com/Serpenseth')
+
+            self.author_item[1].setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse
+            )
+            self.author_item[2].setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse
+            )
+
+            for i in range(3):
+                self.author_item[i].resize(400, 30)
+                self.author_item[i].move(13, y_coords[i])
+                self.author_item[i].hide()
+
+            # Thanks to tab
+            self.thanks_item = [QLabel(self.tabs) for i in range(4)]
+            self.thanks_item[0].setText(
+                f'Shoutout: Mikko Ohtamaa, DefiDeBlitzen, Maka'
+            )
+
+            for i in range(1):
+                self.thanks_item[i].resize(400, 30)
+                self.thanks_item[i].move(13, y_coords[i])
+                self.thanks_item[i].hide()
+
+            def tab_switcher(index):
+                if index == 0:
+                    [self.about_item[i].show() for i in range(3)]
+                    [self.author_item[i].hide() for i in range(3)]
+                    [self.thanks_item[i].hide() for i in range(1)]
+
+                elif index == 1:
+                    [self.about_item[i].hide() for i in range(3)]
+                    [self.author_item[i].show() for i in range(3)]
+                    [self.thanks_item[i].hide() for i in range(1)]
+
+                elif index == 2:
+                    [self.about_item[i].hide() for i in range(3)]
+                    [self.author_item[i].hide() for i in range(3)]
+                    [self.thanks_item[i].show() for i in range(1)]
+
+            self.tabs.tabBarClicked.connect(tab_switcher)
+
+            self.close_about = QPushButton(
+                text='Return',
+                parent=self.about_parent,
+                icon=TigerWalletImage.back
+            )
+            self.close_about.resize(200, 50)
+            self.close_about.setIconSize(QSize(32, 32))
+            self.close_about.move(200, 344)
+            self.close_about.clicked.connect(
+                lambda: [self.about_parent.hide(), self.list_.show()]
+            )
+
+            self.about_parent.hide()
+
+        def launch_about_window(self):
+            self.list_.hide()
+            self.about_parent.show()
+
+        def apply_dark_mode(self):
+            self.setStyleSheet('background-color: #111212;')
+            self.about_parent.setStyleSheet('background-color: transparent;')
+
+            self.close_settings_window.setStyleSheet(
+                "QPushButton{background-color:  transparent;"
+                + 'font-size: 15px;'
+                + 'color: #eff1f3;'
+                + "border-radius: 8px;}"
+                + "QPushButton::hover{background-color: #363636;}"
+            )
+
+            self.list_.setStyleSheet(
+                    "QListWidget {font-size: 20px;"
+                + 'color: #eff1f3;'
+                + 'padding: 7px;'
+                + 'border: transparent;'
+                + 'background: transparent;}'
+                + 'QListView::item:hover{color: #b0c4de;'
+                'background: #363636;'
+                'border-radius: 8px;}'
+            )
+
+            self.settingslbl.setStyleSheet(
+                'font-size: 30px;'
+                + 'color: #6495ed;'
+                + 'background: #111212;'
+            )
+
+            for i in range(3):
+                self.about_item[i].setStyleSheet(
+                    'background: transparent;'
+                    'color: #b0c4de;'
+                    'font: 18px;'
+                )
+
+                self.author_item[i].setStyleSheet(
+                    'background: transparent;'
+                    'color: #b0c4de;'
+                    'font: 18px;'
+                )
+
+            self.thanks_item[0].setStyleSheet(
+                'background: transparent;'
+                'color: #b0c4de;'
+                'font: 18px;'
+            )
+
+            self.tabs.setStyleSheet(
+                'QTabWidget {background: transparent;'
+                'border-radius: 4px;}'
+                'QTabWidget::pane {border: 1px solid lightgray;'
+                'border-radius: 4px;}'
+                'QTabBar::tab {background: #1e1e1e;'
+                'color: #b0c4de;'
+                'border-radius: 4px;'
+                'border-top-left-radius: 4px;'
+                'border-top-right-radius: 4px;'
+                'border-bottom-left-radius: 0px;'
+                'border-bottom-right-radius: 0px;'
+                'font: 16px;'
+                'padding: 9px;}'
+                'QTabBar::tab:selected {border-top: 4px solid #6495ed;'
+                'border-bottom:  3px solid #111212;'
+                'border-right: 1px solid lightgray;'
+                'border-left: 1px solid lightgray;'
+                'font: 20px;}'
+                'QTabBar::tab:hover {border-top: 3px solid gray;'
+                'border-bottom:  3px solid #111212;}'
+                #'border-right: 1px solid lightgray;'
+                #'border-left: 1px solid lightgray;}'
+            )
+
+        def apply_light_mode(self):
+            self.setStyleSheet(
+                'background-color: #eaeaeb;'
+            )
+            self.about_parent.setStyleSheet('background-color: transparent;')
+
+            self.close_settings_window.setStyleSheet(
+                "QPushButton{background-color:  transparent;"
+                + 'font-size: 15px;'
+                + 'color: black;'
+                + "border-radius: 8px;}"
+                + "QPushButton::hover{background-color: #adb4bf;}"
+            )
+
+            self.list_.setStyleSheet(
+                "QListWidget {font-size: 20px;"
+                + 'color: black;'
+                + 'padding: 7px;'
+                + 'border: transparent;'
+                + 'background: transparent;}'
+                + 'QListView::item:hover{color: black;'
+                'background: #adb4bf;'
+                'border-radius: 8px;}'
+            )
+
+            self.settingslbl.setStyleSheet(
+                'font-size: 30px;'
+                + 'color: #6495ed;'
+                + 'background: #eaeaeb;'
+            )
+
+            for i in range(3):
+                self.about_item[i].setStyleSheet(
+                    'background: transparent;'
+                    'color: black;'
+                    'font: 18px;'
+                )
+
+                self.author_item[i].setStyleSheet(
+                    'background: transparent;'
+                    'color: black;'
+                    'font: 18px;'
+                )
+
+            self.thanks_item[0].setStyleSheet(
+                'background: transparent;'
+                'color: black;'
+                'font: 18px;'
+            )
+
+            self.tabs.setStyleSheet(
+                'QTabWidget {background: transparent;'
+                'border-radius: 4px;}'
+                'QTabWidget::pane {border: 2px solid lightgray;'
+                'border-radius: 4px;}'
+                'QTabBar::tab {background: #c3c5c8;'
+                'color: black;'
+                'border-radius: 4px;'
+                'border-top-left-radius: 4px;'
+                'border-top-right-radius: 4px;'
+                'border-bottom-left-radius: 0px;'
+                'border-bottom-right-radius: 0px;'
+                'font: 16px;'
+                'padding: 9px;}'
+                'QTabBar::tab:selected {border-top: 4px solid #6495ed;'
+                'border-bottom:  3px solid #c3c5c8;'
+                'border-right: 1px solid lightgray;'
+                'border-left: 1px solid lightgray;'
+                'font: 20px;}'
+                'QTabBar::tab:hover {border-top: 3px solid gray;'
+                'border-bottom:  3px solid #c3c5c8;}'
+                #'border-right: 1px solid lightgray;'
+                #'border-left: 1px solid lightgray;}'
+            )
 
         def change_rpc(self):
             self.list_.hide()
@@ -3721,7 +3934,9 @@ def main():
                     + 'padding: 7px;'
                     + 'border: transparent;'
                     + 'background: transparent;}'
-                    + 'QListView::item:hover{color: #99badd;}'
+                    + 'QListView::item:hover{color: #b0c4de;'
+                    'background: #363636;'
+                    'border-radius: 8px;}'
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
@@ -3731,7 +3946,9 @@ def main():
                     + 'padding: 7px;'
                     + 'border: transparent;'
                     + 'background: transparent;}'
-                    + 'QListView::item:hover{color: #99badd;}'
+                    + 'QListView::item:hover{color: black;'
+                    'background: #adb4bf;'
+                    'border-radius: 8px;}'
                 )
 
         def add_rpc_window(self):
@@ -4811,7 +5028,12 @@ def main():
                 self.selector.setPalette(pal)
 
         def init_no_tx_msg(self) -> None:
-            self.notx = QLabel('No transactions found', self)
+            self.notx = QLabel(self)
+
+            if not 'operations' in self.data:
+                self.notx.setText('Failed to fetch wallet history. Try again later')
+            else:
+                self.notx.setText('No transactions found')
 
             self.notx.resize(1300, 220)
             self.notx.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -4823,8 +5045,7 @@ def main():
             self.pix_holder.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.pix = QPixmap()
             self.pix.load(globalvar.imgfolder + 'feelsbadman.png')
-            self.pix = self.pix.scaled(
-                QSize(64, 64),
+            self.pix = self.pix.scaled(QSize(64, 64),
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation
             )
@@ -4920,11 +5141,12 @@ def main():
             with open(globalvar.dest_path + 'history.json', 'rb') as f:
                 self.data = orjson.loads(f.read())
 
-                if 'message' in self.data:
-                    errbox('Rate limited. Try again later')
+                if not 'operations' in self.data:
                     self.data = {
                         'operations': []
                     }
+
+                    self.total_tx = 0
                     return
 
                 self.data = self.data['operations']
@@ -4978,8 +5200,7 @@ def main():
                 Summon a pool of minions that willl
                 perform list comprehension.
 
-                The table gets filled up pretty much instantly,
-                even if the user requested 100 transactions.
+                The table gets filled up pretty much instantly.
             '''
             with ThreadPoolExecutor(max_workers=15) as pool:
                 self.times = pool.submit(self.load_block_timestamps).result()
@@ -5056,7 +5277,7 @@ def main():
             # Make the labels less crammed
             [
                 self.history_table.item(i, ii).setSizeHint(QSize(self.header_sizes[ii], 52))
-                    for i in range(self.max_) for ii in range(6)
+                for i in range(self.max_) for ii in range(6)
             ]
 
             # Apply the setSizeHint settings
@@ -5123,6 +5344,7 @@ def main():
             self.init_table()
             self.init_coin_row()
             self.init_side_bar()
+            self.init_sidebar_style()
 
             self.init_change_wallet_window()
             self.init_send_window()
@@ -5834,91 +6056,70 @@ def main():
                 )
 
         def init_side_bar(self):
+            self.button_box = QWidget(self)
+            self.button_box.resize(156, 700)
+            self.button_box.setStyleSheet('background: transparent;')
+
+            # Load up sidebar buttons
+            self.sidebar_button = [QPushButton(self.button_box) for i in range(8)]
+            self.button_size = [156, 50]
+            self.sidebar_button[0].setIconSize(QSize(64, 64))
+
+            for i in range(8):
+                self.sidebar_button[i].setFixedSize(*self.button_size)
+                self.sidebar_button[i].setIconSize(QSize(32, 32))
+
             # Change wallet
-            self.btn1 = QPushButton(
-                text = ' Change wallet',
-                parent = self,
-                icon = TigerWalletImage.wallet_blue
-            )
-            self.btn1.setFixedSize(156, 50)
-            self.btn1.setIconSize(QSize(64, 64))
-            self.btn1.move(2, 50)
-            self.btn1.clicked.connect(self.show_tab1_contents)
+            self.sidebar_button[0].setText(' Change wallet')
+            self.sidebar_button[0].setIcon(TigerWalletImage.wallet_blue)
+            self.sidebar_button[0].move(2, 50)
+            self.sidebar_button[0].clicked.connect(self.show_tab1_contents)
 
             # Send
-            self.btn2 = QPushButton(
-                text = 'Send',
-                parent = self,
-                icon =  TigerWalletImage.send_blue
-            )
-            self.btn2.setFixedSize(156,  50)
-            self.btn2.setIconSize(QSize(32, 32))
-            self.btn2.move(2, 110)
-            self.btn2.clicked.connect(self.show_tab2_contents)
+            self.sidebar_button[1].setText(' Send')
+            self.sidebar_button[1].setIcon(TigerWalletImage.send_blue)
+            self.sidebar_button[1].move(2, 110)
+            self.sidebar_button[1].clicked.connect(self.show_tab2_contents)
 
             # Receieve
-            self.btn3 = QPushButton(
-                text = 'Receive',
-                parent = self,
-                icon = TigerWalletImage.receive_blue
-            )
-            self.btn3.setFixedSize(156, 50)
-            self.btn3.setIconSize(QSize(32, 32))
-            self.btn3.move(2, 170)
-            self.btn3.clicked.connect(self.show_tab3_contents)
+            self.sidebar_button[2].setText(' Receive')
+            self.sidebar_button[2].setIcon(TigerWalletImage.receive_blue)
+            self.sidebar_button[2].move(2, 170)
+            self.sidebar_button[2].clicked.connect(self.show_tab3_contents)
 
             # Address book
-            self.btn4 = QPushButton(
-                text = 'Address Book',
-                parent = self,
-                icon = TigerWalletImage.address_book_blue
-            )
-            self.btn4.setFixedSize(156, 50)
-            self.btn4.setIconSize(QSize(32, 32))
-            self.btn4.move(2, 230)
-            self.btn4.clicked.connect(self.show_tab4_contents)
+            self.sidebar_button[3].setText(' Address Book')
+            self.sidebar_button[3].setIcon(TigerWalletImage.address_book_blue)
+            self.sidebar_button[3].move(2, 230)
+            self.sidebar_button[3].clicked.connect(self.show_tab4_contents)
 
             # History
-            self.btn5 = QPushButton(
-                text='History',
-                parent=self,
-                icon=TigerWalletImage.history_blue
-            )
-            self.btn5.setFixedSize(156, 50)
-            self.btn5.setIconSize(QSize(32, 32))
-            self.btn5.move(2, 290)
-            self.btn5.clicked.connect(self.show_tab5_contents)
+            self.sidebar_button[4].setText(' History')
+            self.sidebar_button[4].setIcon(TigerWalletImage.history_blue)
+            self.sidebar_button[4].move(2, 290)
+            self.sidebar_button[4].clicked.connect(self.show_tab5_contents)
 
             # Settings
-            self.btn6 = QPushButton(
-                text='Settings',
-                parent=self,
-                icon=TigerWalletImage.settings_blue
-            )
-            self.btn6.setFixedSize(156, 50)
-            self.btn6.setIconSize(QSize(32, 32))
-            self.btn6.move(2, 350)
-            self.btn6.clicked.connect(self.show_tab6_contents)
+            self.sidebar_button[5].setText(' Settings')
+            self.sidebar_button[5].setIcon(TigerWalletImage.settings_blue)
+            self.sidebar_button[5].move(2, 350)
+            self.sidebar_button[5].clicked.connect(self.show_tab6_contents)
 
-
-            self.light_dark_switch = QPushButton(self)
-            self.light_dark_switch.setFixedSize(156, 50)
-            self.light_dark_switch.setIcon(TigerWalletImage.moon_blue)
-            self.light_dark_switch.setIconSize(QSize(32, 32))
-            self.light_dark_switch.move(2, 590)
-            self.light_dark_switch.clicked.connect(self.toggle_mode)
-
-            self.donate_btn = QPushButton(self)
-            self.donate_btn.setFixedSize(156, 50)
-            self.donate_btn.setIcon(TigerWalletImage.donate_blue)
-            self.donate_btn.setIconSize(QSize(24, 24))
-            self.donate_btn.move(2, 650)
-            self.donate_btn.clicked.connect(self.init_donate_window)
+            # Dark/light mode switch
+            self.sidebar_button[6].move(2, 590)
+            self.sidebar_button[6].clicked.connect(self.toggle_mode)
 
             if globalvar.configs['theme'] == 'default_dark':
-                self.light_dark_switch.setIcon(TigerWalletImage.moon_blue)
+                self.sidebar_button[6].setIcon(TigerWalletImage.moon_blue)
             else:
-                self.light_dark_switch.setIcon(TigerWalletImage.sun_blue)
+                self.sidebar_button[6].setIcon(TigerWalletImage.sun_blue)
+
+            # Donation button
+            self.sidebar_button[7].setIcon(TigerWalletImage.donate_blue)
+            self.sidebar_button[7].move(2, 650)
+            self.sidebar_button[7].clicked.connect(self.init_donate_window)
+
+            self.button_box.show()
 
         # FIRST button
         def init_change_wallet_window(self):
@@ -5942,6 +6143,9 @@ def main():
             self.wallet_list.move(30, 110)
             self.wallet_list.setHorizontalScrollBarPolicy(
                 QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            )
+            self.wallet_list.setFocusPolicy(
+                QtCore.Qt.FocusPolicy.NoFocus
             )
 
             self.wallets = json_contents['wallets']
@@ -6781,18 +6985,8 @@ def main():
 
                     if self.asset != 'Ether':
                         self.cc = create_contract(globalvar.assets_addr[self.master.index])
-
-                        with ThreadPoolExecutor(max_workers=1) as pool:
-                            self.tx2 = \
-                                pool.submit(
-                                    lambda:
-                                        self.cc.functions.transfer(
-                                            self.master.typeaddr.text(),
-                                            w3.to_wei(float(self.master.amount.text()), 'wei')
-                                        )
-                                ).result()
-                            pool.shutdown(wait=True)
-
+                        self.tx2 = self.cc.functions.transfer(self.master.typeaddr.text(),
+                                                                                 w3.to_wei(float(self.master.amount.text()), 'wei'))
                     else:
                         self.init_eth_transaction(
                             from_=globalvar.account.address,
@@ -7102,7 +7296,7 @@ def main():
             )
             self.add_contact.setFixedSize(240, 40)
             self.add_contact.setIconSize(QSize(32, 32))
-            self.add_contact.move(116, 518)
+            self.add_contact.move(136, 518)
             self.add_contact.show()
             self.add_contact.clicked.connect(self.init_add_contact_window)
 
@@ -7114,7 +7308,7 @@ def main():
             )
             self.del_contact.setFixedSize(240, 40)
             self.del_contact.setIconSize(QSize(32, 32))
-            self.del_contact.move(386, 518)
+            self.del_contact.move(406, 518)
             self.del_contact.show()
             self.del_contact.clicked.connect(self.init_rm_contact_window)
 
@@ -7125,7 +7319,7 @@ def main():
             )
             self.close_book.setFixedSize(240, 62)
             self.close_book.setIconSize(QSize(32, 32))
-            self.close_book.move(254, 574)
+            self.close_book.move(276, 568)
             self.close_book.clicked.connect(self.clear_tab4_contents)
 
         # FIFTH button
@@ -7174,7 +7368,7 @@ def main():
                 self.clear_tab6_contents()
 
             self.donation_window_active = True
-            self.donate_btn.setEnabled(False)
+            self.sidebar_button[7].setEnabled(False)
 
             self.val.hide()
             self.table.hide()
@@ -7188,13 +7382,13 @@ def main():
                 parent=self
             )
 
-            self.dono_label.resize(200, 32)
+            self.dono_label.resize(220, 32)
             self.dono_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.dono_label.move(454, 44)
             self.dono_label.show()
 
             self.dono_msg = QLabel(
-                text='If you like my work, buy me a coffee! (or 20)',
+                text='If you like my work, buy me a coffee!',
                 parent=self
             )
 
@@ -7261,7 +7455,7 @@ def main():
 
             self.widg2 = QWidget(self)
             self.widg2.resize(540, 140)
-            self.widg2.move(308, 420)
+            self.widg2.move(308, 422)
             self.widg2.show()
 
             self.layout2 = QHBoxLayout()
@@ -7282,7 +7476,7 @@ def main():
             ]
 
             self.widg3 = QWidget(self)
-            self.widg3.resize(540, 50)
+            self.widg3.resize(540, 52)
             self.widg3.move(286, 137)
             self.widg3.show()
             self.widg3.setStyleSheet('background: transparent;')
@@ -7320,7 +7514,7 @@ def main():
                     )
 
             self.widg4 = QWidget(self)
-            self.widg4.resize(540, 50)
+            self.widg4.resize(540, 52)
             self.widg4.move(286, 350)
             self.widg4.show()
             self.widg4.setStyleSheet('background: transparent;')
@@ -7766,6 +7960,66 @@ def main():
                     + "QPushButton::hover{background-color: #99badd;}"
                 )
 
+        def init_sidebar_style(self):
+            if globalvar.configs['theme'] == 'default_dark':
+                for i in range(6):
+                    self.sidebar_button[i].setStyleSheet(
+                        "QPushButton {background-color:  #1e1e1e;"
+                        + "border-radius: 16px;"
+                        + "font-size: 16px;"
+                        + "color: #eff1f3;"
+                        + "padding : 7px;"
+                        + "text-align: left;}"
+                        + "QPushButton::hover{background-color: #363636;}"
+                    )
+
+                self.sidebar_button[6].setStyleSheet(
+                    "QPushButton{background-color:  #1e1e1e;"
+                    + "border-radius: 16px;"
+                    + "font-size: 16px;"
+                    + "color: #eff1f3;"
+                    + "padding : 7px;}"
+                    + "QPushButton::hover{background-color: #363636;}"
+                )
+
+                self.sidebar_button[7].setStyleSheet(
+                    "QPushButton{background-color:  #1e1e1e;"
+                    + "border-radius: 16px;"
+                    + "font-size: 16px;"
+                    + "color: #eff1f3;"
+                    + "padding : 7px;}"
+                    + "QPushButton::hover{background-color: #363636;}"
+                )
+
+            elif globalvar.configs['theme'] == 'default_light':
+                for i in range(6):
+                    self.sidebar_button[i].setStyleSheet(
+                        "QPushButton{background-color:  #eff1f3;"
+                        + "border-radius: 16px;"
+                        + "font-size: 16px;"
+                        + "color: black;"
+                        + "padding : 7px;"
+                        + "text-align: left;}"
+                        + "QPushButton::hover{background-color: #adb4bf;}"
+                    )
+
+                self.sidebar_button[6].setStyleSheet(
+                    "QPushButton{background-color:  #eff1f3;"
+                    + "border-radius: 16px;"
+                    + "font-size: 16px;"
+                    + "color: #eff1f3;"
+                    + "padding : 7px;}"
+                    + "QPushButton::hover{background-color: #adb4bf;}"
+                )
+
+                self.sidebar_button[7].setStyleSheet(
+                    "QPushButton{background-color:  #eff1f3;"
+                    + "border-radius: 16px;"
+                    + "font-size: 16px;"
+                    + "color: #eff1f3;"
+                    + "padding : 7px;}"
+                    + "QPushButton::hover{background-color: #adb4bf;}"
+                )
 
 
         # Show FIRST button contents
@@ -7791,7 +8045,7 @@ def main():
                 self.clear_donation_tab()
 
             self.tab = 1
-            self.btn1.setEnabled(False)
+            self.sidebar_button[0].setEnabled(False)
 
             self.table.hide()
             self.val.hide()
@@ -7824,7 +8078,7 @@ def main():
                 self.clear_donation_tab()
 
             self.tab = 2
-            self.btn2.setEnabled(False)
+            self.sidebar_button[1].setEnabled(False)
 
             self.border.show()
             self.table.hide()
@@ -7858,7 +8112,7 @@ def main():
                 self.clear_donation_tab()
 
             self.tab = 3
-            self.btn3.setEnabled(False)
+            self.sidebar_button[2].setEnabled(False)
 
             self.border.show()
             self.table.hide()
@@ -7890,7 +8144,7 @@ def main():
                 self.clear_donation_tab()
 
             self.tab = 4
-            self.btn4.setEnabled(False)
+            self.sidebar_button[3].setEnabled(False)
 
             self.border.show()
             self.table.hide()
@@ -7921,7 +8175,7 @@ def main():
             self.selected_btn5_style()
 
             self.tab = 5
-            self.btn5.setEnabled(False)
+            self.sidebar_button[4].setEnabled(False)
             self.selected_btn5_style()
             self.wh.show()
 
@@ -7937,7 +8191,7 @@ def main():
 
                     if not self.wh.isVisible():
                         self.default_btn5_style()
-                        self.btn5.setEnabled(True)
+                        self.sidebar_button[4].setEnabled(True)
                         return
                 return
 
@@ -7961,7 +8215,7 @@ def main():
                 self.clear_tab5_contents()
 
             self.tab = 6
-            self.btn6.setEnabled(False)
+            self.sidebar_button[5].setEnabled(False)
 
             self.s.show()
 
@@ -7969,27 +8223,12 @@ def main():
         def apply_default_dark_theme(self):
             # Window background
             self.setStyleSheet('background-color: #1e1e1e')
+            self.init_sidebar_style()
 
             self.val.setStyleSheet(
                 'font-size: 30px;'
                 + 'color: #6495ed;'
                 + 'background: #1e1e1e;'
-            )
-
-            self.default_btn1_style()
-            self.default_btn2_style()
-            self.default_btn3_style()
-            self.default_btn4_style()
-            self.default_btn5_style()
-            self.default_btn6_style()
-            self.default_donobtn_style()
-
-            self.light_dark_switch.setStyleSheet(
-                'QPushButton{background-color:  #1e1e1e;'
-                + "border-radius: 2px;"
-                + 'color: #1e1e1e;'
-                + 'padding : 7px;}'
-                + "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             # Init table
@@ -8023,7 +8262,9 @@ def main():
                 + 'padding: 16px;'
                 + 'border-radius: 16px;'
                 + 'background: transparent;}'
-                + "QListView::item:hover{color: #99badd;}"
+                + 'QListView::item:hover{color: #b0c4de;'
+                'background: #363636;'
+                'border-radius: 8px;}'
             )
 
             self.addr.setStyleSheet(
@@ -8179,31 +8420,15 @@ def main():
                 + "border-radius: 8;"
             )
 
-
         ## Applies default_light theme
         def apply_default_light_theme(self):
             self.setStyleSheet('background-color: #eff1f3')
+            self.init_sidebar_style()
 
             self.val.setStyleSheet(
                 'font-size: 30px;'
                 + 'color: #6495ed;'
                 + 'background: #eff1f3;'
-            )
-
-            self.default_btn1_style()
-            self.default_btn2_style()
-            self.default_btn3_style()
-            self.default_btn4_style()
-            self.default_btn5_style()
-            self.default_btn6_style()
-            self.default_donobtn_style()
-
-            self.light_dark_switch.setStyleSheet(
-                'QPushButton{background-color:  #eff1f3;'
-                + "border-radius: 2px;"
-                + 'color: #eff1f3;'
-                + 'padding : 7px;}'
-                + "QPushButton::hover{background-color: #eff1f3;}"
             )
 
             self.table.setStyleSheet(
@@ -8236,7 +8461,9 @@ def main():
                 + 'padding: 16px;'
                 + 'border-radius: 16px;'
                 + 'background: transparent;}'
-                + "QListView::item:hover{color: #99badd;}"
+                + 'QListView::item:hover{color: black;'
+                'background: #adb4bf;'
+                'border-radius: 8px;}'
             )
 
             self.addr.setStyleSheet(
@@ -8396,7 +8623,7 @@ def main():
 
         def default_btn1_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn1.setStyleSheet(
+                self.sidebar_button[0].setStyleSheet(
                     "QPushButton{background-color:  #1e1e1e;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8407,7 +8634,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn1.setStyleSheet(
+                self.sidebar_button[0].setStyleSheet(
                     "QPushButton{background-color:  #eff1f3;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8420,7 +8647,7 @@ def main():
         # Send
         def default_btn2_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn2.setStyleSheet(
+                self.sidebar_button[1].setStyleSheet(
                     "QPushButton{background-color:  #1e1e1e;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8431,7 +8658,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn2.setStyleSheet(
+                self.sidebar_button[1].setStyleSheet(
                     "QPushButton{background-color:  #eff1f3;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8444,7 +8671,7 @@ def main():
         # Receive
         def default_btn3_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn3.setStyleSheet(
+                self.sidebar_button[2].setStyleSheet(
                     "QPushButton{background-color:  #1e1e1e;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8455,7 +8682,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn3.setStyleSheet(
+                self.sidebar_button[2].setStyleSheet(
                     "QPushButton{background-color:  #eff1f3;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8468,7 +8695,7 @@ def main():
         # Address book
         def default_btn4_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn4.setStyleSheet(
+                self.sidebar_button[3].setStyleSheet(
                     "QPushButton{background-color:  #1e1e1e;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8479,7 +8706,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn4.setStyleSheet(
+                self.sidebar_button[3].setStyleSheet(
                     "QPushButton{background-color:  #eff1f3;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8492,7 +8719,7 @@ def main():
         # History
         def default_btn5_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn5.setStyleSheet(
+                self.sidebar_button[4].setStyleSheet(
                     "QPushButton{background-color:  #1e1e1e;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8503,7 +8730,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn5.setStyleSheet(
+                self.sidebar_button[4].setStyleSheet(
                     "QPushButton{background-color:  #eff1f3;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8513,10 +8740,10 @@ def main():
                     + "QPushButton::hover{background-color: #adb4bf;}"
                 )
 
-        #
+        # Settings
         def default_btn6_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn6.setStyleSheet(
+                self.sidebar_button[5].setStyleSheet(
                     "QPushButton{background-color:  #1e1e1e;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8527,7 +8754,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn6.setStyleSheet(
+                self.sidebar_button[5].setStyleSheet(
                     "QPushButton{background-color:  #eff1f3;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8537,10 +8764,10 @@ def main():
                     + "QPushButton::hover{background-color: #adb4bf;}"
                 )
 
-        #
+        # Donate
         def default_donobtn_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.donate_btn.setStyleSheet(
+                self.sidebar_button[7].setStyleSheet(
                     'QPushButton{background-color:  #1e1e1e;'
                     + "border-radius: 2px;"
                     + 'color: #1e1e1e;'
@@ -8549,7 +8776,7 @@ def main():
                 )
 
             if globalvar.configs['theme'] == 'default_light':
-                self.donate_btn.setStyleSheet(
+                self.sidebar_button[7].setStyleSheet(
                     'QPushButton{background-color:  #eff1f3;'
                     + "border-radius: 2px;"
                     + 'color: #eff1f3;'
@@ -8560,7 +8787,7 @@ def main():
         #
         def selected_btn1_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn1.setStyleSheet(
+                self.sidebar_button[0].setStyleSheet(
                     "QPushButton{background-color:  #363636;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8571,7 +8798,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn1.setStyleSheet(
+                self.sidebar_button[0].setStyleSheet(
                     "QPushButton{background-color: #c9cdcd;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8644,7 +8871,7 @@ def main():
         #
         def selected_btn2_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                 self.btn2.setStyleSheet(
+                 self.sidebar_button[1].setStyleSheet(
                      "QPushButton{background-color:  #363636;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8655,7 +8882,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn2.setStyleSheet(
+                self.sidebar_button[1].setStyleSheet(
                     "QPushButton{background-color: #c9cdcd;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8668,7 +8895,7 @@ def main():
         #
         def selected_btn3_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn3.setStyleSheet(
+                self.sidebar_button[2].setStyleSheet(
                     "QPushButton{background-color:  #363636;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8679,7 +8906,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn3.setStyleSheet(
+                self.sidebar_button[2].setStyleSheet(
                     "QPushButton{background-color: #c9cdcd;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8692,7 +8919,7 @@ def main():
         #
         def selected_btn4_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn4.setStyleSheet(
+                self.sidebar_button[3].setStyleSheet(
                     "QPushButton{background-color:  #363636;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8703,7 +8930,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn4.setStyleSheet(
+                self.sidebar_button[3].setStyleSheet(
                     "QPushButton{background-color: #c9cdcd;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8718,7 +8945,7 @@ def main():
         #
         def selected_btn5_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn5.setStyleSheet(
+                self.sidebar_button[4].setStyleSheet(
                     "QPushButton{background-color:  #363636;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8729,7 +8956,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn5.setStyleSheet(
+                self.sidebar_button[4].setStyleSheet(
                     "QPushButton{background-color: #c9cdcd;"
                     + "border-radius: 16;"
                     + "font-size: 16px;"
@@ -8744,7 +8971,7 @@ def main():
         #
         def selected_btn6_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.btn6.setStyleSheet(
+                self.sidebar_button[5].setStyleSheet(
                     "QPushButton{background-color:  #363636;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8755,7 +8982,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.btn6.setStyleSheet(
+                self.sidebar_button[5].setStyleSheet(
                     "QPushButton{background-color: #c9cdcd;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8768,7 +8995,7 @@ def main():
         #
         def selected_donobtn_style(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.donate_btn.setStyleSheet(
+                self.sidebar_button[7].setStyleSheet(
                     "QPushButton{background-color:  #363636;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8778,7 +9005,7 @@ def main():
                 )
 
             elif globalvar.configs['theme'] == 'default_light':
-                self.donate_btn.setStyleSheet(
+                self.sidebar_button[7].setStyleSheet(
                     "QPushButton{background-color: #c9cdcd;"
                     + "border-radius: 16px;"
                     + "font-size: 16px;"
@@ -8844,14 +9071,28 @@ def main():
 
         def toggle_mode(self):
             if globalvar.configs['theme'] == 'default_dark':
-                self.light_dark_switch.setIcon(TigerWalletImage.sun_blue)
+                self.sidebar_button[6].setIcon(TigerWalletImage.sun_blue)
                 globalvar.configs['theme'] = 'default_light'
                 self.apply_default_light_theme()
 
+                '''
+                    Apply light/dark mode to settings window.
+                    If settings window isn't initilized, do nothing
+                '''
+                try:
+                    self.s.apply_light_mode()
+                except AttributeError:
+                    pass
+
             elif globalvar.configs['theme'] == 'default_light':
-                self.light_dark_switch.setIcon(TigerWalletImage.moon_blue)
+                self.sidebar_button[6].setIcon(TigerWalletImage.moon_blue)
                 globalvar.configs['theme'] = 'default_dark'
                 self.apply_default_dark_theme()
+
+                try:
+                    self.s.apply_dark_mode()
+                except AttributeError:
+                    pass
 
 
             with open(globalvar.conf_file, 'w') as f:
@@ -9166,7 +9407,7 @@ def main():
         #
         def clear_tab1_contents(self):
             self.default_btn1_style()
-            self.btn1.setEnabled(True)
+            self.sidebar_button[0].setEnabled(True)
 
             self.box1.hide()
             self.thread.start()
@@ -9180,7 +9421,7 @@ def main():
 
         def clear_tab2_contents(self):
             self.default_btn2_style()
-            self.btn2.setEnabled(True)
+            self.sidebar_button[1].setEnabled(True)
 
             self.box2.hide()
             self.thread.start()
@@ -9194,7 +9435,7 @@ def main():
 
         def clear_tab3_contents(self):
             self.default_btn3_style()
-            self.btn3.setEnabled(True)
+            self.sidebar_button[2].setEnabled(True)
 
             self.box3.hide()
             self.thread.start()
@@ -9208,7 +9449,7 @@ def main():
 
         def clear_tab4_contents(self):
             self.default_btn4_style()
-            self.btn4.setEnabled(True)
+            self.sidebar_button[3].setEnabled(True)
 
             self.box4.hide()
             self.thread.start()
@@ -9283,13 +9524,13 @@ def main():
             except RuntimeError:
                 pass
 
-            self.btn6.setEnabled(True)
+            self.sidebar_button[5].setEnabled(True)
             self.s.hide()
 
         def clear_donation_tab(self):
             self.donation_window_active = False
             self.default_donobtn_style()
-            self.donate_btn.setEnabled(True)
+            self.sidebar_button[7].setEnabled(True)
             self.close_dono.close()
             self.dono_msg.close()
             self.dono_label.close()
