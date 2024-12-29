@@ -22,7 +22,6 @@ dependencies = [
     "eth-account>=0.13.3",
     "pyqt6>=6.7.1",
     "orjson>=3.10.12",
-    "python-dotenv>=1.0.1",
     "mnemonic>=0.21",
     "requests>=2.32.3",
     "hexbytes>=1.2.1",
