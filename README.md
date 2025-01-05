@@ -18,6 +18,13 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 
 5. TigerWallet runs on Windows, Linux, and Mac
 
+TigerWallet also comes in a prebuilt package for both Windows and Linux.
+
+The Windows prebuilt package does not does not require you to install anything. Simple double click the .exe and it launches.
+If you get an error, [click here for the fix](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#windows)
+
+The appimage requires you to install dependencies before running it succesfully.
+
 # Installation
 
 The simplest way to install TigerWallet is to use:
@@ -26,18 +33,23 @@ The simplest way to install TigerWallet is to use:
 pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
 
-<u>However, there are a few things that are required to run TigerWallet, based on your Operating System:</u>
+## OS-specific requirements
+The items below are required in order to run TigerWallet
 
-## Windows:
-Window users need to install [this packpage](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+### Linux
+1. `libxcb-cursor-dev`
 
-## Linux
-`libxcb-cursor-dev` is required on *nix to run TigerWallet.
-
-This is installed like any Linux package; i.e for `Debian`, you would use:
+To install `libxcb-cursor-dev` on Debian, issue the following command:
 ```
 sudo apt install libxcb-cursor-dev
 ```
+Adjust the above command to your distro.
+
+### Windows:
+If you get the following error:
+>Visual C++ or Cython not installed
+
+You need to install [this packpage](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
 # Building
 To build TigerWallet straight from the `.git` folder, you will need the latest version of `setuptools`.
@@ -52,21 +64,27 @@ If you already have `setuptools` on your device, make sure that it's up to date 
 ```
 python3 -m pip install --upgrade setuptools
 ```
-
-**Windows**
-```
-py -m pip install --upgrade setuptools
-```
 Next, you will need `python3-venv`:
 
 This is installed like any Linux package; i.e for `Debian`, you would use:
 ```
 sudo apt install python3-venv
 ```
-Now use the `cd` command to change the directory to the TigerWallet folder that you've cloned, i.e:
+
+**Windows**
 ```
-cd pathtofolder/TigerWallet-1.0
+py -m pip install --upgrade setuptools
 ```
+Finally, you will need `build`. This can be installed using:
+```
+pip install build
+```
+Now use the `cd` command to change the directory to the TigerWallet folder that you've cloned, for example:
+```
+cd pathtofolder/TigerWallet-x.x
+```
+where `x.x` is the version that you have cloned (for example `cd /home/bob/TigerWallet-1.0`)
+
 Build the package using:
 
 **Linux/Mac**
@@ -91,7 +109,7 @@ From the `command promp` or `terminal`, simple use:
 ```
 tigerwallet
 ```
-to run the program.
+to run the program. That's it! Now tigerwallet will launch, and you're ready to use it.
 
 # Contact
 All comments are welcome!
