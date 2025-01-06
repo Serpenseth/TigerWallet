@@ -6911,6 +6911,7 @@ def main():
                         self.master.index == -1 
                         or self.master.index == 0
                     ):
+                        self.asset = 'Ether'
 
                     else:
                         self.asset = self.master.names[self.master.index]
