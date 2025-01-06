@@ -246,9 +246,10 @@ def main():
 
             # ABI
             self.abi_json_file = self.dest_path + "abi_data.json"
-            self.abi = \
-                """[{"inputs":   [{"internalType":"uint256","name":"_totalSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_address","type":"address"},{"internalType":"bool","name":"_isBlacklisting","type":"bool"}],"name":"blacklist","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"blacklists","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"value","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"limited","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"maxHoldingAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"minHoldingAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bool","name":"_limited","type":"bool"},{"internalType":"address","name":"_uniswapV2Pair","type":"address"},{"internalType":"uint256","name":"_maxHoldingAmount","type":"uint256"},{"internalType":"uint256","name":"_minHoldingAmount","type":"uint256"}],"name":"setRule","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"uniswapV2Pair","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]
-                        """
+            self.abi = (
+                """[{"inputs": [{"internalType":"uint256","name":"_totalSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_address","type":"address"},{"internalType":"bool","name":"_isBlacklisting","type":"bool"}],"name":"blacklist","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"blacklists","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"value","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"limited","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"maxHoldingAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"minHoldingAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bool","name":"_limited","type":"bool"},{"internalType":"address","name":"_uniswapV2Pair","type":"address"},{"internalType":"uint256","name":"_maxHoldingAmount","type":"uint256"},{"internalType":"uint256","name":"_minHoldingAmount","type":"uint256"}],"name":"setRule","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"uniswapV2Pair","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]
+                    """
+            )
 
             if (
                 not os.path.exists(self.abi_json_file)
@@ -556,7 +557,9 @@ def main():
                 globalvar.imgfolder + "icons8-history-blue.png"
             )
 
-            self.refresh = QIcon(globalvar.imgfolder + "icons8-refresh.png")
+            self.refresh = QIcon(
+                globalvar.imgfolder + "icons8-refresh.png"
+            )
 
             # Swap image blue
             self.swap_blue = QIcon(
@@ -584,10 +587,14 @@ def main():
             )
 
             # Delete contact icon
-            self.delete = QIcon(globalvar.imgfolder + "icons8-cross-50.png")
+            self.delete = QIcon(
+                globalvar.imgfolder + "icons8-cross-50.png"
+            )
 
             # Add contact icon
-            self.plus = QIcon(globalvar.imgfolder + "icons8-plus-48.png")
+            self.plus = QIcon(
+                globalvar.imgfolder + "icons8-plus-48.png"
+            )
 
             # Settings
             self.settings_blue = QIcon(
@@ -605,7 +612,9 @@ def main():
             )
 
             # Sun (light mode)
-            self.sun_blue = QIcon(globalvar.imgfolder + "icons8-sun-blue.png")
+            self.sun_blue = QIcon(
+                globalvar.imgfolder + "icons8-sun-blue.png"
+            )
 
             # Moon (dark mode)
             self.moon_blue = QIcon(
@@ -5794,11 +5803,8 @@ def main():
             self.update_price_thread.start()
 
         def init_table(self):
-            self.ethbal = QTableWidgetItem(
-                f' {str(round(
-                                                                w3.from_wei(
-                                                                w3.eth.get_balance(self.address), "ether"), 17))}'
-            )
+            b = w3.from_wei(w3.eth.get_balance(self.address), "ether")
+            self.ethbal = QTableWidgetItem(f" {str(b)[:15]}")
 
             self.table = QTableWidget(self)
             self.table.setRowCount(len(globalvar.assets_addr) + 1)
@@ -5859,9 +5865,10 @@ def main():
             self.default_coin_btn.clicked.connect(self.restore_default_coins)
 
             self.del_coin_btn = QPushButton(
-                text="Remove a coin", parent=self, icon=TigerWalletImage.delete
+                text="Remove a coin", 
+                parent=self, 
+                icon=TigerWalletImage.delete
             )
-
             self.del_coin_btn.setFixedSize(190, 46)
             self.del_coin_btn.setIconSize(QSize(32, 32))
             self.del_coin_btn.move(706, 608)
@@ -5987,7 +5994,9 @@ def main():
 
             # Add entered coin button
             self.continue_add_coin_btn = QPushButton(
-                text="Add coin", parent=self, icon=TigerWalletImage.plus
+                text="Add coin", 
+                parent=self, 
+                icon=TigerWalletImage.plus
             )
 
             self.continue_add_coin_btn.setFixedSize(240, 62)
@@ -5998,7 +6007,9 @@ def main():
             self.continue_add_coin_btn.clicked.connect(self.add_coin)
 
             self.close_add_coin_btn = QPushButton(
-                text="Close", parent=self, icon=TigerWalletImage.close
+                text="Close", 
+                parent=self, 
+                icon=TigerWalletImage.close
             )
 
             self.close_add_coin_btn.setFixedSize(240, 62)
@@ -6198,7 +6209,9 @@ def main():
             self.uppermsg.show()
 
             self.rm_coin_continue = QPushButton(
-                text="Continue", parent=self, icon=TigerWalletImage.eth_img
+                text="Continue", 
+                parent=self, 
+                icon=TigerWalletImage.eth_img
             )
             self.rm_coin_continue.setFixedSize(200, 46)
             self.rm_coin_continue.setIconSize(QSize(32, 32))
@@ -6208,7 +6221,9 @@ def main():
 
             # Cancel Button
             self.rm_coin_cancel = QPushButton(
-                text="Cancel", parent=self, icon=TigerWalletImage.close
+                text="Cancel", 
+                parent=self, 
+                icon=TigerWalletImage.close
             )
             self.rm_coin_cancel.setFixedSize(200, 46)
             self.rm_coin_cancel.setIconSize(QSize(32, 32))
@@ -6414,9 +6429,7 @@ def main():
 
         # SECOND button
         def init_send_window(self):
-            """
-            Send crypto window
-            """
+            """ Send crypto window """
             self.box2 = QWidget(self)
             self.box2.resize(790, 620)
             self.box2.move(166, 0)
@@ -6427,13 +6440,9 @@ def main():
             self.assetsval = globalvar.assets_details["value"]
             self.assets_addr = globalvar.assets_addr
             self.index = 0
-            self.ethamount = (
-                "~"
-                + str(w3.from_wei(w3.eth.get_balance(self.address), "ether"))[
-                    :17
-                ]
-                + " ETH"
-            )
+            
+            bal = w3.from_wei(w3.eth.get_balance(self.address), "ether")
+            self.ethamount = f"~ {str(bal)[:17]} ETH"
 
             self.is_valid_erc20_address = False
             self.lblsize = [78, 30]
@@ -6444,7 +6453,8 @@ def main():
             self.sendlabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             self.topmsglabel = QLabel(
-                "Select the crypto that you want to send", self.box2
+                text="Select the crypto that you want to send",
+                parent=self.box2
             )
             self.topmsglabel.setFixedSize(780, 110)
             self.topmsglabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -6481,46 +6491,36 @@ def main():
 
             for i in range(0, len(self.names)):
                 self.asset_list.insertItem(
-                    i + 1, f"{self.names[i]} ({self.symbols[i]})"
+                    i + 1,
+                    f"{self.names[i]} ({self.symbols[i]})"
                 )
 
                 self.asset_list.setItemIcon(
-                    i + 1, QIcon(self.assets["image"][i])
+                    i + 1,
+                    QIcon(self.assets["image"][i])
                 )
 
-            """
-                Display the word 'Asset' before entry field
-                            (tied with asset list)
-            """
+            """ Display the word 'Asset' before entry field """
             self.assetlbl = QLabel("Asset:", self.box2)
             self.assetlbl.resize(*self.lblsize)
             self.assetlbl.move(48, 182)
 
-            """
-                Display user balance of chosen asset
-                            (tied with asset list)
-            """
+            """ Display user balance of chosen asset """
             self.estimate_amount = QLabel(self.box2)
             self.estimate_amount.resize(230, 40)
             self.estimate_amount.move(550, 176)
 
             if self.ethamount != 0:
-                self.estimate_amount.setText(
-                    "~"
-                    + str(
-                        w3.from_wei(w3.eth.get_balance(self.address), "ether")
-                    )[:17]
-                    + " ETH"
+                bal = w3.from_wei(
+                    w3.eth.get_balance(self.address),
+                    "ether"
                 )
+                self.estimate_amount.setText(f"~{str(bal)[:17]} ETH")
 
             else:
                 self.estimate_amount.setText("0 (ETH)")
 
-            """
-                Update balance text based on asset selection
-                            (tied with asset list)
-            """
-
+            """Update balance text based on asset selection"""
             def _update_avail(num):
                 self.index = num - 1
 
@@ -6532,15 +6532,13 @@ def main():
 
                     if self.c == 0.0:
                         self.estimate_amount.setText(
-                            "0.0" + " " + self.symbols[num - 1]
+                            f"0.0 {elf.symbols[num - 1]}"
                         )
 
                     else:
+                        amnt = str(w3.from_wei(self.c, "ether"))[:17]
                         self.estimate_amount.setText(
-                            "~"
-                            + str(w3.from_wei(self.c, "ether"))[:17]
-                            + " "
-                            + self.symbols[num - 1]
+                            f"~{amnt} {self.symbols[num - 1]}"
                         )
 
             self.estimate_amount.show()
@@ -6667,7 +6665,9 @@ def main():
             self._single_gas_worker = FetchGasWorker()
             self._one_time_thread = QThread()
             self._single_gas_worker.moveToThread(self._one_time_thread)
-            self._one_time_thread.started.connect(self._single_gas_worker.work)
+            self._one_time_thread.started.connect(
+                self._single_gas_worker.work
+            )
             self._single_gas_worker.gas.connect(_update_gas)
             self._one_time_thread.start()
 
@@ -6675,7 +6675,9 @@ def main():
 
             # Close/Send buttons
             self.close_send_btn = QPushButton(
-                text="Close", parent=self.box2, icon=TigerWalletImage.close
+                text="Close", 
+                parent=self.box2, 
+                icon=TigerWalletImage.close
             )
             self.close_send_btn.setFixedSize(240, 62)
             self.close_send_btn.setIconSize(QSize(32, 32))
@@ -6896,14 +6898,19 @@ def main():
                         )
 
                 def init_confirmation(self):
-                    if self.master.index == -1 or self.master.index == 0:
+                    if (
+                        self.master.index == -1 
+                        or self.master.index == 0
+                    ):
                         self.sym = "ETH"
 
                     else:
                         self.sym = self.master.symbols[self.master.index]
 
-                    if self.master.index == -1 or self.master.index == 0:
-                        self.asset = "Ether"
+                    if (
+                        self.master.index == -1 
+                        or self.master.index == 0
+                    ):
 
                     else:
                         self.asset = self.master.names[self.master.index]
@@ -6924,7 +6931,8 @@ def main():
                     self.topmsg.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
                     self.notice_msg = QLabel(
-                        "Below is a summary of your transaction:", self
+                        text="Below is a summary of your transaction:", 
+                        parent=self
                     )
                     self.notice_msg.resize(320, 46)
                     self.notice_msg.move(152, 82)
@@ -6959,11 +6967,14 @@ def main():
                     self.am.move(158, 220)
 
                     def _quick_price_check():
-                        self.p = get_price(self.sym)
+                        self.p = float(get_price(self.sym))
+                        amount = float(self.master.amount.text())
+                        amount_total = self.p*amount
+                        amount_as_str = rm_scientific_notation(amount_total)
 
                         self.am.setText(
                             f"<u>{self.master.amount.text()} {self.sym}</u>"
-                            + f" (Value: ~${rm_scientific_notation(float(self.p)*float(self.master.amount.text()))[:13]})"
+                            + f" (Value: ~${amount_as_str[:13]})"
                         )
 
                     _tmp = Thread(target=_quick_price_check)
@@ -6972,9 +6983,9 @@ def main():
                     self.gas_amount = QLabel(self)
 
                     if "(" in self.master.gasfee.text():
-                        self.g = self.master.gasfee.text()[
-                            : self.master.gasfee.text().find("(") - 1
-                        ]
+                        gfee = self.master.gasfee.text()
+
+                        self.g = gfee[:gfee.find("(") - 1]
                         self.g = f"<u>{self.g.replace(' ' ,'', 1)}</u>"
                         self.g += " (This can change)"
 
@@ -6982,9 +6993,9 @@ def main():
 
                         def _mini_gas_fetch():
                             self.g = self.master.gasfee.text()
+                            self.g = float(self.g)
                             self.p = (
-                                w3.from_wei(float(self.g), "ether")
-                                * 1000000000
+                                w3.from_wei(self.g, "ether") * 1000000000
                             )
                             self.p = float(self.p) * float(get_eth_price())
                             self.p *= 23000
@@ -7042,36 +7053,33 @@ def main():
                     self.total.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
                     def calculate_total_value():
-                        amount = float(
-                            self.am.text()[
-                                self.am.text().find("$")
-                                + 1 : self.am.text().find(")")
-                                - 1
-                            ]
-                        )
-
+                        amount = self.am.text()
+                        amount = amount[
+                            amount.find('$')+1
+                            : amount.find(')')-1
+                        ]
+                        amount = float(amount)
+                        
                         gas_text = self.gas_amount.text()
-                        gas = float(
-                            gas_text[
-                                gas_text.find("$")
-                                + 1 : gas_text.rfind("<")
-                                - 1
-                            ]
-                        )
+                        gas = gas_text[
+                            gas_text.find("$")+ 1
+                            : gas_text.rfind("<")- 1
+                        ]
                         self._gas = gas
+                        gas = float(gas)
 
-                        priority = float(
-                            self.priority.text()[
-                                self.priority.text().find("$")
-                                + 1 : self.priority.text().rfind(")")
-                                - 1
-                            ]
-                        )
+                        priority = self.priority.text()
+                        priority = priority[
+                            priority.find("$")+1
+                            : priority.rfind(")")-1
+                        ]
                         self._priority = priority
+                        priority = float(priority)
 
                         _total = amount + gas + priority
+                        _total = round(_total, 5)
 
-                        self.total.setText(f"TOTAL: ~${str(round(_total, 5))}")
+                        self.total.setText(f"TOTAL: ~${str(_total)}")
 
                     calculate_total_value()
 
@@ -7119,10 +7127,12 @@ def main():
                     self.send.clicked.disconnect()
                     self.send.clicked.connect(self.validate_pass)
 
-                    self.label = QLabel(
-                        "Your password is required to complete your transfer",
-                        self,
+                    msg = (
+                        'Your password is required'
+                        'to complete your transfer'
                     )
+
+                    self.label = QLabel(text=msg, parent=self)
                     self.label.resize(500, 110)
                     self.label.move(70, 120)
                     self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -7316,14 +7326,14 @@ def main():
                             }
                         )
 
-                        self.tx_receipt = w3.eth.wait_for_transaction_receipt(
-                            self.tx2
+                        self.tx_r = (
+                            w3.eth.wait_for_transaction_receipt(self.tx2)
                         )
 
                         if (
-                            self.tx_receipt["from"]
-                            == globalvar.account.address
+                            self.tx_r["from"] == globalvar.account.address
                         ):
+                            self.tx_receipt = self.tx_r
                             self.send_completed()
 
                         else:
@@ -7361,7 +7371,8 @@ def main():
                     self.completed_msg = QLabel(
                         text="Asset has been successfully sent. "
                         + "Transaction hash: "
-                        + f"<a href='{self.etherscan_link}'> {self.tx_receipt}</a>",
+                        + f"<a href='{self.etherscan_link}'>"
+                        + f"{self.tx_receipt}</a>",
                         parent=self,
                     )
 
@@ -7475,7 +7486,9 @@ def main():
             self.addr.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             self.closebtn = QPushButton(
-                text="Close", parent=self.box3, icon=TigerWalletImage.close
+                text="Close", 
+                parent=self.box3, 
+                icon=TigerWalletImage.close
             )
 
             self.closebtn.setFixedSize(240, 62)
@@ -7484,7 +7497,9 @@ def main():
             self.closebtn.clicked.connect(self.clear_tab3_contents)
 
             self.copy_address = QPushButton(
-                text=None, parent=self.box3, icon=TigerWalletImage.copy_blue
+                text=None, 
+                parent=self.box3, 
+                icon=TigerWalletImage.copy_blue
             )
 
             self.copy_address.setIconSize(QSize(16, 16))
@@ -7552,11 +7567,15 @@ def main():
 
             for index in range(self.contactbook_sz):
                 self.contact_table.setItem(
-                    index, 0, QTableWidgetItem(self.contacts["name"][index])
+                    index, 
+                    0, 
+                    QTableWidgetItem(self.contacts["name"][index])
                 )
 
                 self.contact_table.setItem(
-                    index, 1, QTableWidgetItem(self.contacts["address"][index])
+                    index, 
+                    1,
+                    QTableWidgetItem(self.contacts["address"][index])
                 )
 
             self.contact_table.show()
@@ -7597,7 +7616,9 @@ def main():
             self.del_contact.clicked.connect(self.init_rm_contact_window)
 
             self.close_book = QPushButton(
-                text="Close", parent=self.box4, icon=TigerWalletImage.close
+                text="Close", 
+                parent=self.box4, 
+                icon=TigerWalletImage.close
             )
             self.close_book.setFixedSize(240, 62)
             self.close_book.setIconSize(QSize(32, 32))
@@ -7610,9 +7631,7 @@ def main():
 
         # SIXTH button
         def init_settings_window(self):
-            """
-            Settings window
-            """
+            """ Settings window """
             self.s = Settings(self)
 
         #
@@ -7664,7 +7683,8 @@ def main():
             self.dono_label.show()
 
             self.dono_msg = QLabel(
-                text="If you like my work, buy me a coffee!", parent=self
+                text="If you like my work, buy me a coffee!", 
+                parent=self
             )
 
             self.dono_msg.resize(1100, 32)
@@ -7936,7 +7956,9 @@ def main():
             connect_copy_to_buttons2()
 
             self.close_dono = QPushButton(
-                text="Close", parent=self, icon=TigerWalletImage.close
+                text="Close", 
+                parent=self, 
+                icon=TigerWalletImage.close
             )
             self.close_dono.setFixedSize(200, 62)
             self.close_dono.setIconSize(QSize(32, 32))
@@ -7989,10 +8011,14 @@ def main():
             self.close_book.hide()
             self.val.hide()
             self.tip.hide()
+            
+            txt = (
+                "Enter the desired name for your contact.\n"
+                "Only enter an ERC-20 address!"
+            )
 
             self.enter_details = QLabel(
-                text="Enter the desired name for your contact.\n"
-                + "Only enter an ERC-20 address!",
+                text = txt,
                 parent=self,
             )
             self.enter_details.resize(800, 100)
@@ -8019,7 +8045,9 @@ def main():
             self.form2.show()
 
             self.close_add = QPushButton(
-                text="Cancel", parent=self, icon=TigerWalletImage.close
+                text="Cancel", 
+                parent=self, 
+                icon=TigerWalletImage.close
             )
             self.close_add.setFixedSize(240, 62)
             self.close_add.setIconSize(QSize(32, 32))
@@ -8027,7 +8055,9 @@ def main():
             self.close_add.show()
 
             self.continue_add = QPushButton(
-                text="Continue", parent=self, icon=TigerWalletImage.eth_img
+                text="Continue", 
+                parent=self, 
+                icon=TigerWalletImage.eth_img
             )
             self.continue_add.setFixedSize(240, 62)
             self.continue_add.setIconSize(QSize(32, 32))
@@ -8129,9 +8159,7 @@ def main():
 
         #
         def init_rm_contact_window(self):
-            """
-            Remove contact window
-            """
+            """ Remove contact window """
             self.add_contact.hide()
             self.del_contact.hide()
             self.close_book.hide()
@@ -8280,7 +8308,10 @@ def main():
 
             self.unlock_wallet_box = QWidget(self)
             self.unlock_wallet_box.resize(510, 260)
-            self.unlock_wallet_box.move(294, Qt.AlignmentFlag.AlignCenter + 48)
+            self.unlock_wallet_box.move(
+                294, 
+                Qt.AlignmentFlag.AlignCenter + 48
+            )
 
             self.unlock_wallet_lbl = QLabel(
                 text="Enter your password to unlock your wallet",
@@ -9555,7 +9586,8 @@ def main():
 
                 if price == "not found":
                     errbox(
-                        f"Cannot get price for {self.coinname.text()} ({self.coinsym.text()})"
+                        'Cannot get price for '
+                        f" {self.coinname.text()} ({self.coinsym.text()})"
                     )
                     pool.shutdown(wait=False)
                     return
@@ -9593,14 +9625,15 @@ def main():
             self.table.item(0, 0).setIcon(TigerWalletImage.eth_img)
 
             with ThreadPoolExecutor(max_workers=7) as pool:
+                asset_label = \
+                     f" {self.assets['name'][i]} ({self.assets['symbol'][i]})"
+
                 pool.submit(
                     [
                         self.table.setItem(
                             i + 1,
                             0,
-                            QTableWidgetItem(
-                                f" {self.assets['name'][i]} ({self.assets['symbol'][i]})"
-                            ),
+                            QTableWidgetItem(assets_label)
                         )
                         for i in range(sz)
                     ]
@@ -9657,7 +9690,11 @@ def main():
                 )
 
             with open(globalvar.assets_json, "w") as f:
-                json.dump(obj=globalvar.assets_addr, fp=f, indent=4)
+                json.dump(
+                    obj=globalvar.assets_addr, 
+                    fp=f, 
+                    indent=4
+                )
 
             self.table.resizeColumnsToContents()
             self.table.resizeRowsToContents()
@@ -9700,7 +9737,11 @@ def main():
                 os.remove(globalvar.assets_details["image"][row.row() - 1])
 
             with open(globalvar.assets_json, "w") as f:
-                json.dump(globalvar.assets_addr, f, indent=4)
+                json.dump(
+                    obj=globalvar.assets_addr, 
+                    fp=f, 
+                    indent=4
+                )
 
             msgbox("Deletion complete")
 
@@ -9758,7 +9799,8 @@ def main():
 
             elif w3.is_address(a) and len(a) < 42:
                 errbox(
-                    "You are trying to add a contract address, not a wallet address!"
+                    'You are trying to add a contract address, '
+                    'not a wallet address!'
                 )
                 return
 
@@ -9780,7 +9822,11 @@ def main():
             self.contact_table.setItem(self.size, 1, QTableWidgetItem(a))
 
             with open(globalvar.contactsjson, "w") as f:
-                json.dump(globalvar.contactbook, f, indent=4)
+                json.dump(
+                    obj=globalvar.contactbook, 
+                    fp=f, 
+                    indent=4
+                )
 
             msgbox("Contact added successfully!")
 
@@ -9989,20 +10035,6 @@ def main():
             self.layout2.deleteLater()
             self.layout3.deleteLater()
             self.layout4.deleteLater()
-
-            items_to_rm = [
-                globalvar.dest_path + "btcqr.png",
-                globalvar.dest_path + "evmqr.png",
-                globalvar.dest_path + "solqr.png",
-                globalvar.dest_path + "ltcqr.png",
-                globalvar.dest_path + "trc20qr.png",
-                globalvar.dest_path + "etcqr.png",
-                globalvar.dest_path + "bchqr.png",
-            ]
-
-            for item in items_to_rm:
-                if os.path.exists(item):
-                    os.remove(item)
 
             self.thread.start()
             self.table.show()
