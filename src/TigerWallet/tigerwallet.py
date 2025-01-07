@@ -2896,10 +2896,12 @@ def main():
 
         def work(self):
             with ThreadPoolExecutor(max_workers=7) as pool:
+                pool.submit(self._fetch_history)
+                
                 for i in range(self.assetamount):
                     self.cont.emit(i)
 
-                    pool.submit(self._fetch_history)
+                    
                     self.contract = create_contract(globalvar.assets_addr[i])
 
                     pool.submit(
