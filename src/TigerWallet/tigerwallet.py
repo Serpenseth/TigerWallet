@@ -61,7 +61,7 @@ import os.path
 # Python threading and related
 from threading import Thread
 import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 # url stuff
 import requests
@@ -84,14 +84,18 @@ from hexbytes import HexBytes
 # Avoid having to save QR cdoes on device - save in memory instead
 from io import BytesIO
 
-# ===Version1.3=== #
+# ===Version1.4=== #
 def main():
-    TigerWalletVersion = "1.3"
+    TigerWalletVersion = "1.4"
 
     s = requests.Session()
     s.mount(
         "https://",
-        HTTPAdapter(max_retries=1, pool_connections=16, pool_maxsize=100),
+        HTTPAdapter(
+            max_retries=1,
+            pool_connections=16,
+            pool_maxsize=100
+        ),
     )
 
     # BEGIN functions
@@ -99,7 +103,7 @@ def main():
         import psutil
 
         for proc in psutil.process_iter():
-            # check whether the process pid matches
+            # check whether the process pid matchges
             if proc.pid == os.getpid():
                 proc.kill()
 
@@ -404,7 +408,10 @@ def main():
     w3 = Web3(web3_provider)
 
     def create_contract(address: str) -> w3.eth.contract:
-        return w3.eth.contract(address=HexBytes(address), abi=globalvar.abi)
+        return w3.eth.contract(
+            address=HexBytes(address),
+            abi=globalvar.abi
+        )
 
     def token_name(contract: w3.eth.contract) -> str:
         return contract.functions.name.call()
@@ -417,10 +424,16 @@ def main():
 
     def token_image(address) -> None:
         addr = address
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20220911 Firefox/131.0"
-        }
-        url = "https://raw.githubusercontent.com/trustwallet/assets/refs/heads/master/blockchains/ethereum/assets/"
+        agent = (
+            'Mozilla/5.0 (X11; Linux x86_64; rv:131.0)'
+            'Gecko/20220911 Firefox/131.0'
+        )
+
+        headers = {"User-Agent": agent}
+        url = (
+            'https://raw.githubusercontent.com/trustwallet/assets/'
+            'refs/heads/master/blockchains/ethereum/assets/'
+        )
 
         resp = s.get(
             f"{url}{w3.to_checksum_address(addr)}/logo.png",
@@ -431,15 +444,67 @@ def main():
         if resp.status_code == 404:
             return
 
-        contract = create_contract(HexBytes(address))
+        contract = create_contract(address)
         sym = contract.functions.symbol().call()
         sym = sym.lower()
 
-        if os.path.exists(globalvar.tokenimgfolder + f"{sym}.png"):
+        if os.path.exists(
+            globalvar.tokenimgfolder
+            + f"{sym}.png"
+        ):
             return
 
-        with open(globalvar.tokenimgfolder + f"{sym}.png", "wb") as out_file:
+        with open(
+            globalvar.tokenimgfolder
+            + f"{sym}.png", "wb"
+        ) as out_file:
             out_file.write(resp.content)
+
+    #
+    def token_image_from_list(address_list: list) -> None:
+        agent = (
+            'Mozilla/5.0 (X11; Linux x86_64; rv:131.0)'
+            'Gecko/20220911 Firefox/131.0'
+        )
+
+        headers = {"User-Agent": agent}
+        url = (
+            'https://raw.githubusercontent.com/trustwallet/assets/'
+            'refs/heads/master/blockchains/ethereum/assets/'
+        )
+
+        resp_list = [
+            s.get(
+                f"{url}{w3.to_checksum_address(address)}/logo.png",
+                headers=headers,
+                stream=True,
+            )
+            for address in address_list
+        ]
+
+        with w3.batch_requests() as batched:
+            for i in range(len(address_list)):
+                batched.add(
+                    token_symbol(
+                        create_contract(address_list[i])
+                    )
+                )
+
+            batched_symbols = batched.execute()
+
+            for symbol in batched_symbols:
+                if os.path.exists(
+                    globalvar.tokenimgfolder
+                    + f"{symbol}.png"
+                ):
+                    return
+
+                with open(
+                    globalvar.tokenimgfolder + f"{symbol}.png", "wb"
+                ) as out_file:
+                    for response in resp_list:
+                        out_file.write(response.content)
+
 
     def get_price(From) -> str:
         """
@@ -453,7 +518,10 @@ def main():
         if the default url is rate-limiting the user, switch
         to the back-up url. This should suffice, for now.
         """
-        backup_url = f"https://min-api.cryptocompare.com/data/price?fsym={From}&tsyms={'USDT'}"
+        backup_url = (
+            'https://min-api.cryptocompare.com/data/price?fsym='
+            f"{From}&tsyms=USDT"
+        )
 
         default_url = (
             f"https://api.coinbase.com/v2/exchange-rates?currency={From}"
@@ -486,6 +554,29 @@ def main():
 
     def get_eth_price() -> str:
         return get_price("ETH")
+
+    def get_price_from_list(addresses: list) -> list:
+        addrs = ','.join(addresses)
+
+        url = "https://min-api.cryptocompare.com/data/price?fsym="
+        url += f"USDT&tsyms={addrs}"
+
+        try:
+            page_data = s.get(
+                url,
+                stream=True,
+            )
+        except ConnectionError:
+            errbox(
+                "Error: failed to fetch price. Are you connected to the internet?"
+            )
+            self_destruct()
+
+        result = page_data.json()
+
+        return_result = [item for item in result.values()]
+
+        return return_result
 
     # END Web3-related stuff
 
@@ -1313,7 +1404,8 @@ def main():
 
         def init_show_pass(self):
             self.btn_showhide = QPushButton(
-                parent=self, icon=TigerWalletImage.closed_eye
+                parent=self,
+                icon=TigerWalletImage.closed_eye
             )
 
             self.btn_showhide.setIconSize(QSize(28, 28))
@@ -1333,12 +1425,15 @@ def main():
             self.n2.move(40, 282)
 
             self.btn2_hideshow = QPushButton(
-                parent=self, icon=TigerWalletImage.closed_eye
+                parent=self,
+                icon=TigerWalletImage.closed_eye
             )
 
         def init_btn(self):
             self.btn1 = QPushButton(
-                text="Return", parent=self, icon=TigerWalletImage.back
+                text="Return",
+                parent=self,
+                icon=TigerWalletImage.back
             )
 
             self.btn1.setFixedSize(240, 62)
@@ -1348,7 +1443,9 @@ def main():
 
         def init_btn2(self):
             self.btn2 = QPushButton(
-                text="Continue", parent=self, icon=TigerWalletImage.continue_
+                text="Continue",
+                parent=self,
+                icon=TigerWalletImage.continue_
             )
 
             self.btn2.setFixedSize(240, 62)
@@ -1401,13 +1498,17 @@ def main():
                 errbox("Empty passwords are a no no")
                 return
 
-            if not globalvar.from_mnemonic and not globalvar.from_private_key:
+            if (
+                not globalvar.from_mnemonic
+                and not globalvar.from_private_key
+            ):
                 globalvar.account = Account.from_mnemonic(
                     globalvar.mnemonic_phrase
                 )
 
                 self.encrypted = Account.encrypt(
-                    globalvar.account.key, password=self.entry1.text()
+                    globalvar.account.key,
+                    password=self.entry1.text()
                 )
 
                 with open(globalvar.nameofwallet, "w") as f:
@@ -1420,7 +1521,8 @@ def main():
 
             elif globalvar.from_mnemonic:
                 self.encrypted = Account.encrypt(
-                    globalvar.account.key, password=self.entry1.text()
+                    globalvar.account.key,
+                    password=self.entry1.text()
                 )
 
                 with open(globalvar.conf_file, "w") as ff:
@@ -2875,6 +2977,7 @@ def main():
                 self.show_qr.setText("Show QR code")
 
     # A worker for AssetLoadingBar class
+    # Performance upgrade in 1.4
     class AssetLoadingBarWorker(QThread):
         prog = pyqtSignal(str)
         cont = pyqtSignal(int)
@@ -2892,60 +2995,105 @@ def main():
             self.data = self.data.json()
 
             with open(globalvar.dest_path + "history.json", "w") as f:
-                json.dump(self.data, f, indent=4)
+                json.dump(
+                    obj=self.data,
+                    fp=f,
+                    indent=4
+                )
+
+        def fetch_images(self):
+            token_image_from_list(globalvar.assets_addr)
 
         def work(self):
-            with ThreadPoolExecutor(max_workers=7) as pool:
+            with ThreadPoolExecutor() as pool:
                 pool.submit(self._fetch_history)
-                
-                for i in range(self.assetamount):
-                    self.cont.emit(i)
 
-                    
-                    self.contract = create_contract(globalvar.assets_addr[i])
-
-                    pool.submit(
-                        lambda: globalvar.assets_details["name"].append(
-                            token_name(self.contract).upper()
+                pool.submit(
+                    [
+                        lambda: token_image(
+                            globalvar.assets_addr[i]
                         )
-                    )
+                        for i in range(self.assetamount)
+                    ]
+                )
 
-                    globalvar.assets_details["symbol"].append(
-                        token_symbol(self.contract).upper()
-                    )
+                self.contract = pool.submit(
+                    lambda: [
+                        create_contract(globalvar.assets_addr[i])
+                        for i in range(self.assetamount)
+                    ]
+                ).result()
 
-                    pool.submit(
-                        lambda: globalvar.assets_details["value"].append(
-                            str(
-                                w3.from_wei(
-                                    token_balance(self.contract, self.address),
-                                    "ether",
-                                )
+                with w3.batch_requests() as batch_symbol:
+                    for i in range(self.assetamount):
+                        batch_symbol.add(
+                            self.contract[i].functions.symbol()
+                        )
+
+                    batched_requests = batch_symbol.execute()
+
+                    price = pool.submit(
+                        lambda: get_price_from_list(
+                            [
+                                batched_requests[i]
+                                for i in range(self.assetamount)
+                            ]
+                        )
+                    ).result()
+
+                    for i in range(self.assetamount):
+                        globalvar.assets_details["price"].append(
+                            str(price[i])
+                        )
+
+                        globalvar.assets_details["symbol"].append(
+                            batched_requests[i].upper()
+                        )
+
+                with w3.batch_requests() as batch_token_balance:
+                    for i in range(self.assetamount):
+                        batch_token_balance.add(
+                            token_balance(
+                                self.contract[i],
+                                self.address
                             )
                         )
-                    )
 
-                    pool.submit(lambda: token_image(globalvar.assets_addr[i]))
-
-                    # Attempt to prevent 429 client error (too many requests)
-                    time.sleep(0.3)
-
-                    p = get_price(token_symbol(self.contract))
-
-                    globalvar.assets_details["price"].append(p)
+                    res = batch_token_balance.execute()
 
                     pool.submit(
-                        globalvar.assets_details["image"].append(
-                            globalvar.tokenimgfolder
-                            + globalvar.assets_details["symbol"][i].lower()
-                            + ".png"
-                        )
+                        lambda: [
+                            globalvar.assets_details["value"].append(
+                                str(
+                                    w3.from_wei(res[i], 'ether')
+                                )
+                            )
+                            for i in range(self.assetamount)
+                        ]
                     )
 
-                    self.prog.emit(
-                        token_name(self.contract).upper()
-                        + f" ({i+1}/{self.assetamount})"
-                    )
+                with w3.batch_requests() as batch_token_name:
+                    for i in range(self.assetamount):
+                        batch_token_name.add(
+                            token_name(self.contract[i])
+                        )
+
+                    res = batch_token_name.execute()
+
+                    for ii in range(self.assetamount):
+                        self.cont.emit(ii)
+                        time.sleep(0.05)
+
+                        globalvar.assets_details["name"].append(res[ii].upper())
+
+                        globalvar.assets_details["image"].append(
+                            globalvar.tokenimgfolder
+                            + globalvar.assets_details["symbol"][ii].lower()
+                            + ".png"
+                        )
+
+                        self.prog.emit(res[ii].upper() + f" ({i+1}/{self.assetamount})")
+
 
             self.cont.emit(len(globalvar.assets_addr))
 
@@ -3053,11 +3201,17 @@ def main():
             self.bar.setValue(n)
 
             if n == len(globalvar.assets_addr):
-                with open(globalvar.assets_json, "w") as f:
-                    json.dump(globalvar.assets_addr, f, indent=4)
+                with open(
+                    globalvar.assets_json, "w"
+                ) as f:
+                    json.dump(
+                        obj=globalvar.assets_addr,
+                        fp=f,
+                        indent=4
+                    )
 
-                self.worker.quit()
                 self.thread.quit()
+                self.worker.quit()
                 self.worker.deleteLater()
                 self.thread.deleteLater()
                 self.launch_wallet()
@@ -3147,7 +3301,6 @@ def main():
     # Gets gas continuously
 
     # Updates the price of assets
-    # Fixed
     class TimedUpdatePriceOfAssetsWorker(QThread):
         eth_price = pyqtSignal(str)
         timer = QTimer()
@@ -3156,7 +3309,7 @@ def main():
         def __init__(self):
             super(QThread, self).__init__()
             self.address = globalvar.account.address
-            self.pool = ThreadPoolExecutor(max_workers=2)
+            self.pool = ThreadPoolExecutor()
 
         def work(self):
             self.assetamount = len(globalvar.assets_addr)
@@ -5572,9 +5725,10 @@ def main():
             self.init_addressbook_window()
             self.init_settings_window()
             self.init_history_window()
-
-            self.fill_up_table()
             self.start_afk_timer()
+
+            with ThreadPoolExecutor() as pool:
+                pool.submit(self.fill_up_table)
 
             if "default" in globalvar.configs["theme"]:
                 # The border that fills up space
@@ -5736,9 +5890,17 @@ def main():
             self.address = globalvar.account.address
             self.assets = globalvar.assets_details
 
-            self.eth_price = get_eth_price()
-            self._m = w3.eth.get_balance(self.address)
-            self._m = w3.from_wei(self._m if not None else 0, "ether")
+            pool = ThreadPoolExecutor()
+            self.eth_price = pool.submit(get_eth_price).result()
+
+            self._m = pool.submit(
+                lambda: w3.eth.get_balance(self.address)
+            ).result()
+
+            self._m = pool.submit(
+                lambda: w3.from_wei(self._m if not None else 0, "ether")
+            ).result()
+
             self.money = float(self._m) * float(self.eth_price)
 
             self.val.setText(f"Balance: ${str(self.money)}")
@@ -5805,7 +5967,12 @@ def main():
             self.update_price_thread.start()
 
         def init_table(self):
-            b = w3.from_wei(w3.eth.get_balance(self.address), "ether")
+            b = ThreadPoolExecutor().submit(
+                lambda: w3.from_wei(
+                    w3.eth.get_balance(self.address), "ether"
+                )
+            ).result()
+
             self.ethbal = QTableWidgetItem(f" {str(b)[:15]}")
 
             self.table = QTableWidget(self)
@@ -5848,7 +6015,9 @@ def main():
 
         def init_coin_row(self):
             self.add_coin_btn = QPushButton(
-                text="Add a coin", parent=self, icon=TigerWalletImage.plus
+                text="Add a coin",
+                parent=self,
+                icon=TigerWalletImage.plus
             )
 
             self.add_coin_btn.setFixedSize(190, 46)
@@ -5867,8 +6036,8 @@ def main():
             self.default_coin_btn.clicked.connect(self.restore_default_coins)
 
             self.del_coin_btn = QPushButton(
-                text="Remove a coin", 
-                parent=self, 
+                text="Remove a coin",
+                parent=self,
                 icon=TigerWalletImage.delete
             )
             self.del_coin_btn.setFixedSize(190, 46)
@@ -5956,17 +6125,10 @@ def main():
                         self.errlbl.show()
                         return
 
-                    elif addr in globalvar.assets_addr:
-                        self.errlbl.setText(
-                            "Asset is already in your asset list"
-                        )
-                        self.errlbl.show()
-                        return
-
                     try:
                         self.c = create_contract(addr)
 
-                        with ThreadPoolExecutor(max_workers=3) as pool:
+                        with ThreadPoolExecutor() as pool:
                             pool.submit(
                                 lambda: self.coinname.setText(
                                     self.c.functions.name().call()
@@ -5996,21 +6158,25 @@ def main():
 
             # Add entered coin button
             self.continue_add_coin_btn = QPushButton(
-                text="Add coin", 
-                parent=self, 
+                text="Add coin",
+                parent=self,
                 icon=TigerWalletImage.plus
             )
+
+            def add_launch_coin():
+                t = Thread(target=self.add_coin)
+                t.start()
 
             self.continue_add_coin_btn.setFixedSize(240, 62)
             self.continue_add_coin_btn.setIconSize(QSize(32, 32))
             self.continue_add_coin_btn.move(560, 500)
             self.continue_add_coin_btn.show()
             self.continue_add_coin_btn.setEnabled(False)
-            self.continue_add_coin_btn.clicked.connect(self.add_coin)
+            self.continue_add_coin_btn.clicked.connect(add_launch_coin)
 
             self.close_add_coin_btn = QPushButton(
-                text="Close", 
-                parent=self, 
+                text="Close",
+                parent=self,
                 icon=TigerWalletImage.close
             )
 
@@ -6210,26 +6376,15 @@ def main():
             self.uppermsg.move(272, 40)
             self.uppermsg.show()
 
-            self.rm_coin_continue = QPushButton(
-                text="Continue", 
-                parent=self, 
-                icon=TigerWalletImage.eth_img
-            )
-            self.rm_coin_continue.setFixedSize(200, 46)
-            self.rm_coin_continue.setIconSize(QSize(32, 32))
-            self.rm_coin_continue.move(580, 584)
-            self.rm_coin_continue.show()
-            self.rm_coin_continue.clicked.connect(self.rm_coin)
-
             # Cancel Button
             self.rm_coin_cancel = QPushButton(
-                text="Cancel", 
-                parent=self, 
+                text="Cancel",
+                parent=self,
                 icon=TigerWalletImage.close
             )
             self.rm_coin_cancel.setFixedSize(200, 46)
             self.rm_coin_cancel.setIconSize(QSize(32, 32))
-            self.rm_coin_cancel.move(300, 584)
+            self.rm_coin_cancel.move(300, 608)
             self.rm_coin_cancel.show()
             self.rm_coin_cancel.clicked.connect(
                 lambda: [
@@ -6247,6 +6402,17 @@ def main():
                     self.val.show(),
                 ]
             )
+
+            self.rm_coin_continue = QPushButton(
+                text="Continue",
+                parent=self,
+                icon=TigerWalletImage.eth_img
+            )
+            self.rm_coin_continue.setFixedSize(200, 46)
+            self.rm_coin_continue.setIconSize(QSize(32, 32))
+            self.rm_coin_continue.move(580, 608)
+            self.rm_coin_continue.show()
+            self.rm_coin_continue.clicked.connect(self.rm_coin)
 
             self.table.setSelectionMode(
                 QtWidgets.QAbstractItemView.SelectionMode.MultiSelection
@@ -6442,9 +6608,12 @@ def main():
             self.assetsval = globalvar.assets_details["value"]
             self.assets_addr = globalvar.assets_addr
             self.index = 0
-            
-            bal = w3.from_wei(w3.eth.get_balance(self.address), "ether")
-            self.ethamount = f"~ {str(bal)[:17]} ETH"
+
+            bal2 = w3.from_wei(
+                w3.eth.get_balance(self.address),
+                "ether"
+            )
+            self.ethamount = f"~ {str(bal2)[:17]} ETH"
 
             self.is_valid_erc20_address = False
             self.lblsize = [78, 30]
@@ -6677,8 +6846,8 @@ def main():
 
             # Close/Send buttons
             self.close_send_btn = QPushButton(
-                text="Close", 
-                parent=self.box2, 
+                text="Close",
+                parent=self.box2,
                 icon=TigerWalletImage.close
             )
             self.close_send_btn.setFixedSize(240, 62)
@@ -6901,7 +7070,7 @@ def main():
 
                 def init_confirmation(self):
                     if (
-                        self.master.index == -1 
+                        self.master.index == -1
                         or self.master.index == 0
                     ):
                         self.sym = "ETH"
@@ -6910,7 +7079,7 @@ def main():
                         self.sym = self.master.symbols[self.master.index]
 
                     if (
-                        self.master.index == -1 
+                        self.master.index == -1
                         or self.master.index == 0
                     ):
                         self.asset = 'Ether'
@@ -6934,7 +7103,7 @@ def main():
                     self.topmsg.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
                     self.notice_msg = QLabel(
-                        text="Below is a summary of your transaction:", 
+                        text="Below is a summary of your transaction:",
                         parent=self
                     )
                     self.notice_msg.resize(320, 46)
@@ -7062,7 +7231,7 @@ def main():
                             : amount.find(')')-1
                         ]
                         amount = float(amount)
-                        
+
                         gas_text = self.gas_amount.text()
                         gas = gas_text[
                             gas_text.find("$")+ 1
@@ -7436,9 +7605,7 @@ def main():
 
         # THIRD button
         def init_receive_window(self):
-            """
-            Receive crypto window
-            """
+            """ Receive crypto window  """
             self.box3 = QWidget(self)
             self.box3.resize(790, 680)
             self.box3.move(166, 0)
@@ -7489,8 +7656,8 @@ def main():
             self.addr.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             self.closebtn = QPushButton(
-                text="Close", 
-                parent=self.box3, 
+                text="Close",
+                parent=self.box3,
                 icon=TigerWalletImage.close
             )
 
@@ -7500,8 +7667,8 @@ def main():
             self.closebtn.clicked.connect(self.clear_tab3_contents)
 
             self.copy_address = QPushButton(
-                text=None, 
-                parent=self.box3, 
+                text=None,
+                parent=self.box3,
                 icon=TigerWalletImage.copy_blue
             )
 
@@ -7570,13 +7737,13 @@ def main():
 
             for index in range(self.contactbook_sz):
                 self.contact_table.setItem(
-                    index, 
-                    0, 
+                    index,
+                    0,
                     QTableWidgetItem(self.contacts["name"][index])
                 )
 
                 self.contact_table.setItem(
-                    index, 
+                    index,
                     1,
                     QTableWidgetItem(self.contacts["address"][index])
                 )
@@ -7619,8 +7786,8 @@ def main():
             self.del_contact.clicked.connect(self.init_rm_contact_window)
 
             self.close_book = QPushButton(
-                text="Close", 
-                parent=self.box4, 
+                text="Close",
+                parent=self.box4,
                 icon=TigerWalletImage.close
             )
             self.close_book.setFixedSize(240, 62)
@@ -7686,7 +7853,7 @@ def main():
             self.dono_label.show()
 
             self.dono_msg = QLabel(
-                text="If you like my work, buy me a coffee!", 
+                text="If you like my work, buy me a coffee!",
                 parent=self
             )
 
@@ -7959,8 +8126,8 @@ def main():
             connect_copy_to_buttons2()
 
             self.close_dono = QPushButton(
-                text="Close", 
-                parent=self, 
+                text="Close",
+                parent=self,
                 icon=TigerWalletImage.close
             )
             self.close_dono.setFixedSize(200, 62)
@@ -8014,7 +8181,7 @@ def main():
             self.close_book.hide()
             self.val.hide()
             self.tip.hide()
-            
+
             txt = (
                 "Enter the desired name for your contact.\n"
                 "Only enter an ERC-20 address!"
@@ -8048,8 +8215,8 @@ def main():
             self.form2.show()
 
             self.close_add = QPushButton(
-                text="Cancel", 
-                parent=self, 
+                text="Cancel",
+                parent=self,
                 icon=TigerWalletImage.close
             )
             self.close_add.setFixedSize(240, 62)
@@ -8058,8 +8225,8 @@ def main():
             self.close_add.show()
 
             self.continue_add = QPushButton(
-                text="Continue", 
-                parent=self, 
+                text="Continue",
+                parent=self,
                 icon=TigerWalletImage.eth_img
             )
             self.continue_add.setFixedSize(240, 62)
@@ -8312,7 +8479,7 @@ def main():
             self.unlock_wallet_box = QWidget(self)
             self.unlock_wallet_box.resize(510, 260)
             self.unlock_wallet_box.move(
-                294, 
+                294,
                 Qt.AlignmentFlag.AlignCenter + 48
             )
 
@@ -8682,7 +8849,7 @@ def main():
             )
 
             self.table.setStyleSheet(
-                "QTableView{font-size: 17px;"
+                "QTableView{font-size: 16px;"
                 + "gridline-color: #1e1e1e;"
                 + "color: #b0c4de;"
                 + "border-radius: 16px;}"
@@ -8879,7 +9046,7 @@ def main():
 
             self.table.setStyleSheet(
                 # The table its self
-                "QTableView{font-size: 17px;"
+                "QTableView{font-size: 16px;"
                 + "gridline-color: #eff1f3;"
                 + "color: black;"
                 + "border-radius: 16px;}"
@@ -9064,7 +9231,6 @@ def main():
             )
 
         # Change wallet
-
         def default_btn1_style(self):
             if globalvar.configs["theme"] == "default_dark":
                 self.sidebar_button[0].setStyleSheet(
@@ -9507,7 +9673,7 @@ def main():
                 self.table.setItem(
                     pos,
                     2,
-                    QTableWidgetItem(self.assets["price"][pos - 1][:17]),
+                    QTableWidgetItem(' ' + self.assets["price"][pos - 1][:17]),
                 )
 
                 self.table.item(pos, 0).setSizeHint(QSize(278, 50))
@@ -9568,23 +9734,32 @@ def main():
 
         def update_price(self):
             for pos in range(len(globalvar.assets_addr)):
-                item = QTableWidgetItem(globalvar.assets_details["price"][pos])
+                item = QTableWidgetItem(
+                    globalvar.assets_details["price"][pos]
+                )
+
                 self.table.setItem(pos + 1, 2, item)
 
         def update_eth_price(self, new_price):
-            self.table.setItem(0, 2, QTableWidgetItem(f" {new_price}"))
+            self.table.setItem(
+                0,
+                2,
+                QTableWidgetItem(f" {new_price}")
+            )
 
         # Add coin function
         def add_coin(self):
-            with ThreadPoolExecutor(max_workers=7) as pool:
+            token_image(self.coinaddr.text())
+
+            with ThreadPoolExecutor() as pool:
                 contract = create_contract(self.coinaddr.text())
 
                 bal = pool.submit(
-                    lambda: contract.functions.balanceOf(self.address).call()
+                    contract.functions.balanceOf(self.address).call
                 ).result()
 
                 price = pool.submit(
-                    lambda: get_price(self.coinsym.text().upper())
+                    lambda: get_price(self.coinsym.text())
                 ).result()
 
                 if price == "not found":
@@ -9592,10 +9767,12 @@ def main():
                         'Cannot get price for '
                         f" {self.coinname.text()} ({self.coinsym.text()})"
                     )
-                    pool.shutdown(wait=False)
-                    return
+                    os.remove(
+                        globalvar.tokenimgfolder
+                        + f"{self.coinsym.text()}.png"
+                    )
 
-                pool.submit(lambda: token_image(self.coinaddr.text()))
+                    return
 
                 globalvar.assets_addr.append(self.coinaddr.text())
                 self.assets["symbol"].append(self.coinsym.text().upper())
@@ -9605,17 +9782,20 @@ def main():
 
                 sz = len(self.assets["name"])
 
-                globalvar.assets_details["image"].append(
+                img = (
                     globalvar.tokenimgfolder
                     + globalvar.assets_details["symbol"][sz - 1].lower()
                     + ".png"
                 )
 
-                pool.shutdown(wait=True)
+                globalvar.assets_details["image"].append(
+                    img
+                )
 
             globalvar.assets_details = self.assets
             self.table.setRowCount(self.table.rowCount() + 1)
 
+            # Clear table
             [
                 self.table.takeItem(i, ii)
                 for i in range(sz + 1)
@@ -9627,16 +9807,18 @@ def main():
             self.table.setItem(0, 2, QTableWidgetItem(" " + self.eth_price))
             self.table.item(0, 0).setIcon(TigerWalletImage.eth_img)
 
-            with ThreadPoolExecutor(max_workers=7) as pool:
-                asset_label = \
-                     f" {self.assets['name'][i]} ({self.assets['symbol'][i]})"
+            with ThreadPoolExecutor() as pool:
+                asset_label = [
+                    f" {self.assets['name'][i]} ({self.assets['symbol'][i]})"
+                    for i in range(sz)
+                ]
 
                 pool.submit(
                     [
                         self.table.setItem(
                             i + 1,
                             0,
-                            QTableWidgetItem(assets_label)
+                            QTableWidgetItem(asset_label[i])
                         )
                         for i in range(sz)
                     ]
@@ -9654,7 +9836,9 @@ def main():
                 pool.submit(
                     [
                         self.table.setItem(
-                            i + 1, 1, QTableWidgetItem(self.assets["value"][i])
+                            i + 1,
+                            1,
+                            QTableWidgetItem(self.assets["value"][i])
                         )
                         for i in range(sz)
                     ]
@@ -9694,8 +9878,8 @@ def main():
 
             with open(globalvar.assets_json, "w") as f:
                 json.dump(
-                    obj=globalvar.assets_addr, 
-                    fp=f, 
+                    obj=globalvar.assets_addr,
+                    fp=f,
                     indent=4
                 )
 
@@ -9741,8 +9925,8 @@ def main():
 
             with open(globalvar.assets_json, "w") as f:
                 json.dump(
-                    obj=globalvar.assets_addr, 
-                    fp=f, 
+                    obj=globalvar.assets_addr,
+                    fp=f,
                     indent=4
                 )
 
@@ -9826,8 +10010,8 @@ def main():
 
             with open(globalvar.contactsjson, "w") as f:
                 json.dump(
-                    obj=globalvar.contactbook, 
-                    fp=f, 
+                    obj=globalvar.contactbook,
+                    fp=f,
                     indent=4
                 )
 
@@ -9997,29 +10181,6 @@ def main():
         def clear_tab5_contents(self):
             self.wh.hide()
             self.tab = 0
-
-        # This is no longer used in version 1.3
-        """
-        def clear_tab6_contents(self):
-            try:
-                if self.s.vp.isVisible():
-                    self.s.vp.close()
-            except AttributeError:
-                pass
-            except RuntimeError:
-                pass
-
-            try:
-                if self.s.vp.qrcode.isVisible():
-                    self.s.vp.qrcode.close()
-            except AttributeError:
-                pass
-            except RuntimeError:
-                pass
-
-            self.sidebar_button[5].setEnabled(True)
-            self.s.hide()
-        """
 
         def clear_donation_tab(self):
             self.default_donobtn_style()
