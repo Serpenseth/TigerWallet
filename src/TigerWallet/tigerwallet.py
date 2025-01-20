@@ -81,12 +81,14 @@ from eth_account import Account
 # Required for `Web3.contract` functions
 from hexbytes import HexBytes
 
-# Avoid having to save QR cdoes on device - save in memory instead
+# Avoid having to save QR codes on device - save in memory instead
 from io import BytesIO
 
-# ===Version1.4=== #
+import subprocess
+
+# ===Version1.5=== #
 def main():
-    TigerWalletVersion = "1.4"
+    TigerWalletVersion = "1.5"
 
     s = requests.Session()
     s.mount(
@@ -113,7 +115,11 @@ def main():
 
     # Question box
     def questionbox(question) -> bool:
-        ret = QMessageBox.question(None, "TigerWallet", question)
+        ret = QMessageBox.question(
+            None,
+            "TigerWallet",
+            question
+        )
 
         if ret == ret.Yes:
             return True
@@ -122,7 +128,7 @@ def main():
 
     # Information box
     def msgbox(msg) -> None:
-        return QMessageBox.information(None, "TigerWallet", msg)
+        QMessageBox.information(None, "TigerWallet", msg)
 
     def rm_scientific_notation(number: str) -> str:
         """Removes scientific notations, resulting in an actual decimal
@@ -205,14 +211,19 @@ def main():
 
             self.account = type(Account)
 
+            import getpass
+
+            self.current_usr = getpass.getuser()
+
             if os.name == "nt":
                 self.dest_path = "C:/ProgramData/TigerWallet/"
 
             else:
-                import getpass
-
-                self.current_usr = getpass.getuser()
-                self.dest_path = "/home/" + self.current_usr + "/.TigerWallet/"
+                self.dest_path = (
+                    "/home/"
+                    + self.current_usr
+                    + "/.TigerWallet/"
+                )
 
             if not os.path.exists(self.dest_path):
                 try:
@@ -261,7 +272,11 @@ def main():
             ):
                 # JSON abi file, used for token contracts
                 with open(self.abi_json_file, "w") as jsonfile:
-                    json.dump(obj=self.abi, indent=4, fp=jsonfile)
+                    json.dump(
+                        obj=self.abi,
+                        indent=4,
+                        fp=jsonfile
+                    )
 
             self.conf_file = self.dest_path + "conf.json"
             self.configs = {
@@ -278,12 +293,29 @@ def main():
             ):
                 # Create conf.json file if it doesn't exist
                 with open(self.conf_file, "w") as f:
-                    json.dump(obj=self.configs, indent=4, fp=f)
+                    json.dump(
+                        obj=self.configs,
+                        indent=4,
+                        fp=f
+                    )
 
             else:
                 # Load conf.json file
                 with open(self.conf_file, "r") as f:
                     self.configs = json.load(f)
+
+                    # If version is out of date, update it
+                    if self.configs['version'] != TigerWalletVersion:
+                        f.close()
+
+                with open(self.conf_file, "w") as f:
+                    self.configs['version'] = TigerWalletVersion
+
+                    json.dump(
+                        obj=self.configs,
+                        indent=4,
+                        fp=f
+                    )
 
             self.assets_json = ""
             self.position = 0
@@ -293,7 +325,10 @@ def main():
             self.filechosen = 0
             self.recovered = 0
 
-            self.contactbook = {"name": [], "address": []}
+            self.contactbook = {
+                "name": [],
+                "address": []
+            }
 
             self.contactsjson = self.dest_path + "contacts.json"
 
@@ -309,7 +344,12 @@ def main():
                     self.contactbook = json.load(f)
 
             # Contract-related
-            self.abi = orjson.loads(open(self.abi_json_file, "rb").read())
+            self.abi = orjson.loads(
+                open(
+                    self.abi_json_file,
+                    "rb"
+                ).read()
+            )
             # Asset-related
             self.assets_json = self.dest_path + "assets.json"
             # List of crypto to display #
@@ -331,7 +371,11 @@ def main():
             ):
                 # If first run or assets_json got messed with
                 with open(self.assets_json, "w") as f:
-                    json.dump(obj=self.addresses, fp=f, indent=4)
+                    json.dump(
+                        obj=self.addresses,
+                        fp=f,
+                        indent=4
+                    )
 
             self.assets_addr = []
 
@@ -419,11 +463,11 @@ def main():
     def token_symbol(contract: w3.eth.contract) -> str:
         return contract.functions.symbol.call()
 
-    def token_balance(contract: w3.eth.contract, address: str) -> float:
+    def token_balance(contract: w3.eth.contract,
+                                    address: str) -> float:
         return contract.functions.balanceOf(address).call()
 
     def token_image(address) -> None:
-        addr = address
         agent = (
             'Mozilla/5.0 (X11; Linux x86_64; rv:131.0)'
             'Gecko/20220911 Firefox/131.0'
@@ -436,7 +480,7 @@ def main():
         )
 
         resp = s.get(
-            f"{url}{w3.to_checksum_address(addr)}/logo.png",
+            f"{url}{w3.to_checksum_address(address)}/logo.png",
             headers=headers,
             stream=True,
         )
@@ -452,13 +496,14 @@ def main():
             globalvar.tokenimgfolder
             + f"{sym}.png"
         ):
-            return
+            pass
 
-        with open(
-            globalvar.tokenimgfolder
-            + f"{sym}.png", "wb"
-        ) as out_file:
-            out_file.write(resp.content)
+        else:
+            with open(
+                globalvar.tokenimgfolder
+                + f"{sym}.png", "wb"
+            ) as out_file:
+                out_file.write(resp.content)
 
     #
     def token_image_from_list(address_list: list) -> None:
@@ -537,14 +582,19 @@ def main():
                 stream=True,
             )
         except ConnectionError:
-            errbox(
-                "Error: failed to fetch price. Are you connected to the internet?"
-            )
-            self_destruct()
+            return "N/A"
 
         if "coinbase" in page_data.url:
             if not "USDT" in page_data.json()["data"]["rates"]:
-                return "not found"
+                page_data = s.get(
+                    backup_url,
+                    stream=True,
+                )
+
+                if 'Response' in page_data.json():
+                    return 'N/A'
+
+                return rm_scientific_notation(page_data.json()["USDT"])
 
             return rm_scientific_notation(
                 page_data.json()["data"]["rates"]["USDT"]
@@ -555,11 +605,40 @@ def main():
     def get_eth_price() -> str:
         return get_price("ETH")
 
-    def get_price_from_list(addresses: list) -> list:
-        addrs = ','.join(addresses)
+    def get_price_from_list(symbols: list) -> list:
+        url_list = [
+            f"https://api.coinbase.com/v2/exchange-rates?currency={symbol}"
+            for symbol in symbols
+        ]
 
+        page_data_list = [
+            s.get(
+                url,
+                stream=True,
+            )
+            for url in url_list
+        ]
+
+        result_list = []
+
+        for item in page_data_list:
+            if not "USDT" in item.json()["data"]["rates"]:
+                result_list.append("N/A")
+            else:
+                result_list.append(item.json()["data"]["rates"]["USDT"])
+
+        '''
+        result_list = [
+            page_data.json()["data"]["rates"]["USDT"]
+            for page_data in page_data_list
+        ]
+        '''
+
+        return result_list
+
+        '''
         url = "https://min-api.cryptocompare.com/data/price?fsym="
-        url += f"USDT&tsyms={addrs}"
+        url += f"USDT&tsyms={','.join(symbols)}"
 
         try:
             page_data = s.get(
@@ -567,16 +646,14 @@ def main():
                 stream=True,
             )
         except ConnectionError:
-            errbox(
-                "Error: failed to fetch price. Are you connected to the internet?"
-            )
-            self_destruct()
+            pass
 
         result = page_data.json()
 
         return_result = [item for item in result.values()]
 
         return return_result
+        '''
 
     # END Web3-related stuff
 
@@ -2977,7 +3054,6 @@ def main():
                 self.show_qr.setText("Show QR code")
 
     # A worker for AssetLoadingBar class
-    # Performance upgrade in 1.4
     class AssetLoadingBarWorker(QThread):
         prog = pyqtSignal(str)
         cont = pyqtSignal(int)
@@ -2994,7 +3070,10 @@ def main():
             self.data = s.get(url + key, stream=True)
             self.data = self.data.json()
 
-            with open(globalvar.dest_path + "history.json", "w") as f:
+            with open(
+                globalvar.dest_path
+                + "history.json", "w"
+            ) as f:
                 json.dump(
                     obj=self.data,
                     fp=f,
@@ -3009,8 +3088,8 @@ def main():
                 pool.submit(self._fetch_history)
 
                 pool.submit(
-                    [
-                        lambda: token_image(
+                    lambda: [
+                        token_image(
                             globalvar.assets_addr[i]
                         )
                         for i in range(self.assetamount)
@@ -3030,20 +3109,12 @@ def main():
                             self.contract[i].functions.symbol()
                         )
 
-                    batched_requests = batch_symbol.execute()
-
-                    price = pool.submit(
-                        lambda: get_price_from_list(
-                            [
-                                batched_requests[i]
-                                for i in range(self.assetamount)
-                            ]
-                        )
-                    ).result()
+                    batched_requests = pool.submit(batch_symbol.execute).result()
+                    price = get_price_from_list(batched_requests)
 
                     for i in range(self.assetamount):
                         globalvar.assets_details["price"].append(
-                            str(price[i])
+                            str(price[i])[:17]
                         )
 
                         globalvar.assets_details["symbol"].append(
@@ -3059,7 +3130,7 @@ def main():
                             )
                         )
 
-                    res = batch_token_balance.execute()
+                    res = pool.submit(batch_token_balance.execute).result()
 
                     pool.submit(
                         lambda: [
@@ -3078,7 +3149,7 @@ def main():
                             token_name(self.contract[i])
                         )
 
-                    res = batch_token_name.execute()
+                    res = pool.submit(batch_token_name.execute).result()
 
                     for ii in range(self.assetamount):
                         self.cont.emit(ii)
@@ -3141,12 +3212,6 @@ def main():
 
                 self.bar.setStyleSheet(self.barstyle + "color: black;")
 
-            # Style
-            if globalvar.configs["theme"] == "default_dark":
-                self.setStyleSheet("background-color: #1e1e1e")
-
-            elif globalvar.configs["theme"] == "default_light":
-                self.setStyleSheet("background-color: #eff1f3")
 
         # Window ui
         def setup_main(self):
@@ -3222,13 +3287,83 @@ def main():
             self.close()
             self.deleteLater()
 
-    # Updates total balance continuously
-    class TimedUpdateTotalBalanceWorker(QThread):
+    # New in v1.5
+    class TimedMonitorForNewTransfers(QThread):
         """
-        A timed worker that updates user's balance.
+        A timed worker that checks for
+        new tokens in the user's wallet
         """
 
-        baleth = pyqtSignal(str)
+        received_new_tokens = pyqtSignal(bool)
+        timer = QTimer()
+
+        def __init__(self):
+            super().__init__()
+            self.address = globalvar.account.address
+            self.new_tokens = {
+                'address': '',
+                'symbol': '',
+                'name': ''
+            }
+
+        def work(self):
+            current_block = w3.eth.get_block('latest', True)
+            self.received_new_tokens.emit(False)
+
+            for tx in current_block.transactions:
+                if (
+                    tx['from'] == self.address
+                    or tx['to'] == self.address
+                ):
+                    hash_ = '0x' + tx['hash'].hex()
+
+                    url = (
+                        f"https://eth.blockscout.com/api/v2/transactions/{hash_}"
+                        + '/token-transfers?type=ERC-20'
+                    )
+
+                    self.data = s.get(url, stream=True)
+
+                    if (
+                        'items' in self.data.json().keys()
+                        and len(self.data.json()['items']) != 0
+                    ):
+                        data = self.data.json()['items'][0]
+
+                        if (
+                            not data['token']['address']
+                            in globalvar.assets_addr
+                        ):
+                            self.token = {
+                                'address': data['token']['address'],
+                                'symbol': data['token']['symbol'],
+                                'name': data['token']['name']
+                            }
+
+                            globalvar.assets_addr.append(
+                                self.token['address']
+                            )
+
+                            self.balance = create_contract(
+                                self.token['address']
+                            )
+                            self.balance = self.balance.functions.balanceOf(
+                                self.address
+                            )
+                            self.balance = w3.from_wei(
+                                float(self.balance.call()),
+                                'ether'
+                            )
+
+                            globalvar.assets_details['value'].append(
+                                str(self.balance)[:17]
+                            )
+
+                            self.new_tokens = self.token
+                            self.received_new_tokens.emit(True)
+
+    class TimedUpdateTotalBalance(QThread):
+        balance = pyqtSignal(float)
         timer = QTimer()
 
         def __init__(self):
@@ -3236,34 +3371,36 @@ def main():
             self.address = globalvar.account.address
 
         def work(self):
-            with ThreadPoolExecutor(max_workers=2) as pool:
-                is_connected = pool.submit(w3.is_connected).result()
-
-                if not is_connected:
-                    self.baleth.emit("N/A (No internet connection)")
-
-                _q = w3.from_wei(
-                    w3.eth.get_balance(HexBytes(self.address)), "ether"
+            eth_balance = float(
+                w3.from_wei(
+                    w3.eth.get_balance(self.address),
+                    'ether'
                 )
+            )
 
-                _bal = get_eth_price()
-                total = float(_q) * float(_bal)
+            eth_price = float(get_eth_price())
+            eth_balance *= eth_price
 
-                if _q != None and _bal != None:
-                    for index in range(len(globalvar.assets_details["value"])):
-                        item = float(globalvar.assets_details["value"][index])
+            amount_of_assets = len(globalvar.assets_details['symbol'])
 
-                        p = get_price(
-                            globalvar.assets_details["symbol"][index]
-                        )
+            assets_price = globalvar.assets_details['price']
+            assets_amount = globalvar.assets_details['value']
 
-                        total += float(p) * item
+            total_list = [
+                float(assets_price[i]) if not 'N/A' else 0.0
+                * float(assets_amount[i])
+                for i in range(amount_of_assets)
+                if float(assets_amount[i]) != 0.0
+            ]
 
-                else:
-                    pass
-                pool.shutdown(wait=True)
+            total = 0.0
 
-            self.baleth.emit(f"Balance: ${total}")
+            for item in total_list:
+                total += item
+
+            total += float(eth_balance)
+
+            self.balance.emit(total)
 
     # Gets gas continuously
     class TimedUpdateGasFeeWorker(QThread):
@@ -3287,8 +3424,11 @@ def main():
                 self.p *= float(get_eth_price())
                 self.p *= 200000
 
+                self.p = rm_scientific_notation(round(self.p, 2))
+                self.gwei = rm_scientific_notation(self.gwei)
+
                 self.gas.emit(
-                    f" {rm_scientific_notation(self.gwei)} GWEI  ~${rm_scientific_notation(round(self.p, 2))} (updates every 10 secs)"
+                    f" {self.gwei} GWEI  ~${self.p} (updates every 10 secs)"
                 )
             except Exception:
                 self.gas.emit(
@@ -3297,8 +3437,6 @@ def main():
 
             if not w3.is_connected():
                 self.gas.emit(" N/A (No internet connection)")
-
-    # Gets gas continuously
 
     # Updates the price of assets
     class TimedUpdatePriceOfAssetsWorker(QThread):
@@ -3347,8 +3485,12 @@ def main():
             self.p *= float(get_eth_price())
             self.p *= 23000
 
+            self.gwei = rm_scientific_notation(self.gwei)
+            self.p = round(round(self.p, 2))
+            self.p = rm_scientific_notation(self.p)
+
             self.gas.emit(
-                f" {rm_scientific_notation(self.gwei)} GWEI  ~${rm_scientific_notation(round(self.p, 2))} (updates every 10 secs)"
+                f" {self.gwei} GWEI  ~${self.p} (updates every 10 secs)"
             )
             self.quit()
 
@@ -3561,6 +3703,487 @@ def main():
                         errbox("Invalid password")
                         return
 
+    class DownloadUpdateWorker(QThread):
+        from zipfile import ZipFile
+
+        dl_prog = pyqtSignal(int)
+        total_size = pyqtSignal(str)
+        is_finished = pyqtSignal(bool)
+
+        def __init__(
+            self,
+            parent=None,
+            method_of_execution=None,
+            version=0
+        ):
+            super(QThread, self).__init__()
+            self.method_of_execution = method_of_execution
+            self.version = version
+            self.parent = parent
+
+            if os.name == 'nt':
+                self.extract_path = (
+                    f"C:\\Users\\{globalvar.current_usr}\\"
+                    + 'Desktop\\'
+                )
+
+            else:
+                self.extract_path = (
+                    f"/home/{globalvar.current_usr}/"
+                )
+
+        def work(self):
+            self.dl_prog.emit(0)
+            self.is_finished.emit(False)
+            dl = 0
+
+            # Ran via pyinstaller's exe
+            if self.method_of_execution == 'pyinstaller-executable':
+                ver = self.version
+                tigerwallet_executable_file = \
+                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-x86-64"
+
+                dl_executable_link = (
+                    'https://github.com/Serpenseth/'
+                    + 'TigerWallet/releases/download/'
+                    + tigerwallet_executable_file
+                    + '.exe'
+                )
+
+                with open(
+                    self.extract_path
+                    + f"tigerwallet-{self.version}-x86-64.exe",
+                    mode='wb'
+                ) as exe_file:
+                    # Download the file as a stream
+                    downloaded_executable = s.get(
+                        url=dl_executable_link,
+                        stream=True
+                    )
+
+                    self.size = int(
+                        downloaded_executable.headers.get(
+                            'content-length'
+                        )
+                    )
+
+                    self.parent.total_file_size = self.size
+                    self.parent.bar.setRange(
+                        0,
+                        self.size
+                    )
+
+                    for data in downloaded_executable.iter_content(
+                        chunk_size=4096
+                    ):
+                        dl += len(data)
+                        exe_file.write(data)
+                        self.dl_prog.emit(dl)
+
+                    self.is_finished.emit(True)
+
+            # Ran via py/python
+            elif self.method_of_execution == 'python-command':
+                dl_link = 'https://github.com/Serpenseth/TigerWallet'
+                dl_link += '/archive/refs/heads/main.zip'
+
+                with BytesIO() as zip_:
+                    zipped_dl = s.get(
+                        url=dl_link,
+                        stream=True
+                    )
+
+                   #self.parent.total_file_size = self.size
+                    self.parent.bar.setRange(0, 0)
+
+                    for data in zipped_dl.iter_content(
+                        chunk_size=1024
+                    ):
+                        dl += len(data)
+                        zip_.write(data)
+                        self.dl_prog.emit(dl)
+
+                    with self.ZipFile(zip_, 'r') as zip_ref:
+                        zip_ref.extractall(self.extract_path)
+
+                    self.is_finished.emit(True)
+
+            # Ran as an appimage
+            elif self.method_of_execution == 'appimage-executable':
+                ver = self.version
+                tigerwallet_executable_file = \
+                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-x86-64"
+
+                dl_executable_link = (
+                    'https://github.com/Serpenseth/'
+                    + 'TigerWallet/releases/download/'
+                    + tigerwallet_executable_file
+                    + '.Appimage'
+                )
+
+                with open(
+                    self.extract_path
+                    + f"tigerwallet-{self.version}-x86-64.Appimage",
+                    mode='wb'
+                ) as appimage_file:
+                    # Download the file as a stream
+                    downloaded_executable = s.get(
+                        url=dl_executable_link,
+                        stream=True
+                    )
+
+                    self.size = int(
+                        downloaded_executable.headers.get(
+                            'content-length'
+                        )
+                    )
+
+                    self.parent.total_file_size = self.size
+                    self.parent.bar.setRange(0, self.size)
+
+                    for data in downloaded_executable.iter_content(
+                        chunk_size=4096
+                    ):
+                        dl += len(data)
+                        appimage_file.write(data)
+                        self.dl_prog.emit(dl)
+
+                    self.is_finished.emit(True)
+
+            # Ran via tigerwallet (pip install  with git)
+            elif self.method_of_execution == 'pip-install-executable':
+                dl_link = 'https://github.com/Serpenseth/TigerWallet'
+                install_cmd = 'install git+'
+
+                self.parent.bar.setRange(0, 0)
+
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        '-m',
+                        'pip',
+                        'install',
+                        f"git+{dl_link}"
+                    ],
+                    stdout=subprocess.PIPE,
+                )
+
+                # Do nothing while pip hasn't completed
+                while (
+                    not 'Successfully'
+                    in result.stdout.decode('utf-8')
+                ):
+                    self.is_finished.emit(False)
+
+                self.is_finished.emit(True)
+
+    # New in v1.5
+    class CheckForUpdates(QWidget):
+        def __init__(
+            self,
+            url: str
+        ):
+            super().__init__()
+            self.current_version = TigerWalletVersion
+            self.url = url
+            self.local_path = globalvar.local_path
+            self.execution_method = self.__how_is_tigerwallet_running()
+            self.total_file_size = 0
+
+            self.init_self()
+
+            self.init_loading_label()
+            self.init_thread()
+
+            self.init_progressbar()
+            self.init_asset_label()
+            self.check_if_update_is_available()
+
+            if "default" in globalvar.configs["theme"]:
+                self.label.setStyleSheet(
+                    "font-size: 40px;"
+                    + "color: white;"
+                    + "background: transparent;"
+                )
+
+                self.label2.setStyleSheet(
+                    "font-size: 25px;"
+                    + "color: white;"
+                    + "background: transparent;"
+                )
+
+                self.barstyle = (
+                    """
+                        QProgressBar{
+                            color: black;
+                            border-radius: 0px;
+                            background: transparent;
+                        }
+
+                        QProgressBar::chunk{
+                            background-color: #6495ed;
+                            border-radius: 3px;
+                        }
+                    """
+                )
+
+                self.bar.setStyleSheet(
+                    self.barstyle
+                    + "color: black;"
+                )
+
+        def __how_is_tigerwallet_running(self):
+            if os.name == "nt":
+                if '_MEI' in self.local_path:
+                    return 'pyinstaller-executable'
+
+                elif 'AppData\\Local' in self.local_path:
+                    return 'pip-install-executable'
+
+            if '/tmp/.mount' in self.local_path:
+                return 'appimage-executable'
+
+            return 'python-command'
+
+        def check_if_update_is_available(self):
+            data = s.get(url=self.url)
+            data = data.text.split()
+
+            github_version = ' '.join(data[11:14])
+
+            github_version = float(github_version[11:14])
+            self.current_version = float(self.current_version)
+
+            if self.current_version < github_version:
+                resp = questionbox(
+                    'A new update is available. '
+                    + 'Install now?'
+                )
+
+                if resp:
+                    self.download_update()
+
+                else:
+                    self.close()
+                    self.deleteLater()
+
+            else:
+                self.close()
+                self.deleteLater()
+
+        def init_thread(self):
+            self.thread = QThread()
+
+        def init_self(self):
+            self.setFixedWidth(680)
+            self.setFixedHeight(310)
+            self.setWindowTitle("TigerWallet  -  Loading assets")
+
+            align_to_center(self)
+            add_round_corners(self, 32)
+
+        def init_progressbar(self):
+            self.bar = QProgressBar(self)
+            self.bar.resize(420, 12)
+            #self.bar.setRange(0, self.total_file_size)
+            self.bar.setValue(0)
+            self.bar.move(Qt.AlignmentFlag.AlignCenter, 180)
+            self.bar.setTextVisible(False)
+
+        def init_loading_label(self):
+            self.img_holder = QLabel(self)
+            self.img_holder.resize(680, 350)
+            self.tiger_pic = QPixmap(TigerWalletImage.loading_bg)
+            self.tiger_pic = self.tiger_pic.scaled(QSize(680, 350))
+            self.img_holder.setPixmap(self.tiger_pic)
+
+            self.label = QLabel("Downloading update...", self)
+            self.label.resize(740, 216)
+            self.label.move(140, 20)
+
+        def init_asset_label(self):
+            self.label2 = QLabel(self)
+            self.label2.resize(680, 30)
+            self.label2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.label2.move(0, 220)
+
+
+
+        def emit_progress(self, n):
+            self.label2.setText(
+                f"{str(n)}/{self.total_file_size} KB"
+            )
+
+            self.bar.setValue(n)
+
+        def download_update(self):
+            ver = 'v' + self.current_version
+
+            # Using pyinstaller
+            if self.execution_method == 'pyinstaller-executable':
+                self.duw = DownloadUpdateWorker(
+                    parent=self,
+                    method_of_execution='pyinstaller-executable',
+                    version=ver
+                )
+
+                def is_done(res):
+                    if res:
+                        msgbox(
+                            'New version downloaded to path: '
+                            + f"C:\\Users\\{globalvar.current_usr}\\"
+                            + 'Desktop\\'
+                            + f"tigerwallet-{ver}-x86-64.exe",
+                        )
+
+                        self.thread.quit()
+                        self.duw.quit()
+                        self.thread.deleteLater()
+                        self.duw.deleteLater()
+
+                        self.close()
+                        self.deleteLater()
+
+                self.duw.moveToThread(self.thread)
+                self.duw.dl_prog.connect(self.emit_progress)
+                self.duw.is_finished.connect(is_done)
+                self.thread.started.connect(self.duw.work)
+                self.thread.start()
+
+            # Using appimage
+            elif self.execution_method == 'appimage-executable':
+                self.duw = DownloadUpdateWorker(
+                    parent=self,
+                    method_of_execution='appimage-executable',
+                    version=ver
+                )
+
+                def is_done(res):
+                    if res:
+                        msgbox(
+                            'New version downloaded to path: '
+                            f"/home/{globalvar.current_usr}/"
+                            + f"tigerrwallet-{ver}-x86-64.Appimage",
+                        )
+
+                        self.thread.quit()
+                        self.duw.quit()
+                        self.thread.deleteLater()
+                        self.duw.deleteLater()
+
+                        self.close()
+                        self.deleteLater()
+
+                self.duw.moveToThread(self.thread)
+                self.duw.dl_prog.connect(self.emit_progress)
+                self.duw.is_finished.connect(is_done)
+                self.thread.started.connect(self.duw.work)
+                self.thread.start()
+
+            # Using tigerwallet installed via git+pip
+            elif self.execution_method == 'pip-install-executable':
+                self.duw = DownloadUpdateWorker(
+                    parent=self,
+                    method_of_execution='pip-install-executable'
+                )
+
+                self.label.setText('Running pip install...')
+                self.label.resize(740, 216)
+                self.label.move(154, 20)
+                self.label2.hide()
+
+                def pip_install_finished(completed):
+                    if completed:
+                        msgbox('Update complete')
+
+                        self.thread.quit()
+                        self.duw.quit()
+                        self.thread.deleteLater()
+                        self.duw.deleteLater()
+
+                        self.close()
+                        self.deleteLater()
+
+                        subprocess.run(['tigerwallet'])
+
+                self.duw.moveToThread(self.thread)
+                #self.duw.dl_prog.connect(self.emit_progress)
+                self.duw.is_finished.connect(pip_install_finished)
+                self.thread.started.connect(self.duw.work)
+                self.thread.start()
+
+            # Using source code directly
+            elif self.execution_method == 'python-command':
+                self.duw = DownloadUpdateWorker(
+                    parent=self,
+                    method_of_execution='python-command',
+                    version=ver
+                )
+
+                self.label2.hide()
+
+                def is_done(res):
+                    if res:
+                        if os.name == 'nt':
+                            msgbox(
+                                'New version downloaded to path: '
+                                + f"C:\\Users\\{globalvar.current_usr}\\"
+                                + 'Desktop\\'
+                                + 'TigerWallet-main'
+                            )
+
+                        else:
+                            msgbox(
+                                'New version downloaded to path: '
+                                + f"/home/{globalvar.current_usr}"
+                                + 'TigerWallet-main'
+                            )
+
+                        self.thread.quit()
+                        self.duw.quit()
+                        self.thread.deleteLater()
+                        self.duw.deleteLater()
+
+                        self.close()
+                        self.deleteLater()
+
+                        if os.name == 'nt':
+                            subprocess.run(
+                                [
+                                    sys.executable,
+                                    f"C:\\Users\\{globalvar.current_usr}\\"
+                                    + 'Desktop\\TigerWallet-main\\'
+                                    + 'src\\TigerWallet\\tigerwallet.py'
+                                ]
+                            )
+
+                        else:
+                            subprocess.run(
+                                [
+                                    sys.executable,
+                                    f"/home/{globalvar.current_usr}/"
+                                    + 'TigerWallet-main/src/'
+                                    + 'TigerWallet/tigerwallet.py'
+                                ]
+                            )
+
+                self.duw.moveToThread(self.thread)
+                self.duw.dl_prog.connect(self.emit_progress)
+                self.duw.is_finished.connect(is_done)
+                self.thread.started.connect(self.duw.work)
+                self.thread.start()
+
+            if number_of_wallets != 0:
+                login.close()
+                login.deleteLater()
+                return
+
+            first.close()
+            first.deleteLater()
+
+
+    # Fixed program crash in v1.5
+    # when adding an invalid RPC
     class Settings(QWidget):
         """
         Settings window - used by UserWallet
@@ -3755,7 +4378,7 @@ def main():
             # Thanks to tab
             self.thanks_item = [QLabel(self.tabs) for i in range(4)]
             self.thanks_item[0].setText(
-                f"Shoutout: Mikko Ohtamaa, DefiDeBlitzen, Maka"
+                f"Shoutout: Mikko Ohtamaa, DefiDeBlitzen, Maka, felipe"
             )
 
             for i in range(1):
@@ -4185,15 +4808,7 @@ def main():
                         + "is known to cause issues with TigerWallet.\n"
                         + "Please use another RPC"
                     )
-
                     return
-
-                with open(globalvar.conf_file, "r") as f:
-                    tmp_dict = json.load(f)
-
-                    if self.add_rpc_https.text() == tmp_dict["rpc"]:
-                        errbox("RPC is already on your list")
-                        return
 
                 with open(globalvar.rpc_list_file, "r") as f:
                     tmp_list = json.load(f)
@@ -4285,13 +4900,21 @@ def main():
                         patch_provider(provider)
 
                         _w3 = Web3(provider)
-                        good = _w3.is_connected()
 
-                        if not good:
-                            self.err = 1
+                        try:
+                            good = _w3.is_connected()
+
+                            if not good:
+                                self.err = 1
+                                self.done.emit(True)
+
+                            else:
+                                self.done.emit(True)
+
+                        except orjson.JSONDecodeError:
+                            self.err = 2
                             self.done.emit(True)
-                        else:
-                            self.done.emit(True)
+
 
                 self.trpcmb = _TestingRPCMsgBox(self)
                 self.test_rpc_worker = _TestRPCWorker(self)
@@ -4306,8 +4929,15 @@ def main():
                         if self.test_rpc_worker.err == 1:
                             self.trpcmb.close()
                             errbox(
-                                f"Failed to connect to {self.add_rpc_https.text() + self.add_rpc_port.text()}"
+                                'Failed to connect to '
+                                + self.add_rpc_https.text()
+                                + f" {self.add_rpc_port.text()}"
                             )
+                            return
+
+                        elif self.test_rpc_worker.err == 2:
+                            self.trpcmb.close()
+                            errbox('Input provided is not a web3 RPC')
                             return
 
                         r = (
@@ -5130,7 +5760,7 @@ def main():
             msgbox("Your password has been changed sucessfully")
             self._close_change_passwd_window()
 
-    class UpdateBalanceWorker(QThread):
+    class UpdateHistoryWorker(QThread):
         is_done = pyqtSignal(bool)
 
         def __init__(self, master):
@@ -5449,10 +6079,10 @@ def main():
 
             def kill_thread(is_done):
                 if is_done:
-                    self.ubw.quit()
+                    self.uhw.quit()
                     self.ubt.quit()
 
-                    if self.ubw.has_changes:
+                    if self.uhw.has_changes:
                         if not self.notx.isHidden():
                             self.notx.close()
                             self.pix_holder.close()
@@ -5468,7 +6098,7 @@ def main():
                         self.load_file()
                         self.unload_history_data()
 
-                    if self.ubw.had_error:
+                    if self.uhw.had_error:
                         pass
                     else:
                         msgbox("No transactions found")
@@ -5476,12 +6106,12 @@ def main():
                     self.refresh.setEnabled(True)
                     self.refresh.setText("Refresh")
 
-            self.ubw = UpdateBalanceWorker(self)
+            self.uhw = UpdateHistoryWorker(self)
             self.ubt = QThread()
 
-            self.ubw.moveToThread(self.ubt)
-            self.ubt.started.connect(self.ubw.work)
-            self.ubw.is_done.connect(kill_thread)
+            self.uhw.moveToThread(self.ubt)
+            self.ubt.started.connect(self.uhw.work)
+            self.uhw.is_done.connect(kill_thread)
 
             self.refresh.clicked.connect(
                 lambda: [
@@ -5492,7 +6122,10 @@ def main():
             )
 
         def load_file(self) -> None:
-            with open(globalvar.dest_path + "history.json", "rb") as f:
+            with open(
+                globalvar.dest_path
+                + "history.json", "rb"
+            ) as f:
                 self.data = orjson.loads(f.read())
 
                 if "error" in self.data:
@@ -5929,13 +6562,44 @@ def main():
         def init_threads(self):
             # Main Thread/worker
             self.thread = QThread()
-            self.worker = TimedUpdateTotalBalanceWorker()
+            self.worker = TimedMonitorForNewTransfers()
 
             self.worker.moveToThread(self.thread)
-            self.worker.baleth.connect(self.update_balance)
+
+            def add_coin_if_new_one_arrived(cond):
+                if cond:
+                    self.add_coin(
+                        self.worker.new_tokens['name'],
+                        self.worker.new_tokens['address'],
+                        self.worker.new_tokens['symbol'],
+                        invoked_from_worker=True
+                    )
+
+            self.worker.received_new_tokens.connect(
+                add_coin_if_new_one_arrived
+            )
             self.worker.timer.timeout.connect(self.worker.work)
-            self.thread.started.connect(lambda: self.worker.timer.start(15000))
+            self.thread.started.connect(
+                lambda: self.worker.timer.start(15000)
+            )
             self.thread.start()
+
+            self.update_balance_thread = QThread()
+            self.update_balance_worker = TimedUpdateTotalBalance()
+
+            self.update_balance_worker.moveToThread(
+                self.update_balance_thread
+            )
+            self.update_balance_worker.balance.connect(
+                self.update_balance
+            )
+            self.update_balance_worker.timer.timeout.connect(
+                self.update_balance_worker.work
+            )
+            self.update_balance_thread.started.connect(
+                lambda: self.update_balance_worker.timer.start(10000)
+            )
+            self.update_balance_thread.start()
 
             # Gas update Thread/Worker
             self._gas_th = QThread()
@@ -6150,6 +6814,7 @@ def main():
                         self.continue_add_coin_btn.setEnabled(True)
                     except Exception:
                         self.errlbl.show()
+                        print('err')
                         return
 
                 else:
@@ -6163,16 +6828,19 @@ def main():
                 icon=TigerWalletImage.plus
             )
 
-            def add_launch_coin():
-                t = Thread(target=self.add_coin)
-                t.start()
+            def launch_add_coin():
+                self.add_coin(
+                    self.coinname.text(),
+                    self.coinaddr.text(),
+                    self.coinsym.text()
+                )
 
             self.continue_add_coin_btn.setFixedSize(240, 62)
             self.continue_add_coin_btn.setIconSize(QSize(32, 32))
             self.continue_add_coin_btn.move(560, 500)
             self.continue_add_coin_btn.show()
             self.continue_add_coin_btn.setEnabled(False)
-            self.continue_add_coin_btn.clicked.connect(add_launch_coin)
+            self.continue_add_coin_btn.clicked.connect(launch_add_coin)
 
             self.close_add_coin_btn = QPushButton(
                 text="Close",
@@ -6386,21 +7054,23 @@ def main():
             self.rm_coin_cancel.setIconSize(QSize(32, 32))
             self.rm_coin_cancel.move(300, 608)
             self.rm_coin_cancel.show()
+
+            def cancel_rm_coin_btn_function():
+                self.table.clearSelection()
+                self.rm_coin_continue.close()
+                self.rm_coin_cancel.close()
+                self.uppermsg.close()
+                self.table.setSelectionMode(
+                    QtWidgets.QAbstractItemView.SelectionMode.NoSelection
+                )
+                self.thread.start()
+                self.add_coin_btn.show()
+                self.default_coin_btn.show()
+                self.del_coin_btn.show()
+                self.val.show()
+
             self.rm_coin_cancel.clicked.connect(
-                lambda: [
-                    self.table.clearSelection(),
-                    self.rm_coin_continue.close(),
-                    self.rm_coin_cancel.close(),
-                    self.uppermsg.close(),
-                    self.table.setSelectionMode(
-                        QtWidgets.QAbstractItemView.SelectionMode.NoSelection
-                    ),
-                    self.thread.start(),
-                    self.add_coin_btn.show(),
-                    self.default_coin_btn.show(),
-                    self.del_coin_btn.show(),
-                    self.val.show(),
-                ]
+                cancel_rm_coin_btn_function
             )
 
             self.rm_coin_continue = QPushButton(
@@ -8561,6 +9231,17 @@ def main():
                 ]
             )
 
+
+
+        def clear_main_table_contents(self):
+            sz = len(self.assets["name"])
+
+            [
+                self.table.takeItem(i, ii)
+                for i in range(sz + 1)
+                for ii in range(3)
+            ]
+
         # new in v1.3
         def black_out_window(self):
             self.button_box.hide()
@@ -8610,7 +9291,8 @@ def main():
             try:
                 with open(globalvar.nameofwallet, "r") as f:
                     Account.decrypt(
-                        json.load(f), password=self.unlock_wallet_pbox.text()
+                        json.load(f),
+                        self.unlock_wallet_pbox.text()
                     )
             except Exception:
                 errbox("Invalid password")
@@ -8630,6 +9312,10 @@ def main():
                     ":enabled {background-color: #eff1f3;}"
                     ":disabled {background-color: black;}"
                 )
+
+            self.button_box.show()
+            self.border.show()
+            self.lock_wallet_button.show()
 
             if self.tab == 0:
                 if self.donation_window_active:
@@ -9717,21 +10403,25 @@ def main():
                 json.dump(globalvar.configs, f, indent=4)
 
         # Update balance
-        def update_balance(self, num):
-            self.val.setText(num)
+        def update_balance(self, number):
+            num = rm_scientific_notation(number)
+            self.val.setText(f"Balance: ${str(num)}")
 
+            '''
             if self.val.text() == "No internet connection":
                 self.val.resize(550, +len(str(self.money)), 40)
                 self.val.move(444, 38)
+            '''
 
-            elif len(self.val.text() + str(self.money)) == 16:
+            if len(self.val.text() + str(self.money)) == 16:
                 self.val.resize(224 + len(str(self.money)), 40)
                 self.val.move(438, 38)
 
             else:
-                self.val.resize(474 + len(str(self.money)), 40)
+                self.val.resize(472 + len(str(self.money)), 40)
                 self.val.move(306, 38)
 
+        #
         def update_price(self):
             for pos in range(len(globalvar.assets_addr)):
                 item = QTableWidgetItem(
@@ -9748,37 +10438,40 @@ def main():
             )
 
         # Add coin function
-        def add_coin(self):
-            token_image(self.coinaddr.text())
+        def add_coin(self,
+            coin_name=None,
+            coin_address=None,
+            coin_symbol=None,
+            invoked_from_worker=False
+        ):
+            token_image(coin_address)
 
             with ThreadPoolExecutor() as pool:
-                contract = create_contract(self.coinaddr.text())
+                contract = create_contract(coin_address)
 
-                bal = pool.submit(
-                    contract.functions.balanceOf(self.address).call
-                ).result()
+                if not invoked_from_worker:
+                    bal = pool.submit(
+                        contract.functions.balanceOf(self.address).call
+                    ).result()
+
+                    bal = w3.from_wei(
+                        float(bal),
+                        'ether'
+                    )
+
+                    self.assets["value"].append(str(bal)[:17])
+                    globalvar.assets_addr.append(coin_address)
 
                 price = pool.submit(
-                    lambda: get_price(self.coinsym.text())
+                    lambda: get_price(coin_symbol)
                 ).result()
 
-                if price == "not found":
-                    errbox(
-                        'Cannot get price for '
-                        f" {self.coinname.text()} ({self.coinsym.text()})"
-                    )
-                    os.remove(
-                        globalvar.tokenimgfolder
-                        + f"{self.coinsym.text()}.png"
-                    )
+                if price == "N/A":
+                    price = 'N/A'
 
-                    return
-
-                globalvar.assets_addr.append(self.coinaddr.text())
-                self.assets["symbol"].append(self.coinsym.text().upper())
-                self.assets["value"].append(str(bal)[:17])
+                self.assets["symbol"].append(coin_symbol.upper())
                 self.assets["price"].append(price)
-                self.assets["name"].append(self.coinname.text().upper())
+                self.assets["name"].append(coin_name.upper())
 
                 sz = len(self.assets["name"])
 
@@ -9796,11 +10489,7 @@ def main():
             self.table.setRowCount(self.table.rowCount() + 1)
 
             # Clear table
-            [
-                self.table.takeItem(i, ii)
-                for i in range(sz + 1)
-                for ii in range(3)
-            ]
+            self.clear_main_table_contents()
 
             self.table.setItem(0, 0, QTableWidgetItem(" ETHER (ETH)"))
             self.table.setItem(0, 1, self.ethbal)
@@ -9886,42 +10575,84 @@ def main():
             self.table.resizeColumnsToContents()
             self.table.resizeRowsToContents()
 
-            self.coinaddr.close()
-            self.errlbl.close()
-            self.contractlbl.close()
-            self.coinname.close()
-            self.coinnamelbl.close()
-            self.coinsym.close()
-            self.coinsymlbl.close()
-            self.coindec.close()
-            self.coindeclbl.close()
-            self.continue_add_coin_btn.close()
-            self.close_add_coin_btn.close()
 
-            self.add_coin_btn.show()
-            self.del_coin_btn.show()
-            self.default_coin_btn.show()
-            self.table.show()
+
+            if not invoked_from_worker:
+                self.coinaddr.close()
+                self.errlbl.close()
+                self.contractlbl.close()
+                self.coinname.close()
+                self.coinnamelbl.close()
+                self.coinsym.close()
+                self.coinsymlbl.close()
+                self.coindec.close()
+                self.coindeclbl.close()
+                self.continue_add_coin_btn.close()
+                self.close_add_coin_btn.close()
+
+                self.add_coin_btn.show()
+                self.del_coin_btn.show()
+                self.default_coin_btn.show()
+                self.table.show()
 
         # Remove coin function
         def rm_coin(self):
             self.ind = self.table.selectionModel().selectedRows()
 
-            if len(self.ind) == 0:
+            amount_rows_selected = len(self.ind)
+
+            if amount_rows_selected == 0:
                 errbox("No coin was selected")
                 return
 
-            for i in range(0, len(self.ind)):
-                if " ETHER" in self.table.itemFromIndex(self.ind[i]).text():
-                    errbox("Ether cannot be removed")
-                    self.table.clearSelection()
-                    return
+            if 0 in self.ind:
+                errbox("Ether cannot be removed")
+                self.table.clearSelection()
+                return
+
+            # Get tokens' value(s)
+            removed_items_value = [
+                self.table.item(self.ind[i].row(), 1).text()
+                for i in range(amount_rows_selected)
+            ]
+
+            # Get tokens' price
+            removed_items_price = [
+                self.table.item(self.ind[i].row(), 2).text()
+                for i in range(amount_rows_selected)
+            ]
+
+            amount_to_deduct = [
+                float(amount)
+                * float(price) if not ' N/A' else 0.0
+                for amount in removed_items_value
+                for price in removed_items_price
+            ]
+
+            current_balance = float(
+                self.val.text()[10:len(self.val.text())]
+            )
+
+            for item in amount_to_deduct:
+                current_balance -= item
+
+            current_balance = rm_scientific_notation(
+                current_balance
+            )
+
+            self.val.setText(
+                f"Balance: ${current_balance}"
+            )
 
             # https://stackoverflow.com/questions/37786299/how-to-delete-row-rows-from-a-qtableview-in-pyqt
             for row in reversed(sorted(self.ind)):
                 self.table.removeRow(row.row())
                 del globalvar.assets_addr[row.row() - 1]
-                os.remove(globalvar.assets_details["image"][row.row() - 1])
+
+                try:
+                    os.remove(globalvar.assets_details["image"][row.row() - 1])
+                except FileNotFoundError:
+                    pass
 
             with open(globalvar.assets_json, "w") as f:
                 json.dump(
@@ -10215,8 +10946,6 @@ def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(TigerWalletImage.eth_img)
 
-    # app.setStyle('fusion')
-
     json_contents = {}
 
     with open(globalvar.conf_file, "r") as f:
@@ -10231,8 +10960,14 @@ def main():
         first = FirstWindow()
         first.show()
 
-    app.exec()
+    updates = CheckForUpdates(
+        'https://raw.githubusercontent.com/Serpenseth/'
+        + 'TigerWallet/refs/heads/main/pyproject.toml'
+    )
 
+    updates.show()
+
+    app.exec()
 
 if __name__ == "__main__":
     main()
