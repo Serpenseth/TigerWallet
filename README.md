@@ -64,7 +64,20 @@ pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
 
 ## Building
-To build TigerWallet straight from the `.git` folder, you will need the latest version of `setuptools`.
+To build TigerWallet straight from the `.git` folder, you will need the latest version of `build`.
+
+You can install it by issuing the following command:
+```
+pip install setuptools
+```
+If you already have `build` on your device, make sure that it's up to date by using:
+
+**Linux**
+```
+python3 -m pip install --upgrade build
+```
+
+Next you will need `setuptools`.
 
 You can install it by issuing the following command:
 ```
@@ -72,10 +85,11 @@ pip install setuptools
 ```
 If you already have `setuptools` on your device, make sure that it's up to date by using:
 
-**Linux/Mac**
+**Linux**
 ```
 python3 -m pip install --upgrade setuptools
 ```
+
 Next, you will need `python3-venv`:
 
 This is installed like any Linux package; i.e for `Debian`, you would use:
@@ -99,7 +113,7 @@ where `x.x` is the version that you have cloned (for example `cd /home/bob/Tiger
 
 Build the package using:
 
-**Linux/Mac**
+**Linux**
 ```
 python3 -m build .
 ```
