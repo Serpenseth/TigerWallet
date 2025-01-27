@@ -99,9 +99,8 @@ sudo apt install python3-venv
 
 Now use the `cd` command to change the directory to the TigerWallet folder that you've cloned, for example:
 ```
-cd pathtofolder/TigerWallet-x.x
+cd pathtofolder/TigerWallet
 ```
-where `x.x` is the version that you have cloned (for example `cd /home/bob/TigerWallet-1.0`)
 
 Build the package using:
 
