@@ -22,10 +22,13 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 **Features that are currently missing:**
 
 TigerWallet is currently missing the following features:
-1. Currently, it only supports Ethereum mainnet (changing in next update)
+1. Only supports Ethereum mainnet (changing in next update)
 2. No NFT support
-3. No ENS support (chaing in next update)
+3. No ENS support (changing in next update)
 4. No dApps and WalletConnect support
+5. No in-app swap
+6. No Buy/Sell tokens with fiat (from i.e Onramper)
+7. No in-app staking
 
 TigerWallet also comes in a prebuilt package for both Windows and Linux.
 
