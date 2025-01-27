@@ -101,6 +101,7 @@ Now use the `cd` command to change the directory to the TigerWallet folder that 
 ```
 cd pathtofolder/TigerWallet
 ```
+for example `cd pathtofolder/TigerWallet` would look like /home/bob/TigerWallet on Linux (your path will be different)
 
 Build the package using:
 
