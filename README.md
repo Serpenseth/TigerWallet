@@ -68,7 +68,7 @@ To build TigerWallet straight from the `.git` folder, you will need the latest v
 
 You can install it by issuing the following command:
 ```
-pip install setuptools
+pip install build
 ```
 If you already have `build` on your device, make sure that it's up to date by using:
 
