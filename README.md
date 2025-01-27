@@ -37,18 +37,10 @@ If you get an error, [click here for the fix](https://github.com/Serpenseth/Tige
 
 The appimage requires you to install dependencies before running it succesfully.
 
-# Installation
-
-The simplest way to install TigerWallet is to use:
-
-```
-pip install git+https://github.com/Serpenseth/TigerWallet.git
-```
-
-## OS-specific requirements
+# OS-specific requirements
 The items below are required in order to run TigerWallet
 
-### Linux
+## Linux
 1. `libxcb-cursor-dev`
 
 To install `libxcb-cursor-dev` on Debian, issue the following command:
@@ -57,13 +49,21 @@ sudo apt install libxcb-cursor-dev
 ```
 Adjust the above command to your distro.
 
-### Windows:
+## Windows:
 If you get the following error:
 >Visual C++ or Cython not installed
 
 You need to install [this packpage](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
-# Building
+# Installation
+
+The simplest way to install TigerWallet is to use:
+
+```
+pip install git+https://github.com/Serpenseth/TigerWallet.git
+```
+
+## Building
 To build TigerWallet straight from the `.git` folder, you will need the latest version of `setuptools`.
 
 You can install it by issuing the following command:
@@ -115,6 +115,7 @@ Next, install the package using:
 pip install .
 ```
 Done!
+
 
 # Running TigerWallet
 From the `command promp` or `terminal`, simple use:
