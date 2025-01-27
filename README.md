@@ -18,6 +18,7 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 
 5. TigerWallet runs on Windows, Linux, and Mac
 
+
 *Features that are currently missing*
 TigerWallet is currently missing the following features:
 1. Currently, it only supports Ethereum mainnet (changing in next update)
