@@ -6,7 +6,7 @@ TigerWallet is a non-custodial wallet, 100% built in Python, that aims to be use
 
 It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sent from/sent to TigerWallet.
 
-*Benefits of using TigerWallet*:
+**Benefits of using TigerWallet**:
 1. Non-custodial. You own your crypto assets. Your private key is stored on your device, and it is also encrypted. Your private key does not leave your device while using TigerWallet as well.
 
 2. Simple. The design choices were all geared towards simplicity.
@@ -19,7 +19,7 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 5. TigerWallet runs on Windows, Linux, and Mac
 
 
-*Features that are currently missing:*
+**Features that are currently missing:**
 
 TigerWallet is currently missing the following features:
 1. Currently, it only supports Ethereum mainnet (changing in next update)
