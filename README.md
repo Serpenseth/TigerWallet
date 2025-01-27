@@ -97,14 +97,6 @@ This is installed like any Linux package; i.e for `Debian`, you would use:
 sudo apt install python3-venv
 ```
 
-**Windows**
-```
-py -m pip install --upgrade setuptools
-```
-Finally, you will need `build`. This can be installed using:
-```
-pip install build
-```
 Now use the `cd` command to change the directory to the TigerWallet folder that you've cloned, for example:
 ```
 cd pathtofolder/TigerWallet-x.x
