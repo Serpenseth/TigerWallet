@@ -18,6 +18,13 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 
 5. TigerWallet runs on Windows, Linux, and Mac
 
+*Features that are currently missing*
+TigerWallet is currently missing the following features:
+1. Currently, it only supports Ethereum mainnet (changing in next update)
+2. No NFT support
+3. No ENS support (chaing in next update)
+4. No dApps and WalletConnect support
+
 TigerWallet also comes in a prebuilt package for both Windows and Linux.
 
 The Windows prebuilt package does not does not require you to install anything. Simple double click the .exe and it launches.
