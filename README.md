@@ -14,9 +14,10 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 3. Lightweight. TigerWallet barely comsumes any resources. It is very light, and easy to run.
 
 4. You can add any coin* that is listed on a centralized exhange.
-    * TigerWallet currently use an API that is free, and it only fetches the price from centralized exchanges.
+   * TigerWallet currently use an API that is free, and it only fetches the price from centralized exchanges.
 
-5. TigerWallet runs on Windows, Linux, and Mac
+5. TigerWallet runs on Windows, Linux, and Mac*
+   * In theory, it should work in Mac, too, but that has not been tested, yet
 
 
 **Features that are currently missing:**
