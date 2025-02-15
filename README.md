@@ -66,7 +66,7 @@ pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
 
 ## Building standalone executable
-To build an executable that does not require you to have any Python dependencies installed, you will need `pyinstaller`
+To build an executable you will need `pyinstaller`
 
 Install `pyinstaller` by using the following command:
 ```
@@ -83,6 +83,8 @@ You are now ready to build! Simply issue the following command:
 pyinstaller tigerwallet.py --onefile --add-data "images/:images" --add-data "images/token_images/*:images/token_images" --add-data "README.md:README.md" --add-data "LICENSE:LICENSE" -i "eth.ico" --windowed -n "tigerwallet-2.0-x86-64"
 ```
 The `-n` command gives the executable a name. Make sure you change the numbers `2.0` to the current version
+
+NOTE: On Linux, you still need to use `./tigerwallet-2.0-x86-64` to launch the program. Double clicking to launch the program is only available on Windows.
 
 Done!
 
