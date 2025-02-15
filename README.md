@@ -11,7 +11,7 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 
 2. Simple. The design choices were all geared towards simplicity.
 
-3. Lightweight. TigerWallet barely comsumes any resources. It is very light, and easy to run.
+3. Lightweight. TigerWallet barely comsumes any resources. It is quite light, and easy to run.
 
 4. You can add any coin* that is listed on a centralized exhange.
    * TigerWallet currently use an API that is free, and it only fetches the price from centralized exchanges.
@@ -67,8 +67,6 @@ pip install git+https://github.com/Serpenseth/TigerWallet.git
 
 ## Building standalone executable
 To build an executable that does not require you to have any Python dependencies installed, you will need `pyinstaller`
-
-First, download the source code either via `git clone`, or by downloading the source code as a zip.
 
 Install `pyinstaller` by using the following command:
 ```
