@@ -257,7 +257,6 @@ def main():
             self.local_path = os.path.dirname(__file__) + "/"
             self.imgfolder = self.local_path + "images/"
             self.tokenimgfolder = self.dest_path + "token_images/"
-            imgfolder = self.local_path + "token_images/"
 
             '''
             Token image folder gets moved from
@@ -266,20 +265,19 @@ def main():
             The 7 token images don't have to be downloaded anymore
             while the wallet is loading, which speeds up the loading time.
             '''
-            if (
-                not os.path.exists(self.tokenimgfolder)
-                and os.path.exists(imgfolder)
-            ):
+            if not os.path.exists(self.tokenimgfolder):
                 import shutil
 
                 try:
                     shutil.move(
-                        imgfolder,
+                        self.imgfolder + 'token_images/',
                         self.tokenimgfolder,
-                        copy_function=shutil.copytree
                     )
 
-                except Exception:
+                except Exception as e:
+                    print(e)
+
+
                     """
                     An instance of QApplication must be
                     active for messagebox to appear
@@ -644,7 +642,7 @@ def main():
 
             list_of_token_images = [
                 self.tokenimgfolder
-                + symbol
+                + symbol.lower()
                 + '.png'
                 for symbol in list_of_token_symbols
             ]
@@ -9592,6 +9590,9 @@ def main():
                         file_contents['name'][i].upper()
                         + f" ({file_contents['symbol'][i].upper()})"
                     )
+
+                    print(file_contents['image'][i])
+
                     self.to_droplist.setItemIcon(
                         i,
                         QIcon(file_contents['image'][i])
