@@ -26,10 +26,10 @@ TigerWallet is currently missing the following features:
 1. Only supports Ethereum mainnet (changing in next next update(sorry!))
 2. No NFT support
 ~~3. No ENS support (changing in next update)~~
-4. No dApps and WalletConnect support
+3. No dApps and WalletConnect support
 ~~5. No in-app swap~~
-6. No Buy/Sell tokens with fiat (from i.e Onramper)
-7. No in-app staking
+4. No Buy/Sell tokens with fiat (from i.e Onramper)
+5. No in-app staking
 
 TigerWallet also comes in a prebuilt package for both Windows and Linux.
 
