@@ -23,18 +23,18 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 **Features that are currently missing:**
 
 TigerWallet is currently missing the following features:
-1. Only supports Ethereum mainnet (changing in next update)
+1. Only supports Ethereum mainnet (changing in next next update(sorry!))
 2. No NFT support
-3. No ENS support (changing in next update)
+~~3. No ENS support (changing in next update)~~
 4. No dApps and WalletConnect support
-5. No in-app swap
+~~5. No in-app swap~~
 6. No Buy/Sell tokens with fiat (from i.e Onramper)
 7. No in-app staking
 
 TigerWallet also comes in a prebuilt package for both Windows and Linux.
 
 The Windows prebuilt package does not does not require you to install anything. Simple double click the .exe and it launches.
-If you get an error, [click here for the fix](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#windows)
+If you get an error, or nothing happens, [click here for the fix](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#windows)
 
 The appimage requires you to install dependencies before running it succesfully.
 
@@ -63,6 +63,29 @@ The simplest way to install TigerWallet is to use:
 ```
 pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
+
+## Building standalone executable
+To build an executable that does not require you to have any Python dependencies installed, you will need `pyinstaller`
+
+First, download the source code either via `git clone`, or by downloading the source code as a zip.
+
+Install `pyinstaller` by using the following command:
+```
+pip install pyinstaller
+```
+
+Next, use the `cd` command to change the directory to the folder you have downloaded (or extracted, if downloaded the zip file)
+```
+cd /path/to/folder
+```
+
+You are now ready to build! Simply issue the following command:
+```
+pyinstaller tigerwallet.py --onefile --add-data "images/*:images" --add-data "README.md:README.md" --add-data "LICENSE:LICENSE" -i "eth.ico" --windowed -n "tigerwallet-2.0-x86-64"
+```
+The `-n` command gives the executable a name. Make sure you change the numbers `2.0` to the current version
+
+Done!
 
 ## Building
 To build TigerWallet straight from the `.git` folder, you will need the latest version of `build`.
