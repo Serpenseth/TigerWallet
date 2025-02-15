@@ -82,7 +82,7 @@ cd /path/to/folder
 
 You are now ready to build! Simply issue the following command:
 ```
-pyinstaller tigerwallet.py --onefile --add-data "images/*:images" --add-data "images/token_images/*:token_images" --add-data "README.md:README.md" --add-data "LICENSE:LICENSE" -i "eth.ico" --windowed -n "tigerwallet-2.0-x86-64"
+pyinstaller tigerwallet.py --onefile --add-data "images/:images" --add-data "images/token_images/*:images/token_images" --add-data "README.md:README.md" --add-data "LICENSE:LICENSE" -i "eth.ico" --windowed -n "tigerwallet-2.0-x86-64"
 ```
 The `-n` command gives the executable a name. Make sure you change the numbers `2.0` to the current version
 
