@@ -9591,8 +9591,6 @@ def main():
                         + f" ({file_contents['symbol'][i].upper()})"
                     )
 
-                    print(file_contents['image'][i])
-
                     self.to_droplist.setItemIcon(
                         i,
                         QIcon(file_contents['image'][i])
