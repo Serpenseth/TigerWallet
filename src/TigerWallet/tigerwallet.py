@@ -53,6 +53,8 @@ from PyQt6.QtCore import QSize, QThread, QTimer, Qt, pyqtSignal
 # os stuff
 import os
 
+import sys
+
 # time.sleep
 import time
 
@@ -97,7 +99,9 @@ from io import BytesIO
 # Update-related
 import subprocess
 
-# ===Version2.0=== #
+# Move function
+import shutil
+
 def main():
     TigerWalletVersion = "2.0"
 
@@ -216,7 +220,6 @@ def main():
     # END    functions
 
     # Variables
-    # Updated in v2.0:
     class GlobalVariable:
         def __init__(self):
             self.dest_path = ""
@@ -255,29 +258,32 @@ def main():
                     quit()
 
             self.local_path = os.path.dirname(__file__) + "/"
-            self.imgfolder = self.local_path + "images/"
-            self.tokenimgfolder = self.dest_path + "token_images/"
+            self.imgfolder = self.dest_path + "images/"
+            self.tokenimgfolder = self.dest_path + "images/token_images/"
 
+            # Added in v2.1
             '''
-            Token image folder gets moved from
-            default location to the token folder location
+            Move the imgfolder from local path to app data folder.
 
-            The 7 token images don't have to be downloaded anymore
-            while the wallet is loading, which speeds up the loading time.
+            The previous versions had the folder stored in
+            the same directory as the TigerWallet script.
+            This was fine, until I realized that when you run
+            tigerwallet that was installed via pip install git+,
+            the images folder was stored in the python3 folder, which is
+            /home/$USER/.local/lib/python3.version/site-packages directory,
+            where $USER is the current user, and version is the python version
+
+            This is not the right way to do things.
             '''
-            if not os.path.exists(self.tokenimgfolder):
-                import shutil
-
+            if not os.path.exists(self.imgfolder):
                 try:
                     shutil.move(
-                        self.imgfolder + 'token_images/',
-                        self.tokenimgfolder,
+                        self.local_path + 'images/',
+                        self.imgfolder,
+                        copy_function=shutil.copytree
                     )
 
-                except Exception as e:
-                    print(e)
-
-
+                except Exception:
                     """
                     An instance of QApplication must be
                     active for messagebox to appear
@@ -286,7 +292,7 @@ def main():
 
                     errbox(
                         'Fatal error: Could not move '
-                        + 'TigerWallet token image folder.\n'
+                        + 'TigerWallet image folder.\n'
                         + "Make sure that you have write permissions"
                     )
 
@@ -330,7 +336,7 @@ def main():
                 with open(self.conf_file, "r") as f:
                     self.configs = json.load(f)
 
-                    # If version is out of date, update it
+                    # If version is out of date, we close the file and update it
                     if self.configs['version'] != TigerWalletVersion:
                         f.close()
 
@@ -4446,14 +4452,10 @@ def main():
             self.parent = parent
 
             if os.name == 'nt':
-                self.extract_path = (
-                    f"C:\\Users\\{prog.current_usr}\\"
-                )
+                self.extract_path = f"C:\\Users\\{prog.current_usr}\\"
 
             else:
-                self.extract_path = (
-                    f"/home/{prog.current_usr}/"
-                )
+                self.extract_path = f"/home/{prog.current_usr}/"
 
         def work(self):
             self.dl_prog.emit(0)
@@ -4545,6 +4547,51 @@ def main():
 
                         self.is_finished.emit(True)
 
+            # Ran via appimage
+            elif self.method_of_execution == 'appimage-executable':
+                ver = self.version
+                tigerwallet_executable_file = \
+                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-x86-64.AppImage"
+
+                dl_executable_link = (
+                    'https://github.com/Serpenseth/'
+                    + 'TigerWallet/releases/download/'
+                    + tigerwallet_executable_file
+                    + '.AppImage'
+                )
+
+                with open(
+                    self.extract_path
+                    + f"tigerwallet-{self.version}-x86-64.AppImage",
+                    mode='wb'
+                ) as exe_file:
+                    # Download the file as a stream
+                    downloaded_executable = s.get(
+                        url=dl_executable_link,
+                        stream=True
+                    )
+
+                    self.size = int(
+                        downloaded_executable.headers.get(
+                            'content-length'
+                        )
+                    )
+
+                    self.parent.total_file_size = self.size
+                    self.parent.bar.setRange(
+                        0,
+                        self.size
+                    )
+
+                    for data in downloaded_executable.iter_content(
+                        chunk_size=4096
+                    ):
+                        dl += len(data)
+                        exe_file.write(data)
+                        self.dl_prog.emit(dl)
+
+                    self.is_finished.emit(True)
+
             # Ran via py/python
             elif self.method_of_execution == 'python-command':
                 dl_link = 'https://github.com/Serpenseth/TigerWallet'
@@ -4610,7 +4657,6 @@ def main():
             self.local_path = prog.local_path
             self.execution_method = self.__how_is_tigerwallet_running()
             self.total_file_size = 0
-
             self.init_self()
 
             self.init_loading_label()
@@ -4652,20 +4698,19 @@ def main():
             if '_MEI' in self.local_path:
                 return 'pyinstaller-executable'
 
-            if os.name == "nt":
-                if 'AppData\\Local' in self.local_path:
-                    return 'pip-install-executable'
+            elif '/tmp/.mount' in self.local_path:
+                return 'appimage-executable'
+
+            elif (
+                'AppData\\Local' in self.local_path
+                or 'site-packages' in self.local_path
+            ):
+                return 'pip-install-executable'
 
             return 'python-command'
 
         def check_if_update_is_available(self):
-            data = s.get(url=self.url)
-            data = data.text.split()
-
-            github_version = ' '.join(data[11 : 14])
-            github_version = float(github_version[11 : 14])
-
-            if float(self.current_version) < github_version:
+            if float(self.current_version) < self.github_version:
                 resp = questionbox(
                     'A new update is available. '
                     + 'Install now?'
@@ -4701,6 +4746,11 @@ def main():
             align_to_center(self)
             add_round_corners(self, 32)
 
+            self.data = s.get(url=self.url)
+            self.data = self.data.text.split()
+            self.github_version = ' '.join(self.data[11 : 14])
+            self.github_version = float(self.github_version[11 : 14])
+
         def init_progressbar(self):
             self.bar = QProgressBar(self)
             self.bar.resize(420, 12)
@@ -4726,11 +4776,23 @@ def main():
             self.label2.move(0, 220)
 
         def emit_progress(self, n):
-            if n == 0:
-                num = 0
+            num = 0
 
-            else:
-                num = (float(n) / float(self.total_file_size)) * 100.0
+            if (
+                self.execution_method != 'pip-install-executable'
+                and self.execution_method != 'python-command'
+            ):
+                if n <= 0:
+                    num = 0
+
+                else:
+                    num = (
+                        (
+                            float(n)
+                            / float(self.total_file_size)
+                        )
+                        * 100.0
+                    )
 
             self.label2.setText(
                 f"{str(int(num))} %"
@@ -4739,7 +4801,9 @@ def main():
             self.bar.setValue(n)
 
         def download_update(self):
-            ver = 'v' + self.current_version
+            ver = 'v' + str(self.github_version)
+
+            print(self.execution_method)
 
             # Using pyinstaller
             if self.execution_method == 'pyinstaller-executable':
@@ -4758,11 +4822,25 @@ def main():
                                 + f"tigerwallet-{ver}-x86-64.exe",
                             )
 
+                            subprocess.run(
+                                [
+                                    f"/home/{prog.current_usr}/"
+                                    f"tigerwallet-{ver}-x86-64.exe"
+                                ]
+                            )
+
                         else:
                             msgbox(
                                 'New version downloaded to path: '
                                 + f"/home/{prog.current_usr}/"
                                 + f"tigerwallet-{ver}-x86-64.",
+                            )
+
+                            subprocess.run(
+                                [
+                                    f"/home/{prog.current_usr}/"
+                                    f"tigerwallet-{ver}-x86-64"
+                                ]
                             )
 
                         self.thread.quit()
@@ -4772,6 +4850,35 @@ def main():
 
                         self.close()
                         self.deleteLater()
+
+                self.duw.moveToThread(self.thread)
+                self.duw.dl_prog.connect(self.emit_progress)
+                self.duw.is_finished.connect(is_done)
+                self.thread.started.connect(self.duw.work)
+                self.thread.start()
+
+            # Using AppImage
+            elif self.execution_method == 'appimage-executable':
+                self.duw = DownloadUpdateWorker(
+                    parent=self,
+                    method_of_execution='appimage-executable',
+                    version=ver
+                )
+
+                def is_done(res):
+                    msgbox(
+                        'New version downloaded to path: '
+                        + f"/home/{prog.current_usr}/"
+                        + f"tigerwallet-{ver}-x86-64.AppImage",
+                    )
+
+                    self.thread.quit()
+                    self.duw.quit()
+                    self.thread.deleteLater()
+                    self.duw.deleteLater()
+
+                    self.close()
+                    self.deleteLater()
 
                 self.duw.moveToThread(self.thread)
                 self.duw.dl_prog.connect(self.emit_progress)
@@ -13341,8 +13448,6 @@ def main():
             self.del_coin_btn.show()
             self.tab = 0
             self.btn_showhide.show()
-
-    import sys
 
     # Underlying root
     app = QApplication(sys.argv)
