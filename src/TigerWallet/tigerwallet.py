@@ -103,7 +103,7 @@ import subprocess
 import shutil
 
 def main():
-    TigerWalletVersion = "2.0"
+    TigerWalletVersion = "2.1"
 
     s = requests.Session()
     s.mount(
@@ -4462,7 +4462,7 @@ def main():
             self.is_finished.emit(False)
             dl = 0
 
-            # Ran via pyinstaller's exe
+            # Ran via pyinstaller's executable
             if self.method_of_execution == 'pyinstaller-executable':
                 ver = self.version
                 tigerwallet_executable_file = \
@@ -4478,7 +4478,7 @@ def main():
 
                     with open(
                         self.extract_path
-                        + f"tigerwallet-{self.version}-x86-64.exe",
+                        + f"tigerwallet-{ver[1:len(ver)]}-x86-64.exe",
                         mode='wb'
                     ) as exe_file:
                         # Download the file as a stream
@@ -4517,7 +4517,7 @@ def main():
 
                     with open(
                         self.extract_path
-                        + f"tigerwallet-{self.version}-x86-64",
+                        + f"tigerwallet-{ver[1:len(ver)]}-x86-64",
                         mode='wb'
                     ) as file_:
                         # Download the file as a stream
@@ -4551,7 +4551,7 @@ def main():
             elif self.method_of_execution == 'appimage-executable':
                 ver = self.version
                 tigerwallet_executable_file = \
-                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-x86-64.AppImage"
+                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-x86-64"
 
                 dl_executable_link = (
                     'https://github.com/Serpenseth/'
@@ -4607,7 +4607,7 @@ def main():
                     self.parent.bar.setRange(0, 0)
 
                     for data in zipped_dl.iter_content(
-                        chunk_size=1024
+                        chunk_size=4096
                     ):
                         dl += len(data)
                         zip_.write(data)
@@ -4803,8 +4803,6 @@ def main():
         def download_update(self):
             ver = 'v' + str(self.github_version)
 
-            print(self.execution_method)
-
             # Using pyinstaller
             if self.execution_method == 'pyinstaller-executable':
                 self.duw = DownloadUpdateWorker(
@@ -4819,13 +4817,13 @@ def main():
                             msgbox(
                                 'New version downloaded to path: '
                                 + f"C:\\Users\\{prog.current_usr}\\"
-                                + f"tigerwallet-{ver}-x86-64.exe",
+                                + f"tigerwallet-{ver[1 : len(ver)]}-x86-64.exe",
                             )
 
                             subprocess.run(
                                 [
                                     f"/home/{prog.current_usr}/"
-                                    f"tigerwallet-{ver}-x86-64.exe"
+                                    f"tigerwallet-{ver[1 : len(ver)]}-x86-64.exe"
                                 ]
                             )
 
@@ -4833,13 +4831,23 @@ def main():
                             msgbox(
                                 'New version downloaded to path: '
                                 + f"/home/{prog.current_usr}/"
-                                + f"tigerwallet-{ver}-x86-64.",
+                                + f"tigerwallet-{ver[1 : len(ver)]}-x86-64",
                             )
 
+                            # Make it executable
+                            subprocess.run(
+                                [
+                                    'chmod',
+                                    '+x',
+                                    f"tigerwallet-{ver[1 : len(ver)]}-x86-64"
+                                ]
+                            )
+
+                            # Launch the updated version
                             subprocess.run(
                                 [
                                     f"/home/{prog.current_usr}/"
-                                    f"tigerwallet-{ver}-x86-64"
+                                    f"tigerwallet-{ver[1 : len(ver)]}-x86-64"
                                 ]
                             )
 
@@ -4866,19 +4874,27 @@ def main():
                 )
 
                 def is_done(res):
-                    msgbox(
-                        'New version downloaded to path: '
-                        + f"/home/{prog.current_usr}/"
-                        + f"tigerwallet-{ver}-x86-64.AppImage",
-                    )
+                    if res:
+                        msgbox(
+                            'New version downloaded to path: '
+                            + f"/home/{prog.current_usr}/"
+                            + f"tigerwallet-{ver[1 : len(ver)]}-x86-64.AppImage",
+                        )
 
-                    self.thread.quit()
-                    self.duw.quit()
-                    self.thread.deleteLater()
-                    self.duw.deleteLater()
+                        self.thread.quit()
+                        self.duw.quit()
+                        self.thread.deleteLater()
+                        self.duw.deleteLater()
 
-                    self.close()
-                    self.deleteLater()
+                        self.close()
+                        self.deleteLater()
+
+                        subprocess.run(
+                            [
+                                f"/home/{prog.current_usr}/"
+                                f"tigerwallet-{ver[1 : len(ver)]}-x86-64.AppImage"
+                            ]
+                        )
 
                 self.duw.moveToThread(self.thread)
                 self.duw.dl_prog.connect(self.emit_progress)
