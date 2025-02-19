@@ -1,12 +1,10 @@
-# TigerWallet
-
 What is TigerWallet?
 
-TigerWallet is a non-custodial wallet, 100% built in Python, that aims to be user-friendly, minimalistic, and easy to use.
+TigerWallet is a non-custodial wallet, built in Python, that aims to be user-friendly, minimalistic, and easy to use.
 
-It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sent from/sent to TigerWallet.
+It currently supports the Ethereum mainnet, meaning that most* Ethereum tokens can be sent from/sent to TigerWallet.
 
-**Benefits of using TigerWallet**:
+**Pros of using TigerWallet**:
 1. Non-custodial. You own your crypto assets. Your private key is stored on your device, and it is also encrypted. Your private key does not leave your device while using TigerWallet as well.
 
 2. Simple. The design choices were all geared towards simplicity.
@@ -14,146 +12,176 @@ It operates on the Ethereum mainnet, meaning that most* ERC-20 tokens can be sen
 3. Lightweight. TigerWallet barely comsumes any resources. It is quite light, and easy to run.
 
 4. You can add any coin* that is listed on a centralized exhange.
-   * TigerWallet currently use an API that is free, and it only fetches the price from centralized exchanges.
+   * TigerWallet currently uses an API that is free, and it only fetches the price from centralized exchanges.
 
 5. TigerWallet runs on Windows, Linux, and Mac*
    * In theory, it should work in Mac, too, but that has not been tested, yet
 
 
-**Features that are currently missing:**
-
-TigerWallet is currently missing the following features:
-1. Only supports Ethereum mainnet (changing in next next update(sorry!))
+**Cons of using TigerWallet**:
+1. Only supports Ethereum mainnet
 2. No NFT support
 3. No dApps and WalletConnect support
 4. No Buy/Sell tokens with fiat (from i.e Onramper)
 5. No in-app staking
+6. No QR code scanning
    
 ~~No ENS support (changing in next update)~~   
 ~~No in-app swap~~
 
-TigerWallet also comes in a prebuilt package for both Windows and Linux.
+# Requirements for running TigerWallet
+TigerWallet requires `python3`. 
 
-The Windows prebuilt package does not does not require you to install anything. Simple double click the .exe and it launches.
-If you get an error, or nothing happens, [click here for the fix](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#windows)
-
-The appimage requires you to install dependencies before running it succesfully.
-
-# OS-specific requirements
-The items below are required in order to run TigerWallet
+Windows users can get python from the official [python website](https://www.python.org/downloads/windows/)
+Mac users can get the installer from the official [python website](https://www.python.org/downloads/macos/)
 
 ## Linux
-1. `libxcb-cursor-dev`
+Linux these days typically comes bundled with `python3` out of the box. You can check if you have `python3` by using the following command:
+```
+which python3
+```
+If nothing is written to the terminal, then you need to install `python3`
 
-To install `libxcb-cursor-dev` on Debian, issue the following command:
+Install it using your distro's package manager, for example:
+Ubuntu/Debian users install `python3` by issuing the following command:
+```
+sudo apt install python3
+```
+
+Ubuntu/Debian users require the following package to be installed: `libxcb-cursor-dev`
+Install it using:
 ```
 sudo apt install libxcb-cursor-dev
 ```
-Adjust the above command to your distro.
-
-## Windows:
-If you get the following error:
->Visual C++ or Cython not installed
-
-You need to install [this packpage](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
 # Installation
 
-The simplest way to install TigerWallet is to use:
-
+TigerWallet is installed using:
 ```
 pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
 
-## Building standalone executable
-To build an executable you will need `pyinstaller`
+TigerWallet also includes a traditional Windows installer (which can be found [here](https://github.com/Serpenseth/TigerWallet/releases))
 
-Install `pyinstaller` by using the following command:
-```
-pip install pyinstaller
-```
+# Building from source code
+In order to build TigerWallet, you will to install a few requirements
 
-Next, use the `cd` command to change the directory to the folder you have downloaded (or extracted, if downloaded the zip file)
-```
-cd /path/to/folder
-```
-
-You are now ready to build! Simply issue the following command:
-```
-pyinstaller tigerwallet.py --onefile --add-data "images/:images" --add-data "images/token_images/*:images/token_images" --add-data "README.md:README.md" --add-data "LICENSE:LICENSE" -i "eth.ico" --windowed -n "tigerwallet-2.0-x86-64"
-```
-The `-n` command gives the executable a name. Make sure you change the numbers `2.0` to the current version
-
-NOTE: On Linux, you still need to use `./tigerwallet-2.0-x86-64` to launch the program. Double clicking to launch the program is only available on Windows.
-
-Done!
-
-## Building
-To build TigerWallet straight from the `.git` folder, you will need the latest version of `build`.
-
-You can install it by issuing the following command:
-```
-pip install build
-```
-If you already have `build` on your device, make sure that it's up to date by using:
-
-**Linux**
-```
-python3 -m pip install --upgrade build
-```
-
-Next you will need `setuptools`.
-
-You can install it by issuing the following command:
+## Build requirements
+1. You will need to install `setuptools`, which is installed by issuing the following command:
 ```
 pip install setuptools
 ```
-If you already have `setuptools` on your device, make sure that it's up to date by using:
 
-**Linux**
+2. You will need `build`, which is installed by issuing the following command:
 ```
-python3 -m pip install --upgrade setuptools
-```
-
-Next, you will need `python3-venv`:
-
-This is installed like any Linux package; i.e for `Debian`, you would use:
-```
-sudo apt install python3-venv
+pip install build
 ```
 
-Now use the `cd` command to change the directory to the TigerWallet folder that you've cloned, for example:
-```
-cd pathtofolder/TigerWallet
-```
-for example `cd pathtofolder/TigerWallet` would look like /home/bob/TigerWallet on Linux (your path will be different)
+3. Optional. You will need `git` if you don't want to download the source code as a `zip`.
 
-Build the package using:
+Windows users: download and install `git` from the [official website](https://git-scm.com/downloads/win)
+Linux users: install `git` by following the instructions from [official website](https://git-scm.com/downloads/linux)
+Mac users: install `git` by following the instructions from [official website](https://git-scm.com/downloads/mac)
 
+
+### Installation
+Once you have the above requirements, you are ready to install TigerWallet
+
+1. Use `git` to download the source code. This is done by issuing the following command:
+```
+git clone https://github.com/Serpenseth/TigerWallet.git
+```
+2. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
+
+**Linux/mac users**, issue the following command to change directories
+```
+cd ~/TigerWallet
+```
+**Windows users**, issue the following command to change directories
+```
+cd %userprofile%\\TigerWallet
+```
+
+3. Issue the following command to build the installer files:
+
+**Windows users**
+```
+py -m build .
+```
 **Linux**
 ```
 python3 -m build .
 ```
 
-**Windows**
-```
-py -m build .
-```
-This will build the package.
-
-Next, install the package using:
+4. Issue the following command to install TigerWallet:
 ```
 pip install .
 ```
-Done!
 
-
-# Running TigerWallet
-From the `command promp` or `terminal`, simple use:
+To run tigerwallet, execute the following command:
 ```
 tigerwallet
 ```
-to run the program. That's it! Now tigerwallet will launch, and you're ready to use it.
+
+# Building the executables
+To build the executables, you will need `pyinstaller`
+
+1. Install `pyinstaller` by using the following command:
+```
+pip install pyinstaller
+```
+
+2. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
+
+**Linux/mac users**, issue the following command to change directories
+```
+cd ~/TigerWallet
+```
+**Windows users**, issue the following command to change directories
+```
+cd %userprofile%\\TigerWallet
+```
+
+3. Issue the following command to build tigerwallet
+```
+pyinstaller tigerwallet.py --onefile --add-data "images/:images" --add-data "images/token_images/*:images/token_images" --add-data "README.md:README.md" --add-data "LICENSE:LICENSE" -i "eth.ico" --windowed -n "tigerwallet-2.1-x86-64"
+```
+The `-n` command gives the executable a name. Make sure you change the numbers `2.1` to the current version
+
+## Running the executables
+To run tigerwallet, double click the executable
+
+# Building the .exe installer
+
+The steps required to build the installer are tedious, unfortunately.
+This section is for **windows** only.
+
+## Build requirements
+1. Install `nsis` from the [official website](https://nsis.sourceforge.io/Download)
+2. Install `pynsist` by using the following command:
+```
+pip install pynsist
+```
+3. Use `git` to download the source code. This is done by issuing the following command:
+```
+git clone https://github.com/Serpenseth/TigerWallet.git
+```
+4. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
+```
+cd %userprofile%\\TigerWallet
+```
+5. Issue the following command to build the installer
+```
+pynsist pytest.cfg
+```
+6. Copy the `installer.nsi` file, and paste it into the following directory
+```
+cd %userprofile%\\TigerWallet\\build\\nsis
+```
+Overwrite the file that is already there
+7. Right-click the `installer.nsi` file, and select `Compile NSIS Script`
+
+You will now have the same installer as in the release section of TigerWallet
 
 # Contact
 All comments are welcome!
