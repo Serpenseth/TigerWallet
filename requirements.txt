@@ -1,7 +1,7 @@
 eth_account==0.13.4
 hexbytes==1.2.1
 mnemonic==0.21
-numpy==2.2.3
+numpy==1.26.4
 orjson==3.10.15
 psutil==5.9.0
 PyQt6==6.8.1
