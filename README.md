@@ -33,6 +33,7 @@ It currently supports the Ethereum mainnet, meaning that most* Ethereum tokens c
 TigerWallet requires `python3`. 
 
 Windows users can get python from the official [python website](https://www.python.org/downloads/windows/)
+
 Mac users can get the installer from the official [python website](https://www.python.org/downloads/macos/)
 
 Once you have `python3`, you will need to install the dependencies. 
@@ -58,6 +59,12 @@ Ubuntu/Debian users require the following package to be installed: `libxcb-curso
 Install it using:
 ```
 sudo apt install libxcb-cursor-dev
+```
+
+Once you have `python3`, you will need to install the dependencies. 
+This is done by using the following command:
+```
+pip install -r requirements.txt
 ```
 
 # Installation
