@@ -36,12 +36,6 @@ Windows users can get python from the official [python website](https://www.pyth
 
 Mac users can get the installer from the official [python website](https://www.python.org/downloads/macos/)
 
-Once you have `python3`, you will need to install the dependencies. 
-This is done by using the following command:
-```
-pip install -r requirements.txt
-```
-
 ## Linux
 Linux these days typically comes bundled with `python3` out of the box. You can check if you have `python3` by using the following command:
 ```
@@ -59,12 +53,6 @@ Ubuntu/Debian users require the following package to be installed: `libxcb-curso
 Install it using:
 ```
 sudo apt install libxcb-cursor-dev
-```
-
-Once you have `python3`, you will need to install the dependencies. 
-This is done by using the following command:
-```
-pip install -r requirements.txt
 ```
 
 # Installation
@@ -198,7 +186,13 @@ You will now have the same installer as in the release section of TigerWallet
 
 # Troubleshoot
 
-If you double-click the `.AppImage`, and nothing happens, please read [this section](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#linux)
+1. If you double-click the `.AppImage` or the executable and nothing happens, please read [this section](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#linux)
+
+2. You might be missing dependencies.
+This is done by using the following command:
+```
+pip install -r requirements.txt
+```
 
 
 # Contact
