@@ -35,6 +35,12 @@ TigerWallet requires `python3`.
 Windows users can get python from the official [python website](https://www.python.org/downloads/windows/)
 Mac users can get the installer from the official [python website](https://www.python.org/downloads/macos/)
 
+Once you have `python3`, you will need to install the dependencies. 
+This is done by using the following command:
+```
+pip install -r requirements.txt
+```
+
 ## Linux
 Linux these days typically comes bundled with `python3` out of the box. You can check if you have `python3` by using the following command:
 ```
@@ -182,6 +188,11 @@ Overwrite the file that is already there
 7. Right-click the `installer.nsi` file, and select `Compile NSIS Script`
 
 You will now have the same installer as in the release section of TigerWallet
+
+# Troubleshoot
+
+If you double-click the `.AppImage`, and nothing happens, please read [this section](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#linux)
+
 
 # Contact
 All comments are welcome!
