@@ -1,2 +1,2 @@
-include src/TigerWallet/images/*
-include src/TigerWallet/.env
+include images/*
+include images/token_images/*
