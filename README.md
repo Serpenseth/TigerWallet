@@ -190,7 +190,7 @@ You will now have the same installer as in the release section of TigerWallet
 1. If you double-click the `.AppImage` or the executable and nothing happens, please read [this section](https://github.com/Serpenseth/TigerWallet?tab=readme-ov-file#linux)
 
 2. You might be missing dependencies.
-This is done by using the following command:
+Install them using the following command:
 ```
 pip install -r requirements.txt
 ```
