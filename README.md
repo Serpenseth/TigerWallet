@@ -180,6 +180,7 @@ pynsist pytest.cfg
 cd %userprofile%\\TigerWallet\\build\\nsis
 ```
 Overwrite the file that is already there
+
 7. Right-click the `installer.nsi` file, and select `Compile NSIS Script`
 
 You will now have the same installer as in the release section of TigerWallet
