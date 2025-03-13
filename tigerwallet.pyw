@@ -70,7 +70,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 from requests.adapters import HTTPAdapter
 
-# JSON and ORSON
+# JSON and ORJSON
 import json
 import orjson
 
@@ -103,7 +103,7 @@ import subprocess
 import shutil
 
 def main():
-    TigerWalletVersion = "2.1"
+    TigerWalletVersion = "3.0"
 
     s = requests.Session()
     s.mount(
@@ -217,7 +217,19 @@ def main():
         windowframegeo.moveCenter(centerpos)
         window.move(windowframegeo.topLeft())
 
-    # END    functions
+    def fix_white_borders(comboboxes: list, theme='dark') -> None:
+        if theme == 'dark':
+            for item in comboboxes:
+                item.view().parentWidget().setStyleSheet(
+                    'background-color: #0a0f18;'
+                )
+
+        elif theme == 'light':
+            for item in comboboxes:
+                item.view().parentWidget().setStyleSheet(
+                    'background-color: #eff1f3;'
+                )
+    # END functions
 
     # Variables
     class GlobalVariable:
@@ -309,7 +321,8 @@ def main():
                 "version": TigerWalletVersion,
                 "wallets": [],
                 "rpc": {
-                    'eth': "https://ethereum-rpc.publicnode.com"
+                    'eth': "https://ethereum-rpc.publicnode.com",
+                    'base': 'https://base-pokt.nodies.app'
                 },
                 "currency": "USD",
                 "theme": "default_dark",
@@ -320,7 +333,7 @@ def main():
                 not os.path.exists(self.conf_file)
                 or os.stat(self.conf_file).st_size == 0
                 or not 'play_loading_gif' in json.load(
-                    open(self.conf_file, 'r')
+                    open(self.conf_file, mode='r')
                 )
             ):
                 # Create conf.json file if it doesn't exist
@@ -352,6 +365,36 @@ def main():
             # New in v.2.0
             self.chain = 'eth'
 
+            # Default addresses
+            self.addresses = {
+                'eth': [
+                    # DAI
+                    "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+                    # USDT
+                    "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                    # USDC
+                    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                    # BNB
+                    "0xB8c77482e45F1F44dE1745F52C74426C631bDD52",
+                    # POL (formerly MATIC)
+                    "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
+                    # PEPE
+                    "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+                    # SHIB
+                    "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
+                ],
+                'base': [
+                    # DAI
+                    '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+                    # USDC
+                    '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+                    # BRETT
+                    '0x532f27101965dd16442E59d40670FaF5eBB142E4',
+                    # TOSHI
+                    '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4'
+                ]
+            }
+
             # New in v2.0
             self.default_symbols = {
                 'eth': {
@@ -363,6 +406,14 @@ def main():
                         'pol',
                         'pepe',
                         'shib'
+                    ]
+                },
+                'base': {
+                    'symbol': [
+                        'dai',
+                        'usdc',
+                        'brett',
+                        'toshi'
                     ]
                 }
             }
@@ -379,285 +430,509 @@ def main():
                         'pepe',
                         'shiba inu'
                     ]
+                },
+                'base': {
+                    'name': [
+                        'dai stablecoin',
+                        'usd coin',
+                        'brett',
+                        'toshi'
+                    ]
                 }
             }
 
             # New in v2.0
             self.eth_token_images = [
-                self.tokenimgfolder + symbol + '.png'
+                (
+                    self.tokenimgfolder
+                    + symbol
+                    + '.png'
+                )
                 for symbol in self.default_symbols['eth']['symbol']
             ]
 
-            # New in v2.0
-            self.eth_price = '0.0'
-
-            # New in v2.0
-            self.eth_amount = '0.0'
-
-            # Default addresses
-            self.addresses = {
-                'eth': {
-                    'address': [
-                        # DAI
-                        "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-                        # USDT
-                        "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-                        # USDC
-                        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                        # BNB
-                        "0xB8c77482e45F1F44dE1745F52C74426C631bDD52",
-                        # POL (formerly MATIC)
-                        "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
-                        # PEPE
-                        "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
-                        # SHIB
-                        "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
-                    ]
-                }
-            }
+            self.base_token_images = [
+                (
+                    self.tokenimgfolder
+                    + symbol
+                    + '.png'
+                )
+                for symbol in self.default_symbols['base']['symbol']
+            ]
 
             self.asset_default = {
                 'eth': {
-                    "address": self.addresses['eth']['address'],
+                    "address": self.addresses['eth'],
                     "name": self.token_names['eth']['name'],
                     "symbol": self.default_symbols['eth']['symbol'],
                     "image": self.eth_token_images
+                },
+                'base': {
+                    "address": self.addresses['base'],
+                    "name": self.token_names['base']['name'],
+                    "symbol": self.default_symbols['base']['symbol'],
+                    "image": self.base_token_images
                 }
             }
 
             self.asset = self.asset_default
             self.assets_json =  self.dest_path + "assets.json"
 
+            if (
+                not os.path.exists(self.assets_json)
+                or os.stat(self.assets_json).st_size == 0
+                # Older asset file
+                or not isinstance(
+                    json.load(
+                        open(self.assets_json, mode='r')
+                    ),
+                    dict,
+                )
+            ):
+                with open(self.assets_json, mode='w') as f:
+                    json.dump(
+                        obj=self.asset,
+                        fp=f,
+                        indent=4
+                    )
+
+            else:
+                with open(self.assets_json, mode='rb') as f:
+                    self.asset = orjson.loads(f.read())
+
             # New in v2.0
-            list_of_tokens_raw = [
-                # stETH
-                '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
-                # WBTC
-                '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-                # LINK
-                '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-                # wstETH
-                '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
-                # LEO
-                '0x2AF5D2aD76741191D15Dfe7bF6aC92d4Bd912Ca3',
-                # WETH
-                '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-                # USDS
-                '0xdC035D45d973E3EC169d2276DDab16f1e407384F',
-                # USDe
-                '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3',
-                # UNI
-                '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-                # OM
-                '0x3593D125a4f7849a1B059E64F4517A86Dd60c95d',
-                # weETH
-                '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
-                # ONDO
-                '0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3',
-                # PEPE
-                '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
-                # CAKE
-                '0x152649eA73beAb28c5b49B26eb48f7EAD6d4c898',
-                # AAVE
-                '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
-                # stkAAVE
-                '0x4da27a545c0c5B758a6BA100e3a049001de870f5',
-                # ENA
-                '0x57e114B691Db790C35207b2e685D4A43181e6061',
-                # DAI
-                '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-                # VIRTUAL
-                '0x44ff8620b8cA30902395A7bD3F2407e1A091BF73',
-                # WLD
-                '0x163f8C2467924be0ae7B5347228CABF260318753',
-                # XCN
-                '0xA2cd3D43c775978A96BdBf12d733D5A1ED94fb18',
-                # FLOKI
-                '0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E',
-                # ARKM
-                '0x6E2a43be0B1d33b726f0CA3b8de60b3482b8b050',
-                # SAND
-                '0x3845badAde8e6dFF049820680d1F14bD3903a5d0',
-                # MNT
-                '0x3c3a81e81dc49A522A592e7622A7E711c06bf354',
-                # EIGEN
-                '0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83',
-                # PENDLE
-                '0x808507121B80c02388fAd14726482e061B8da827',
-                # WFIL
-                '0x6e1A19F235bE7ED8E3369eF73b196C07257494DE',
-                # ARB
-                '0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1',
-                # FET
-                '0xaea46A60368A7bD060eec7DF8CBa43b7EF41Ad85',
-                # CRV
-                '0xD533a949740bb3306d119CC777fa900bA034cd52',
-                # FDUSD
-                '0xc5f0f7b66764F6ec8C8Dff7BA683102295E16409',
-                # ATOM
-                '0x8D983cb9388EaC77af0474fA441C4815500Cb7BB',
-                # INJ
-                '0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30',
-                # LDO
-                '0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32',
-                # MOVE
-                '0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073',
-                # BONK
-                '0x1151CB3d861920e07a38e03eEAd12C32178567F6',
-                # SPX6900
-                '0xE0f63A424a4439cBE457D80E4f4b51aD25b2c56C',
-                # MOG
-                '0xaaeE1A9723aaDB7afA2810263653A34bA2C21C7a',
-                # BABYDOGE
-                '0xac57de9c1a09fec648e93eb98875b212db0d460b',
-                # TURBO
-                '0xa35923162c49cf95e6bf26623385eb431ad920d3',
-                # MEME
-                '0xb131f4a55907b10d1f0a50d8ab8fa09ec342cd74',
-                # NEIRO
-                '0x812ba41e071c7b7fa4ebcfb62df5f45f6fa853ee',
-                # ELON
-                '0x761d38e5ddf6ccf6cf7c55759d5210750b5d60f3',
-                # NPC
-                '0x8ed97a637a790be1feff5e888d43629dc05408f6',
-                # APU
-                '0x594DaaD7D77592a2b97b725A7AD59D7E188b5bFa',
-                # ANDY
-                '0x68bbed6a47194eff1cf514b50ea91895597fc91e',
-                # BONE
-                '0x9813037ee2218799597d83D4a5B6F3b6778218d9',
-                # LADYS
-                '0x12970e6868f88f6557b76120662c1b3e50a646bf',
-                # WOJAK
-                '0x5026F006B85729a8b14553FAE6af249aD16c9aaB',
-                # BOBO
-                '0xb90b2a35c65dbc466b04240097ca756ad2005295',
-                # PORK
-                '0xb9f599ce614Feb2e1BBe58F180F370D05b39344E'
-            ]
+            list_of_tokens_raw = {
+                'eth': [
+                    # WETH
+                    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+                    # stETH
+                    '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+                    # WBTC
+                    '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+                    # LINK
+                    '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+                    # wstETH
+                    '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
+                    # LEO
+                    '0x2AF5D2aD76741191D15Dfe7bF6aC92d4Bd912Ca3',
+                    # USDS
+                    '0xdC035D45d973E3EC169d2276DDab16f1e407384F',
+                    # USDe
+                    '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3',
+                    # UNI
+                    '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+                    # OM
+                    '0x3593D125a4f7849a1B059E64F4517A86Dd60c95d',
+                    # weETH
+                    '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
+                    # ONDO
+                    '0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3',
+                    # PEPE
+                    '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+                    # CAKE
+                    '0x152649eA73beAb28c5b49B26eb48f7EAD6d4c898',
+                    # AAVE
+                    '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
+                    # stkAAVE
+                    '0x4da27a545c0c5B758a6BA100e3a049001de870f5',
+                    # ENA
+                    '0x57e114B691Db790C35207b2e685D4A43181e6061',
+                    # DAI
+                    '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+                    # VIRTUAL
+                    '0x44ff8620b8cA30902395A7bD3F2407e1A091BF73',
+                    # WLD
+                    '0x163f8C2467924be0ae7B5347228CABF260318753',
+                    # XCN
+                    '0xA2cd3D43c775978A96BdBf12d733D5A1ED94fb18',
+                    # FLOKI
+                    '0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E',
+                    # ARKM
+                    '0x6E2a43be0B1d33b726f0CA3b8de60b3482b8b050',
+                    # SAND
+                    '0x3845badAde8e6dFF049820680d1F14bD3903a5d0',
+                    # MNT
+                    '0x3c3a81e81dc49A522A592e7622A7E711c06bf354',
+                    # EIGEN
+                    '0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83',
+                    # PENDLE
+                    '0x808507121B80c02388fAd14726482e061B8da827',
+                    # WFIL
+                    '0x6e1A19F235bE7ED8E3369eF73b196C07257494DE',
+                    # ARB
+                    '0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1',
+                    # FET
+                    '0xaea46A60368A7bD060eec7DF8CBa43b7EF41Ad85',
+                    # CRV
+                    '0xD533a949740bb3306d119CC777fa900bA034cd52',
+                    # FDUSD
+                    '0xc5f0f7b66764F6ec8C8Dff7BA683102295E16409',
+                    # ATOM
+                    '0x8D983cb9388EaC77af0474fA441C4815500Cb7BB',
+                    # INJ
+                    '0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30',
+                    # LDO
+                    '0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32',
+                    # MOVE
+                    '0x3073f7aAA4DB83f95e9FFf17424F71D4751a3073',
+                    # BONK
+                    '0x1151CB3d861920e07a38e03eEAd12C32178567F6',
+                    # SPX6900
+                    '0xE0f63A424a4439cBE457D80E4f4b51aD25b2c56C',
+                    # MOG
+                    '0xaaeE1A9723aaDB7afA2810263653A34bA2C21C7a',
+                    # BABYDOGE
+                    '0xac57de9c1a09fec648e93eb98875b212db0d460b',
+                    # TURBO
+                    '0xa35923162c49cf95e6bf26623385eb431ad920d3',
+                    # MEME
+                    '0xb131f4a55907b10d1f0a50d8ab8fa09ec342cd74',
+                    # NEIRO
+                    '0x812ba41e071c7b7fa4ebcfb62df5f45f6fa853ee',
+                    # ELON
+                    '0x761d38e5ddf6ccf6cf7c55759d5210750b5d60f3',
+                    # NPC
+                    '0x8ed97a637a790be1feff5e888d43629dc05408f6',
+                    # APU
+                    '0x594DaaD7D77592a2b97b725A7AD59D7E188b5bFa',
+                    # ANDY
+                    '0x68bbed6a47194eff1cf514b50ea91895597fc91e',
+                    # BONE
+                    '0x9813037ee2218799597d83D4a5B6F3b6778218d9',
+                    # LADYS
+                    '0x12970e6868f88f6557b76120662c1b3e50a646bf',
+                    # WOJAK
+                    '0x5026F006B85729a8b14553FAE6af249aD16c9aaB',
+                    # BOBO
+                    '0xb90b2a35c65dbc466b04240097ca756ad2005295',
+                    # PORK
+                    '0xb9f599ce614Feb2e1BBe58F180F370D05b39344E'
+                ],
+                'base': [
+                    # WETH
+                    '0x4200000000000000000000000000000000000006',
+                    # WBTC
+                    '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c',
+                    # wstETH
+                    '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452',
+                    # USDS
+                    '0x820C137fa70C8691f0e44Dc420a5e53c168921Dc',
+                    # OM
+                    '0x3992B27dA26848C2b19CeA6Fd25ad5568B68AB98',
+                    # USDe
+                    '0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34',
+                    # DAI
+                    '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+                    # weETH.base
+                    '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
+                    # AAVE
+                    '0x63706e401c06ac8513145b7687A14804d17f814b',
+                    # ENA
+                    '0x58538e6A46E07434d7E7375Bc268D3cb839C0133',
+                    # rETH
+                    '0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c',
+                    # TEL
+                    '0x09bE1692ca16e06f536F0038fF11D1dA8524aDB1',
+                    # PYTH
+                    '0x4c5d8A75F3762c1561D96f177694f67378705E98',
+                    # VIRTUAL
+                    '0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b',
+                    # ezETH
+                    '0x2416092f143378750bb29b79eD961ab195CcEea5',
+                    # CRV
+                    '0x8Ee73c484A26e0A5df2Ee2a4960B789967dd0415',
+                    # AERO
+                    '0x940181a94A35A4569E4529A3CDfB74e38FD98631',
+                    # PENDLE
+                    '0xA99F6e6785Da0F5d6fB42495Fe424BCE029Eeb3E',
+                    # MORPHO
+                    '0xBAa5CC21fd487B8Fcc2F632f3F4E8D37262a0842',
+                    # 1INCH
+                    '0xc5fecC3a29Fb57B5024eEc8a2239d4621e111CBE',
+                    # cbETH
+                    '0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22',
+                    # SNX
+                    '0x22e6966B799c4D5B13BE962E1D117b56327FDa66',
+                    # ZRO
+                    '0x6985884C4392D348587B19cb9eAAf157F13271cd',
+                    # PRIME
+                    '0xfA980cEd6895AC314E7dE34Ef1bFAE90a5AdD21b',
+                    # SUPER
+                    '0x391359ab0CCef572DcaC78F74E47D7C06Db0b982',
+                    # YFI
+                    '0x9EaF8C1E34F05a589EDa6BAfdF391Cf6Ad3CB239',
+                    # FAI
+                    '0xb33Ff54b9F7242EF1593d2C9Bcd8f9df46c77935',
+                    # WMTX
+                    '0x3e31966d4f81C72D2a55310A6365A56A4393E98D',
+                    # COW
+                    '0xc694a91e6b071bF030A18BD3053A7fE09B6DaE69',
+                    # B3
+                    '0xB3B32F9f8827D4634fE7d973Fa1034Ec9fdDB3B3',
+                    # PHA
+                    '0x336C9297AFB7798c292E9f80d8e566b947f291f0',
+                    # VVV
+                    '0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf',
+                    # USDz
+                    '0x04D5ddf5f3a8939889F11E97f8c4BB48317F1938',
+                    # CFG
+                    '0x2b51E2Ec9551F9B87B321f63b805871f1c81ba97',
+                    # BTRST
+                    '0xA7d68d155d17cB30e311367c2Ef1E82aB6022b67',
+                    # OLAS
+                    '0x54330d28ca3357F294334BDC454a032e7f353416',
+                    # DEGEN
+                    '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed',
+                    # BRETT
+                    '0x532f27101965dd16442E59d40670FaF5eBB142E4',
+                    # TOSHI
+                    '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4',
+                    # SPX6900
+                    '0x50dA645f148798F68EF2d7dB7C1CB22A6819bb2C',
+                    # Mog
+                    '0x2Da56AcB9Ea78330f947bD57C54119Debda7AF71',
+                    # AIXBT
+                    '0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825',
+                    # KAITO
+                    '0x98d0baa52b2D063E780DE12F615f963Fe8537553'
+                ]
+            }
 
-            list_of_token_names = [
-                "Liquid staked Ether 2.0",
-                "Wrapped BTC",
-                "ChainLink Token",
-                "Wrapped liquid staked Ether 2.0",
-                "Bitfinex LEO Token",
-                "Wrapped Ether",
-                "USDS Stablecoin",
-                "USDe",
-                "Uniswap",
-                "MANTRA DAO",
-                "Wrapped eETH",
-                "Ondo",
-                "Pepe",
-                "PancakeSwap Token",
-                "Aave Token",
-                "Staked Aave",
-                "ENA",
-                "Dai Stablecoin",
-                "Virtual Protocol",
-                "Worldcoin",
-                "Chain",
-                "FLOKI",
-                "Arkham",
-                "SAND",
-                "Mantle",
-                "Eigen",
-                "Pendle",
-                "Wrapped Filecoin",
-                "Arbitrum",
-                "Fetch",
-                "Curve DAO Token",
-                "First Digital USD",
-                "Cosmos",
-                "Injective Token",
-                "Lido DAO Token",
-                "Movement",
-                "Bonk",
-                "SPX6900",
-                "Mog Coin",
-                "Baby Doge Coin",
-                "Turbo",
-                "Memecoin",
-                "Neiro",
-                "Dogelon",
-                "Non-Playable Coin",
-                "Apu Apustaja",
-                "Andy",
-                "BONE SHIBASWAP",
-                "Milady",
-                "Wojak Coin",
-                "BOBO",
-                "PepeFork"
-            ]
+            list_of_token_names = {
+                'eth': [
+                    "Wrapped Ether",
+                    "Liquid staked Ether 2.0",
+                    "Wrapped BTC",
+                    "ChainLink Token",
+                    "Wrapped liquid staked Ether 2.0",
+                    "Bitfinex LEO Token",
+                    "USDS Stablecoin",
+                    "USDe",
+                    "Uniswap",
+                    "MANTRA DAO",
+                    "Wrapped eETH",
+                    "Ondo",
+                    "Pepe",
+                    "PancakeSwap Token",
+                    "Aave Token",
+                    "Staked Aave",
+                    "ENA",
+                    "Dai Stablecoin",
+                    "Virtual Protocol",
+                    "Worldcoin",
+                    "Chain",
+                    "FLOKI",
+                    "Arkham",
+                    "SAND",
+                    "Mantle",
+                    "Eigen",
+                    "Pendle",
+                    "Wrapped Filecoin",
+                    "Arbitrum",
+                    "Fetch",
+                    "Curve DAO Token",
+                    "First Digital USD",
+                    "Cosmos",
+                    "Injective Token",
+                    "Lido DAO Token",
+                    "Movement",
+                    "Bonk",
+                    "SPX6900",
+                    "Mog Coin",
+                    "Baby Doge Coin",
+                    "Turbo",
+                    "Memecoin",
+                    "Neiro",
+                    "Dogelon",
+                    "Non-Playable Coin",
+                    "Apu Apustaja",
+                    "Andy",
+                    "BONE SHIBASWAP",
+                    "Milady",
+                    "Wojak Coin",
+                    "BOBO",
+                    "PepeFork"
+                ],
+                'base': [
+                    "Wrapped Ether",
+                    "Wrapped BTC",
+                    "Wrapped liquid staked Ether 2.0",
+                    "USDS Stablecoin",
+                    "MANTRA",
+                    "USDe",
+                    "Dai Stablecoin",
+                    "Wrapped eETH",
+                    "Aave Token",
+                    "ENA",
+                    "Rocket Pool ETH",
+                    "Telcoin",
+                    "Pyth Network",
+                    "Virtual Protocol",
+                    "Renzo Restaked ETH",
+                    "Curve DAO Token",
+                    "Aerodrome",
+                    "Pendle",
+                    "Morpho Token",
+                    "1INCH Token",
+                    "Coinbase Wrapped Staked ETH",
+                    "Synthetix Network Token",
+                    "LayerZero",
+                    "Prime",
+                    "SuperVerse",
+                    "yearn.finance",
+                    "FAI",
+                    "WorldMobileToken",
+                    "CoW Protocol Token",
+                    "B3",
+                    "Phala",
+                    "Venice Token",
+                    "USDz",
+                    "Centrifuge",
+                    "BTRST",
+                    "Autonolas",
+                    "Degen",
+                    "Brett",
+                    "Toshi",
+                    "SPX6900",
+                    "Mog Coin",
+                    "aixbt by Virtuals",
+                    "KAITO"
+                ]
+            }
 
-            list_of_token_symbols = [
-                "stETH",
-                "WBTC",
-                "LINK",
-                "wstETH",
-                "LEO",
-                "WETH",
-                "USDS",
-                "USDe",
-                "UNI",
-                "OM",
-                "weETH",
-                "ONDO",
-                "PEPE",
-                "Cake",
-                "AAVE",
-                "stkAAVE",
-                "ENA",
-                "DAI",
-                "VIRTUAL",
-                "WLD",
-                "XCN",
-                "FLOKI",
-                "ARKM",
-                "SAND",
-                "MNT",
-                "EIGEN",
-                "PENDLE",
-                "WFIL",
-                "ARB",
-                "FET",
-                "CRV",
-                "FDUSD",
-                "ATOM",
-                "INJ",
-                "LDO",
-                "MOVE",
-                "Bonk",
-                "SPX",
-                "Mog",
-                "BabyDoge",
-                "TURBO",
-                "MEME",
-                "Neiro",
-                "ELON",
-                "NPC",
-                "APU",
-                "ANDY",
-                "BONE",
-                "LADYS",
-                "WOJAK",
-                "BOBO",
-                "PORK"
-            ]
+            list_of_token_symbols = {
+                'eth': [
+                    "WETH",
+                    "stETH",
+                    "WBTC",
+                    "LINK",
+                    "wstETH",
+                    "LEO",
+                    "USDS",
+                    "USDe",
+                    "UNI",
+                    "OM",
+                    "weETH",
+                    "ONDO",
+                    "PEPE",
+                    "Cake",
+                    "AAVE",
+                    "stkAAVE",
+                    "ENA",
+                    "DAI",
+                    "VIRTUAL",
+                    "WLD",
+                    "XCN",
+                    "FLOKI",
+                    "ARKM",
+                    "SAND",
+                    "MNT",
+                    "EIGEN",
+                    "PENDLE",
+                    "WFIL",
+                    "ARB",
+                    "FET",
+                    "CRV",
+                    "FDUSD",
+                    "ATOM",
+                    "INJ",
+                    "LDO",
+                    "MOVE",
+                    "Bonk",
+                    "SPX",
+                    "Mog",
+                    "BabyDoge",
+                    "TURBO",
+                    "MEME",
+                    "Neiro",
+                    "ELON",
+                    "NPC",
+                    "APU",
+                    "ANDY",
+                    "BONE",
+                    "LADYS",
+                    "WOJAK",
+                    "BOBO",
+                    "PORK"
+                ],
+                'base': [
+                    'WETH',
+                    "WBTC",
+                    "wstETH",
+                    "USDS",
+                    "OM",
+                    "USDe",
+                    "DAI",
+                    "weETH",
+                    "AAVE",
+                    "ENA",
+                    "rETH",
+                    "TEL",
+                    "PYTH",
+                    "VIRTUAL",
+                    "ezETH",
+                    "CRV",
+                    "AERO",
+                    "PENDLE",
+                    "MORPHO",
+                    "1INCH",
+                    "cbETH",
+                    "SNX",
+                    "ZRO",
+                    "PRIME",
+                    "SUPER",
+                    "YFI",
+                    "FAI",
+                    "WMTX",
+                    "COW",
+                    "B3",
+                    "PHA",
+                    "VVV",
+                    "USDz",
+                    "CFG",
+                    "BTRST",
+                    "OLAS",
+                    "DEGEN",
+                    "BRETT",
+                    "TOSHI",
+                    "SPX",
+                    "Mog",
+                    "AIXBT",
+                    "KAITO"
+                ]
+            }
 
-            list_of_token_images = [
+            eth_list_of_token_images = [
                 self.tokenimgfolder
                 + symbol.lower()
                 + '.png'
-                for symbol in list_of_token_symbols
+                for symbol in list_of_token_symbols['eth']
+            ]
+
+            base_list_of_token_images = [
+                self.tokenimgfolder
+                + symbol.lower()
+                + '.png'
+                for symbol in list_of_token_symbols['base']
             ]
 
             swap_token_details = {
-                'address': list_of_tokens_raw,
-                'name': list_of_token_names,
-                'symbol': list_of_token_symbols,
-                'image': list_of_token_images,
+                'address': {
+                    'eth': list_of_tokens_raw['eth'],
+                    'base': list_of_tokens_raw['base'],
+                },
+                'name': {
+                    'eth': list_of_token_names['eth'],
+                    'base': list_of_token_names['base'],
+                },
+                'symbol':{
+                    'eth': list_of_token_symbols['eth'],
+                    'base': list_of_token_symbols['base'],
+                },
+                'image': {
+                    'eth': eth_list_of_token_images,
+                    'base': base_list_of_token_images
+                },
             }
 
             if not os.path.exists(
@@ -667,7 +942,7 @@ def main():
                 with open(
                     self.dest_path
                     + 'swap_token_details.json',
-                    'w'
+                    mode='w'
                 ) as f:
                     json.dump(
                         obj=swap_token_details,
@@ -679,34 +954,17 @@ def main():
             del list_of_tokens_raw
             del list_of_token_names
             del list_of_token_symbols
-            del list_of_token_images
+            del eth_list_of_token_images
+            del base_list_of_token_images
             del swap_token_details
-
-            if (
-                not os.path.exists(self.assets_json)
-                or os.stat(self.assets_json).st_size == 0
-                # Older asset file
-                or not isinstance(
-                    json.load(
-                        open(self.assets_json, 'r')
-                    ),
-                    dict,
-                )
-            ):
-                with open(self.assets_json, 'w') as f:
-                    json.dump(
-                        obj=self.asset,
-                        fp=f,
-                        indent=4
-                    )
-
-            else:
-                with open(self.assets_json, 'r') as f:
-                    self.asset = json.load(f)
 
             # Assets details
             self.assets_details = {
                 'eth': {
+                    "value": [],
+                    "price": [],
+                },
+                'base': {
                     "value": [],
                     "price": [],
                 }
@@ -742,7 +1000,8 @@ def main():
                     "https://rpc.ankr.com/eth",
                     "https://rpc.flashbots.net",
                     "https://1rpc.io/eth",
-                ]
+                ],
+                'base': 'https://base-pokt.nodies.app'
             }
 
             self.rpc_list_file = self.dest_path + "rpc_list.json"
@@ -753,7 +1012,7 @@ def main():
                 # Older rpc file
                 or not isinstance(
                     json.load(
-                        open(self.rpc_list_file, 'r')
+                        open(self.rpc_list_file, mode='r')
                     ),
                     dict,
                 )
@@ -787,6 +1046,13 @@ def main():
             '''
             self.reserved_nameofwallet = ''
 
+             # New in v2.0
+            self.eth_price = '0.0'
+
+            # New in v2.0
+            self.eth_amount = '0.0'
+            self.base_eth_amount = '0'
+
     prog = GlobalVariable()
 
     # BEGIN Web3-related stuff
@@ -794,7 +1060,17 @@ def main():
         endpoint_uri=prog.configs["rpc"]['eth'],
         exception_retry_configuration=None,
         request_kwargs={
-            "timeout": 20,
+            "timeout": (5, 10),
+            "allow_redirects": False
+        },
+        session=s,
+    )
+
+    base_web3_provider = Web3.HTTPProvider(
+        endpoint_uri='https://base-pokt.nodies.app',
+        exception_retry_configuration=None,
+        request_kwargs={
+            "timeout": (5, 10),
             "allow_redirects": False
         },
         session=s,
@@ -814,18 +1090,51 @@ def main():
         provider.decode_rpc_response = _fast_decode_rpc_response
 
     patch_provider(web3_provider)
-    w3 = Web3(web3_provider)
+    patch_provider(base_web3_provider)
 
-    def create_contract(address: str, abi=prog.abi) -> w3.eth.contract:
+    w3 = Web3(web3_provider)
+    base_w3 = Web3(base_web3_provider)
+
+    def create_contract(
+        address: str,
+        abi=prog.abi,
+        chain='eth'
+    ) -> w3.eth.contract:
+        # Return contract based off of chain
+        if chain == 'base':
+            return base_w3.eth.contract(
+                address=HexBytes(address),
+                abi=abi
+            )
+
         return w3.eth.contract(
             address=HexBytes(address),
             abi=abi
         )
 
-    def token_balance(contract, address: str) -> float:
+    def token_balance(
+        address,
+        contract=None
+    ) -> float:
         return contract.functions.balanceOf(address).call()
 
-    def token_image(address) -> None:
+    def token_image(
+        address,
+        chain='eth'
+    ) -> None:
+        contract = create_contract(address, chain=chain)
+        sym = contract.functions.symbol().call().lower()
+
+        if os.path.exists(
+            prog.tokenimgfolder
+            + f"{sym}.png"
+        ):
+            return
+
+        # The proper name for the chain
+        if chain == 'eth':
+            chain = 'ethereum'
+
         agent = (
             'Mozilla/5.0 (X11; Linux x86_64; rv:131.0)'
             'Gecko/20220911 Firefox/131.0'
@@ -835,7 +1144,7 @@ def main():
 
         url = (
             'https://raw.githubusercontent.com/trustwallet/assets/'
-            'refs/heads/master/blockchains/ethereum/assets/'
+            f"refs/heads/master/blockchains/{chain}/assets/"
         )
 
         resp = s.get(
@@ -845,20 +1154,13 @@ def main():
         )
 
         if resp.status_code == 404:
+            print(f"{sym} failed")
             return
 
-        contract = create_contract(address)
-
-        sym = contract.functions.symbol().call()
-        sym = sym.lower()
-
-        if os.path.exists(
+        if not os.path.exists(
             prog.tokenimgfolder
             + f"{sym}.png"
         ):
-            pass
-
-        else:
             with open(
                 prog.tokenimgfolder
                 + f"{sym}.png", "wb"
@@ -877,6 +1179,10 @@ def main():
         if the default url is rate-limiting the user, switch
         to the back-up url. This should suffice, for now.
         """
+
+        if From == 'ccbtc':
+            From = 'btc'
+
         backup_url = (
             'https://min-api.cryptocompare.com/data/price?fsym='
             f"{From}&tsyms=USDT"
@@ -886,7 +1192,20 @@ def main():
             f"https://api.coinbase.com/v2/exchange-rates?currency={From}"
         )
 
+        page_data = s.get(
+            (
+                default_url
+                if not "rate limit" in s.get(default_url).text
+                else backup_url
+            ),
+        )
+
+        page_url = page_data.url
+
         try:
+            page_data = orjson.loads(page_data.text)
+        except Exception:
+            time.sleep(0.01)
             page_data = s.get(
                 (
                     default_url
@@ -894,25 +1213,32 @@ def main():
                     else backup_url
                 ),
             )
-        except ConnectionError:
-            return "N/A"
+            page_data = orjson.loads(page_data.text)
 
-        if "coinbase" in page_data.url:
-            if not "USDT" in page_data.json()["data"]["rates"]:
+        if "coinbase" in page_url:
+            if 'Response' in page_data:
+                    return 'N/A'
+
+            if not "USDT" in page_data["data"]["rates"]:
                 page_data = s.get(
                     backup_url,
                 )
 
-                if 'Response' in page_data.json():
+                page_data = orjson.loads(page_data.text)
+
+                if 'Response' in page_data.keys():
                     return 'N/A'
 
-                return rm_scientific_notation(page_data.json()["USDT"])
+                return rm_scientific_notation(page_data["USDT"])
 
             return rm_scientific_notation(
-                page_data.json()["data"]["rates"]["USDT"]
+                page_data["data"]["rates"]["USDT"]
             )
         else:
-            return rm_scientific_notation(page_data.json()["USDT"])
+            if 'Response' in page_data:
+                return 'N/A'
+
+            return rm_scientific_notation(page_data["USDT"])
 
     def get_eth_price() -> str:
         return get_price("ETH")
@@ -927,13 +1253,43 @@ def main():
         result_list = []
 
         for item in page_data_list:
-            if not "USDT" in item.json()["data"]["rates"]:
+            if not "USDT" in orjson.loads(item.text)["data"]["rates"]:
                 result_list.append("N/A")
             else:
                 result_list.append(item.json()["data"]["rates"]["USDT"])
 
         return result_list
 
+    def __load_base_assets_price() -> None:
+        price_list = get_price_from_list(
+            prog.asset['base']['symbol']
+        )
+
+        prog.assets_details['base']['price'] = [
+            str(price)[:18]
+            for price in price_list
+        ]
+
+    _base_assets_price = Thread(
+        target=__load_base_assets_price
+    )
+    _base_assets_price.start()
+
+    def __load_eth_asset_prices() -> None:
+        price_list = get_price_from_list(
+            prog.asset['eth']['symbol']
+        )
+
+        prog.assets_details['eth']['price'] = [
+            str(price[:18])
+            for price in price_list
+        ]
+
+    _load_eth_asset_prices = Thread(
+        target=__load_eth_asset_prices
+    )
+
+    _load_eth_asset_prices.start()
     # END Web3-related stuff
 
     # Images
@@ -944,7 +1300,21 @@ def main():
 
         def setup_images(self):
             # Eth
-            self.eth_img = QIcon(prog.imgfolder + "eth.png")
+            self.eth_img = QIcon(
+                prog.imgfolder
+                + "eth.png"
+            )
+
+            # Base
+            self.base_img = QIcon(
+                prog.imgfolder
+                + "base.png"
+            )
+
+            # Home
+            self.home_blue = QIcon(
+                prog.imgfolder + "icons8-home_blue.png"
+            )
 
             # Loading background
             self.loading_bg = prog.imgfolder + "loading-bg.png"
@@ -1158,19 +1528,11 @@ def main():
                 )
 
                 self.btn1.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
 
@@ -1185,19 +1547,11 @@ def main():
                 )
 
                 self.btn1.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
         # Window UI
@@ -1263,15 +1617,6 @@ def main():
             self.close()
             self.deleteLater()
 
-
-            '''
-
-            self.wn = WalletName()
-            self.wn.show()
-            self.close()
-            self.deleteLater()
-            '''
-
         def launchuserwithexperience(self):
             self.uwe = UserWithExperience()
             self.uwe.show()
@@ -1298,19 +1643,11 @@ def main():
                 self.setStyleSheet("background: #0a0f18")
 
                 self.ret.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.continue_.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.msg.setStyleSheet(
@@ -1350,19 +1687,11 @@ def main():
                 self.setStyleSheet("background-color: #eff1f3")
 
                 self.ret.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.continue_.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.msg.setStyleSheet(
@@ -1610,26 +1939,12 @@ def main():
                         + "color: #9fb1ca;"
                     )
 
-                    self.entry_field[i].setStyleSheet(
-                        "color: #c5d4e7;"
-                        + "border: 1px solid #778ba5;"
-                        + "border-radius: 8px;"
-                    )
-
                 self.btn1.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
             elif  prog.configs["theme"] == "default_light":
@@ -1653,26 +1968,12 @@ def main():
                         + "color: #0a0f18;"
                     )
 
-                    self.entry_field[i].setStyleSheet(
-                        "color: #3c598e;"
-                        + "border: 1px solid #778ba5;"
-                        + "border-radius: 8px;"
-                    )
-
                 self.btn1.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
         def init_self(self):
@@ -2003,51 +2304,6 @@ def main():
                     + "background: #0a0f18;"
                 )
 
-                if os.name == 'nt':
-                    self.selection.setStyleSheet(
-                        "QComboBox {border: 1px solid #778ba5;"
-                        + "font: 18px;"
-                        + "border-radius: 4px;"
-                        + "background: #0a0f18;"
-                        + "color: #b0c4de;}"
-                        + "QAbstractItemView {background-color: #0a0f18;"
-                        + "color: #b0c4de;"
-                        + 'outline: 0;'
-                        + 'font: 18px;'
-                        + "border: 1px solid #778ba5;}"
-                        + "QListView:item::hover{background-color: #1e1e1e;"
-                        + "color: #b0c4de;"
-                        + "font: 18px;}"
-                    )
-
-                else:
-                    self.selection.setStyleSheet(
-                        "QComboBox {border: 1px solid #778ba5;"
-                        + "font: 18px;"
-                        + "border-radius: 4px;"
-                        + "background: #0a0f18;"
-                        + "color: #b0c4de;}"
-                        + "QAbstractItemView {background-color: #0a0f18;"
-                        + "color: #b0c4de;"
-                        + 'outline: 0;'
-                        + 'font: 18px;'
-                        + 'padding-top: 16px;'
-                        + "border: 1px solid #778ba5;}"
-                        + "QListView:item::hover{background-color: #1e1e1e;"
-                        + "color: #b0c4de;"
-                        + "font: 18px;}"
-                    )
-
-                self.entry.setStyleSheet(
-                    "color: #c5d4e7; "
-                    + "font: 16px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "background: transparent;"
-                    + "QLineEdit::placeholder{color: #767e89; }"
-                )
-
                 self.forgotpass.setStyleSheet(
                     "QPushButton{background-color:  #0a0f18;"
                     + "font-size: 20px;"
@@ -2059,6 +2315,8 @@ def main():
 
                 )
 
+                fix_white_borders([self.selection])
+
             elif prog.configs["theme"] == "default_light":
                 self.setStyleSheet("background-color: #eff1f3")
 
@@ -2066,53 +2324,6 @@ def main():
                     "font-size: 40px;"
                     + "color: #6495ed;"
                     + "background: #eff1f3;"
-                )
-
-                if os.name == 'nt':
-                    self.selection.setStyleSheet(
-                        "QComboBox {border: 1px solid #778ba5;"
-                        + "font: 18px;"
-                        + "border-radius: 4px;"
-                        + "background: #eff1f3;"
-                        + "color: #3c598e;}"
-                        + "QAbstractItemView {background-color: #eff1f3;"
-                        + "color: #3c598e;"
-                        + 'outline: 0;'
-                        + 'font: 16px;'
-                        + "border: 1px solid #778ba5;}"
-                        + "QListView:item::hover{background-color: #ced7e9;"
-                        + "color: #3c598e;"
-                        + 'border: 1px solid #ced7e9;'
-                        + "font: 18px;}"
-                    )
-
-                else:
-                    self.selection.setStyleSheet(
-                        "QComboBox {border: 1px solid #778ba5;"
-                        + "font: 18px;"
-                        + "border-radius: 4px;"
-                        + "background: #eff1f3;"
-                        + "color: #3c598e;}"
-                        + "QAbstractItemView {background-color: #eff1f3;"
-                        + "color: #3c598e;"
-                        + 'outline: 0;'
-                        + 'font: 16px;'
-                        + 'padding-top: 16px;'
-                        + "border: 1px solid #778ba5;}"
-                        + "QListView:item::hover{background-color: #ced7e9;"
-                        + "color: #3c598e;"
-                        + 'border: 1px solid #ced7e9;'
-                        + "font: 18px;}"
-                    )
-
-                self.entry.setStyleSheet(
-                    "color: #3c598e; "
-                    + "font: 16px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "background: transparent;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
                 )
 
                 self.forgotpass.setStyleSheet(
@@ -2136,7 +2347,7 @@ def main():
         # Topmost label
         def init_label(self):
             self.border = QLabel(self)
-            self.border.resize(481, 348)
+            self.border.resize(481, 352)
             self.border.move(9, 50)
 
             self.label = QLabel("Welcome back!!", self)
@@ -2149,7 +2360,7 @@ def main():
             self.selection = QComboBox(self)
             self.selection.resize(448, 50)
             self.selection.move(26, 110)
-            self.selection.setAutoFillBackground(True)
+            self.selection.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self.selection.setAttribute(
                 Qt.WidgetAttribute.WA_MacShowFocusRect,
                 False
@@ -2177,23 +2388,6 @@ def main():
 
             del self.shortname
             self.selection.setView(self.qlist)
-
-            if os.name != "nt":
-                pal = self.selection.palette()
-
-                if prog.configs["theme"] == "default_dark":
-                    pal.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#b0c4de"),
-                    )
-
-                elif prog.configs["theme"] == "default_light":
-                    pal.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#3c598e"),
-                    )
-
-                self.selection.setPalette(pal)
 
         def init_passfield(self):
             self.entry = QLineEdit(self)
@@ -2327,19 +2521,11 @@ def main():
                 )
 
                 self.ret.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.continue_.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.msg.setStyleSheet(
@@ -2376,19 +2562,11 @@ def main():
                 )
 
                 self.ret.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.continue_.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.msg.setStyleSheet(
@@ -2546,19 +2724,11 @@ def main():
                 self.setStyleSheet("background: #0a0f18")
 
                 self.btn1.setStyleSheet(
-                     'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.paste_btn.setStyleSheet(
@@ -2584,40 +2754,15 @@ def main():
                     + "border-radius: 16px;"
                 )
 
-                for i in range(12):
-                    self.field[i].setStyleSheet(
-                        "color: #c5d4e7; "
-                        + "font: 16px;"
-                        + "border: 1px solid gray;"
-                        + "border-radius: 8px;"
-                        + "padding: 7px;"
-                        + "background: transparent;"
-                        + "QLineEdit::placeholder{color: #767e89; }"
-                    )
-
-                    self.field_number[i].setStyleSheet(
-                        "font-size: 20px;"
-                        + "color: #9fb1ca;"
-                        + "background: transparent;"
-                    )
-
             elif prog.configs["theme"] == "default_light":
                 self.setStyleSheet("background-color: #eff1f3")
 
                 self.btn1.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.paste_btn.setStyleSheet(
@@ -2641,23 +2786,6 @@ def main():
                     + "border: 2px solid #b0c4de;"
                     + "border-radius: 8px;"
                 )
-
-                for i in range(12):
-                    self.field[i].setStyleSheet(
-                        "color: black; "
-                        + "font: 16px;"
-                        + "border: 1px solid gray;"
-                        + "border-radius: 8px;"
-                        + "padding: 7px;"
-                        + "background: transparent;"
-                        + "QLineEdit::placeholder{color: #767e89; }"
-                    )
-
-                    self.field_number[i].setStyleSheet(
-                        "font-size: 20px bold;"
-                        + "color: #6495ed;"
-                        + "background: transparent;"
-                    )
 
         def init_window(self):
             self.setFixedWidth(640)
@@ -2868,19 +2996,11 @@ def main():
                 self.setStyleSheet("background: #0a0f18")
 
                 self.btn1.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.label.setStyleSheet(
@@ -2901,33 +3021,15 @@ def main():
                     + "padding: 4px;"
                 )
 
-                self.entry.setStyleSheet(
-                    "color: #eff1f3; "
-                    + "font: 13px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "background: transparent;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
-                )
-
             elif prog.configs["theme"] == "default_light":
                 self.setStyleSheet("background-color: #eff1f3")
 
                 self.btn1.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.btn2.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.label.setStyleSheet(
@@ -2940,16 +3042,6 @@ def main():
                     "font-size: 20px;"
                     + "color: #3c598e;"
                     + "background: #eff1f3;"
-                )
-
-                self.entry.setStyleSheet(
-                    "color: #3c598e; "
-                    + "font: 13px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "background: transparent;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
                 )
 
         def init_window(self):
@@ -3124,27 +3216,15 @@ def main():
                 )
 
                 self.btncopy.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 16px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.retbtn.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.btncont.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.chbox.setStyleSheet("color: #c5d4e7;")
@@ -3188,19 +3268,11 @@ def main():
                 )
 
                 self.retbtn.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.btncont.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.chbox.setStyleSheet("color: #c5d4e7;")
@@ -3570,6 +3642,7 @@ def main():
 
     # A worker for AssetLoadingBar class
     # Speed uplift in v2.0
+    # Slight visual changes in v3.0
     class AssetLoadingBarWorker(QThread):
         prog = pyqtSignal(str)
         cont = pyqtSignal(int)
@@ -3579,8 +3652,15 @@ def main():
 
             self.address = prog.account.address
             self.asset = prog.asset['eth']
+            self.basset = prog.asset['base']
             self.assetamount = len(self.asset['name'])
             self.no_internet = False
+
+            eth_history_thread = Thread(target=self._fetch_history_eth)
+            eth_history_thread.start()
+
+            base_history_thread = Thread(target=self._fetch_history_base)
+            base_history_thread.start()
 
         def _fetch_eth_price_and_amount(self) -> None:
             prog.eth_price = get_eth_price()
@@ -3588,66 +3668,149 @@ def main():
             prog.eth_amount = float(
                 w3.eth.get_balance(self.address)
             )
-
             prog.eth_amount = str(
                 w3.from_wei(
-                    float(prog.eth_amount) if not None else 0.0, "ether"
+                    prog.eth_amount
+                    if not None else 0.0, "ether"
                 )
             )
 
-        def _fetch_history(self) -> None:
+            prog.base_eth_amount = base_w3.eth.get_balance(self.address)
+
+            if not isinstance(prog.base_eth_amount, tuple):
+                prog.base_eth_amount = float(prog.base_eth_amount)
+
+            else:
+                # Try another instance of Web3 with a different rpc
+                bwp = Web3.HTTPProvider(
+                    endpoint_uri='https://base.drpc.org',
+                    exception_retry_configuration=None,
+                    request_kwargs={
+                        "timeout": (5, 10),
+                        "allow_redirects": False
+                    },
+                    session=s,
+                )
+
+                bw3 = Web3(bwp)
+                prog.base_eth_amount= bw3.eth.get_balance(self.address)
+
+            prog.base_eth_amount = str(
+                base_w3.from_wei(
+                    prog.base_eth_amount
+                    if not None else 0.0, "ether"
+                )
+            )
+
+        def _fetch_history_eth(self) -> None:
             url = f"https://api.ethplorer.io/getAddressHistory/{self.address}"
             key = "?apiKey=freekey&limit=100&showZeroValues=false"
 
-            self.data = s.get(url + key, stream=True)
-            self.data = self.data.json()
+            data = s.get(url + key, stream=True)
+            data = orjson.loads(data.text)
 
             with open(
                 prog.dest_path
-                + "history.json", "w"
+                + "history_eth.json", "w"
             ) as f:
                 json.dump(
-                    obj=self.data,
+                    obj=data,
                     fp=f,
                     indent=4
                 )
 
-        def load_asset_prices(self) -> None:
-            with ThreadPoolExecutor() as pool:
-                price_list = pool.submit(
-                    get_price_from_list,
-                    self.asset['symbol']
+        def _fetch_history_base(self) -> None:
+            url = (
+                f"https://base.blockscout.com/api/v2/addresses/{self.address}/token-transfers?"
+                'type=ERC-20%2CERC-721%2CERC-1155&filter=to%20%7C%20from'
+            )
+
+            data = s.get(url, stream=True)
+            data = orjson.loads(data.text)
+            data_sz = len(data['items'])
+
+            # Attempt to filter out spam/scam tokens
+            if data_sz != 0:
+                filtered_list = [
+                    data['items'][i]
+                    for i in range(data_sz)
+                    if (
+                        data['items'][i]['token']['decimals'] != "0"
+                        and data['items'][i]['token']['circulating_market_cap'] != None
+                        and data['items'][i]['token']['exchange_rate'] != None
+                        and not '#' in data['items'][i]['token']['name']
+                        and not '.' in data['items'][i]['token']['name']
+                        and not 'claim' in data['items'][i]['token']['name']
+                        and not '.' in data['items'][i]['token']['symbol']
+                        and not 'claim' in data['items'][i]['token']['symbol']
+                    )
+                ]
+
+                data['items'] = filtered_list
+
+            with open(
+                prog.dest_path
+                + "history_base.json", "w"
+            ) as f:
+                json.dump(
+                    obj=data,
+                    fp=f,
+                    indent=4
                 )
 
-                p_list = price_list.result()
+        def build_contract_list(self, chain):
+            if chain == 'eth':
+                contract_list = [
+                    create_contract(address, chain=chain)
+                    for address in self.asset['address']
+                ]
 
-                for price in p_list:
-                    prog.assets_details['eth']["price"].append(
-                        str(price)[:22]
-                    )
+                return contract_list
 
-        def build_contract_list(self):
             contract_list = [
-                create_contract(address)
-                for address in self.asset['address']
+                create_contract(address, chain=chain)
+                for address in self.basset['address']
             ]
 
             return contract_list
+
+        def base_token_balance(self):
+            contract_list = self.build_contract_list(chain='base')
+
+            with base_w3.batch_requests() as batch_token_balance:
+                for contract in contract_list:
+                    batch_token_balance.add(
+                        token_balance(
+                            self.address,
+                            contract=contract
+                        )
+                    )
+
+                token_balance_list = batch_token_balance.execute()
+
+                for token_bal in token_balance_list:
+                    prog.assets_details['base']["value"].append(
+                        str(base_w3.from_wei(token_bal, 'ether'))
+                    )
 
         def work(self) -> None:
             if not w3.is_connected():
                 self.no_internet = True
                 self.cont.emit(len(self.asset['name']))
 
-            with ThreadPoolExecutor() as pool:
-                pool.submit(self._fetch_history)
-                pool.submit(self._fetch_eth_price_and_amount)
+            btb = Thread(
+                target=self.base_token_balance
+            )
 
-                time.sleep(0.01)
-                pool.submit(self.load_asset_prices)
+            btb.start()
+
+            with ThreadPoolExecutor() as pool:
+                self._fetch_eth_price_and_amount()
+                #pool.submit(self._fetch_history)
+                #self._fetch_history()
 
                 contract_list = pool.submit(
-                    self.build_contract_list
+                    self.build_contract_list, 'eth'
                 )
 
                 with w3.batch_requests() as batch_token_balance:
@@ -3656,8 +3819,8 @@ def main():
                     for contract in contract_list:
                         batch_token_balance.add(
                             token_balance(
-                                contract,
-                                self.address
+                                self.address,
+                                contract=contract
                             )
                         )
 
@@ -3674,22 +3837,31 @@ def main():
                     time.sleep(0.01)
 
                     self.prog.emit(
-                        self.asset['name'][i].upper()
-                        + f" ({i+1}/{self.assetamount})"
+                        str(int((i / self.assetamount) * 100)) + '%'
                     )
+
+                    if i == self.assetamount-1:
+                        self.prog.emit("99%")
 
                     self.cont.emit(i)
 
-            self.cont.emit(len(self.asset['name']))
+            # Ensures the threads are finished before proceeding
+            while (
+                _load_eth_asset_prices.is_alive()
+                or _base_assets_price.is_alive()
+            ):
+                pass
+            else:
+                self.prog.emit("100%")
+                self.cont.emit(len(self.asset['name']))
 
     # visual changes in v1.2
-    # more visual changes in v2.0
+    # more visual changes in v2.0 (and v3.0)
     class AssetLoadingBar(QWidget):
         """
         Loads assets, so that user doesn't
         need to wait for the data to get fetched
         """
-
         def __init__(self):
             super().__init__()
 
@@ -3703,13 +3875,13 @@ def main():
                 if prog.configs['play_loading_gif']:
                     self.label.setStyleSheet(
                         "font-size: 40px;"
-                        + "color: black;"
+                        + "color: #0a0f18;"
                         + "background: transparent;"
                     )
 
                     self.label2.setStyleSheet(
                         "font-size: 25px;"
-                        + "color: black;"
+                        + "color: #0a0f18;"
                         + "background: transparent;"
                     )
 
@@ -3730,16 +3902,17 @@ def main():
                         QProgressBar{
                             color: black;
                             border-radius: 0px;
-                            background: transparent;
+                            background: #2E425D;
+                            border-radius:3px;
                         }
 
                         QProgressBar::chunk{
                             background-color: #87cefa;
-                            border-radius: 5px;
+                            border-radius: 3px;
                         }
                     """
 
-                self.bar.setStyleSheet(self.barstyle + "color: black;")
+                self.bar.setStyleSheet(self.barstyle)
 
         # Window ui
         def setup_main(self):
@@ -3770,21 +3943,16 @@ def main():
 
 
             self.label = QLabel("Loading assets...", self)
-            self.label.resize(680, 232)
+            self.label.resize(680, 240)
             self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
 
         # Progress bar
         def init_progressbar(self):
             self.bar = QProgressBar(self)
-            self.bar.resize(420, 11)
+            self.bar.resize(420, 7)
 
-            if prog.chain == 'eth':
-                self.bar.setRange(0, len(prog.asset['eth']['name']))
-
-            elif prog.chain == 'base':
-                self.bar.setRange(0, len(prog.asset['base']['name']))
-
+            self.bar.setRange(0, len(prog.asset['eth']['name']))
             self.bar.setValue(0)
             self.bar.move(Qt.AlignmentFlag.AlignCenter, 180)
             self.bar.setTextVisible(False)
@@ -3793,7 +3961,7 @@ def main():
             self.label2 = QLabel(self)
             self.label2.resize(680, 30)
             self.label2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.label2.move(0, 220)
+            self.label2.move(0, 206)
 
         # Thread creation
         def init_thread(self):
@@ -3856,7 +4024,6 @@ def main():
         A timed worker that checks for
         new tokens in the user's wallet
         """
-
         received_new_tokens = pyqtSignal(bool)
         timer = QTimer()
 
@@ -3870,7 +4037,20 @@ def main():
             }
 
         def work(self):
-            current_block = w3.eth.get_block('latest', True)
+            current_block = {}
+
+            if prog.chain == 'eth':
+                current_block = w3.eth.get_block(
+                    'latest',
+                    True
+                )
+
+            elif prog.chain == 'base':
+                current_block = base_w3.eth.get_block(
+                    'latest',
+                    True
+                )
+
             self.received_new_tokens.emit(False)
 
             if isinstance(current_block, tuple):
@@ -3885,7 +4065,7 @@ def main():
                     hash_ = '0x' + hash_
 
                     url = (
-                        f"https://eth.blockscout.com/api/v2/transactions/{hash_}"
+                        f"https://{prog.chain}.blockscout.com/api/v2/transactions/{hash_}"
                         + '/token-transfers?type=ERC-20'
                     )
 
@@ -3895,11 +4075,11 @@ def main():
                         'items' in self.data.json().keys()
                         and len(self.data.json()['items']) != 0
                     ):
-                        data = self.data.json()['items'][0]
+                        data = orjson.loads(self.data.text)['items'][0]
 
                         if (
                             not data['token']['address']
-                            in prog.asset['eth']['address']
+                            in prog.asset[prog.chain]['address']
                         ):
                             self.token = {
                                 'address': data['token']['address'],
@@ -3907,26 +4087,27 @@ def main():
                                 'name': data['token']['name']
                             }
 
-                            prog.asset['eth']['address'].append(
+                            prog.asset[prog.chain]['address'].append(
                                 self.token['address']
                             )
 
                             self.balance_contract = \
                                 create_contract(
-                                    self.token['address']
+                                    self.token['address'],
+                                    chain=prog.chain
                                 )
 
                             self.balance = token_balance(
-                                self.balance_contract,
-                                self.address
+                                self.address,
+                                contract=self.balance_contract,
                             )
                             self.balance = w3.from_wei(
                                 float(self.balance),
                                 'ether'
                             )
 
-                            prog.assets_details['eth']['value'].append(
-                                str(self.balance)[:22]
+                            prog.assets_details[prog.chain]['value'].append(
+                                str(self.balance)[:18]
                             )
 
                             self.new_tokens = self.token
@@ -3940,63 +4121,115 @@ def main():
             super().__init__()
             self.address = prog.account.address
 
-        def build_contract_list(self):
+        def build_contract_list(self, chain=prog.chain):
             contract_list = [
                 create_contract(address)
-                for address in prog.asset['eth']['address']
+                for address in prog.asset[chain]['address']
             ]
 
             return contract_list
 
         def work(self):
-            with ThreadPoolExecutor() as pool:
-                contract_list = pool.submit(
-                    self.build_contract_list
-                )
+            if prog.chain == 'eth':
+                with ThreadPoolExecutor() as pool:
+                    contract_list = pool.submit(
+                        self.build_contract_list
+                    )
 
-                with w3.batch_requests() as batch_token_balance:
-                    contract_list = contract_list.result()
+                    with w3.batch_requests() as batch_token_balance:
+                        contract_list = contract_list.result()
 
-                    for contract in contract_list:
-                        batch_token_balance.add(
-                            token_balance(
-                                contract,
-                                self.address
+                        for contract in contract_list:
+                            batch_token_balance.add(
+                                token_balance(
+                                    self.address,
+                                    contract=contract,
+                                )
                             )
-                        )
 
-                    token_balance_list = batch_token_balance.execute()
+                        token_balance_list = batch_token_balance.execute()
 
-                    for token_bal in token_balance_list:
-                        prog.assets_details['eth']["value"].append(
-                            str(
-                                w3.from_wei(token_bal, 'ether')
+                        for token_bal in token_balance_list:
+                            prog.assets_details[prog.chain]["value"].append(
+                                str(
+                                    w3.from_wei(token_bal, 'ether')
+                                )
                             )
-                        )
+
+            elif prog.chain == 'base':
+                with ThreadPoolExecutor() as pool:
+                    contract_list = pool.submit(
+                        self.build_contract_list
+                    )
+
+                    with w3.batch_requests() as batch_token_balance:
+                        contract_list = contract_list.result()
+
+                        for contract in contract_list:
+                            batch_token_balance.add(
+                                token_balance(
+                                    self.address,
+                                    contract=contract,
+                                )
+                            )
+
+                        token_balance_list = batch_token_balance.execute()
+
+                        for token_bal in token_balance_list:
+                            prog.assets_details[prog.chain]["value"].append(
+                                str(
+                                    base_w3.from_wei(token_bal, 'ether')
+                                )
+                            )
 
             eth_balance = float(
                 w3.from_wei(
                     w3.eth.get_balance(self.address),
                     'ether'
                 )
+                if prog.chain == 'eth'
+                else w3.from_wei(
+                    base_w3.eth.get_balance(self.address),
+                    'ether'
+                )
             )
 
             eth_price = float(get_eth_price())
-            eth_balance *= eth_price
-
-            amount_of_assets = len(prog.asset['eth']['symbol'])
-
-            assets_price = prog.assets_details['eth']['price']
-            assets_amount = prog.assets_details['eth']['value']
-
-            total_list = [
-                float(assets_price[i]) if not 'N/A' else 0.0
-                * float(assets_amount[i])
-                for i in range(amount_of_assets)
-                if float(assets_amount[i]) != 0.0
-            ]
-
             total = 0.0
+
+            amount_of_assets = len(
+                prog.asset[prog.chain]['symbol']
+            )
+
+            total_list = []
+
+            if prog.configs['currency'] == 'USD':
+                eth_balance *= eth_price
+
+                assets_price = \
+                    prog.assets_details[prog.chain]['price']
+
+
+                assets_amount = \
+                    prog.assets_details[prog.chain]['value']
+
+                total_list = [
+                    float(assets_price[i]) if not 'N/A' else 0.0
+                    * float(assets_amount[i])
+                    for i in range(amount_of_assets)
+                    if float(assets_amount[i]) != 0.0
+                ]
+
+            else:
+                assets_amount = \
+                    prog.assets_details[prog.chain]['value']
+
+                total_list = [
+                    eth_price
+                    / float(assets_amount[i])
+                    for i in range(amount_of_assets)
+                    if float(assets_amount[i]) != 0.0
+                ]
 
             for item in total_list:
                 total += item
@@ -4019,19 +4252,36 @@ def main():
             self.g = 0.0
 
         def work(self):
-            self.g = w3.eth.gas_price
+            self.g = 0
+
+            if prog.chain == 'eth':
+                self.g = w3.eth.gas_price
+
+            elif prog.chain == 'base':
+                self.g = base_w3.eth.gas_price
 
             if isinstance(self.g, tuple):
                 return
 
             try:
-                self.p = float(w3.from_wei(float(self.g), "ether"))
+                if prog.chain == 'eth':
+                    self.p = float(
+                        w3.from_wei(float(self.g), "ether")
+                    )
+                elif prog.chain == 'base':
+                    self.p = float(
+                        base_w3.from_wei(float(self.g), "ether")
+                    )
+
                 self.p += (self.p * 0.75)
                 self.p *= float(get_eth_price())
                 self.p *= 23000
 
                 if prog.chain == 'eth':
                     self.p = rm_scientific_notation(round(self.p, 2))
+
+                elif prog.chain == 'base':
+                    self.p = rm_scientific_notation(round(self.p, 11))
 
                 self.gas.emit(
                     f" ~${self.p}"
@@ -4055,11 +4305,11 @@ def main():
         def work(self):
             price = [
                 get_price(symbol)
-                for symbol in prog.asset['eth']['symbol']
+                for symbol in prog.asset[prog.chain]['symbol']
             ]
 
-            for i in range(len(prog.asset['eth']['name'])):
-                prog.assets_details['eth']["price"][i] = price[i]
+            #for i in range(len(prog.asset[self.chain['name'])):
+            prog.assets_details[prog.chain]['price'] = price
 
             self.eth_price.emit(
                 self.pool.submit(get_eth_price).result()
@@ -4078,16 +4328,38 @@ def main():
             self.g = 0.0
 
         def work(self):
-            self.g = w3.eth.gas_price
-            self.p = float(w3.from_wei(self.g, "ether"))
-            self.p += (self.p * 0.75)
-            self.p *= float(get_eth_price())
-            self.p *= 23000
-            self.p = rm_scientific_notation(round(self.p, 2))
+            if isinstance(self.g, tuple):
+                return
 
-            self.gas.emit(
-                f" ~${self.p}"
-            )
+            try:
+                if prog.chain == 'eth':
+                    self.p = float(
+                        w3.from_wei(float(self.g), "ether")
+                    )
+                elif prog.chain == 'base':
+                    self.p = float(
+                        base_w3.from_wei(float(self.g), "ether")
+                    )
+
+                self.p += (self.p * 0.75)
+                self.p *= float(get_eth_price())
+                self.p *= 23000
+
+                if prog.chain == 'eth':
+                    self.p = rm_scientific_notation(round(self.p, 2))
+
+                elif prog.chain == 'base':
+                    self.p = rm_scientific_notation(round(self.p, 11))
+
+                self.gas.emit(
+                    f" ~${self.p}"
+                )
+            except Exception as e:
+                print(e)
+                self.gas.emit(
+                    "Failed to fetch gas price. Trying again in 3 seconds..."
+                )
+
             self.quit()
 
     class ValidatePassword(QWidget):
@@ -4111,29 +4383,11 @@ def main():
                 self.setStyleSheet("background: #0a0f18;")
 
                 self.verify.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.cancel.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
-                )
-
-                self.password.setStyleSheet(
-                    "color: #c5d4e7; "
-                    + "font: 16px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "background: transparent;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.label.setStyleSheet(
@@ -4592,6 +4846,50 @@ def main():
 
                     self.is_finished.emit(True)
 
+            elif self.method_of_execution == 'exe-installer':
+                ver = self.version
+                tigerwallet_executable_file = \
+                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-installer"
+
+                dl_executable_link = (
+                    'https://github.com/Serpenseth/'
+                    + 'TigerWallet/releases/download/'
+                    + tigerwallet_executable_file
+                    + '.exe '
+                )
+
+                with open(
+                    self.extract_path
+                    + f"tigerwallet-{self.version}-installer.exe",
+                    mode='wb'
+                ) as exe_file:
+                    # Download the file as a stream
+                    downloaded_executable = s.get(
+                        url=dl_executable_link,
+                        stream=True
+                    )
+
+                    self.size = int(
+                        downloaded_executable.headers.get(
+                            'content-length'
+                        )
+                    )
+
+                    self.parent.total_file_size = self.size
+                    self.parent.bar.setRange(
+                        0,
+                        self.size
+                    )
+
+                    for data in downloaded_executable.iter_content(
+                        chunk_size=4096
+                    ):
+                        dl += len(data)
+                        exe_file.write(data)
+                        self.dl_prog.emit(dl)
+
+                    self.is_finished.emit(True)
+
             # Ran via py/python
             elif self.method_of_execution == 'python-command':
                 dl_link = 'https://github.com/Serpenseth/TigerWallet'
@@ -4613,7 +4911,7 @@ def main():
                         zip_.write(data)
                         self.dl_prog.emit(dl)
 
-                    with self.ZipFile(zip_, 'r') as zip_ref:
+                    with self.ZipFile(zip_, mode='r') as zip_ref:
                         zip_ref.extractall(self.extract_path)
 
                     self.is_finished.emit(True)
@@ -4646,6 +4944,7 @@ def main():
                 self.is_finished.emit(True)
 
     # New in v1.5
+    # Added .exe installer in v2.1
     class CheckForUpdates(QWidget):
         def __init__(
             self,
@@ -4707,6 +5006,12 @@ def main():
             ):
                 return 'pip-install-executable'
 
+            elif(
+                'Program Files' in self.local_path
+                or 'Local\\Programs\\TigerWallet' in self.local_path
+            ):
+                return 'exe-installer'
+
             return 'python-command'
 
         def check_if_update_is_available(self):
@@ -4749,6 +5054,13 @@ def main():
             self.data = s.get(url=self.url)
             self.data = self.data.text.split()
             self.github_version = ' '.join(self.data[11 : 14])
+
+            # No idea why it sometimes gives a completely incorrect value
+            if 'html' in self.github_version:
+                self.close()
+                self.deleteLater()
+                return
+
             self.github_version = float(self.github_version[11 : 14])
 
         def init_progressbar(self):
@@ -4995,17 +5307,50 @@ def main():
                 self.thread.started.connect(self.duw.work)
                 self.thread.start()
 
+            # Using .exe installer
+            elif self.execution_method == 'exe-installer':
+                self.duw = DownloadUpdateWorker(
+                    parent=self,
+                    method_of_execution='exe-installer',
+                    version=ver
+                )
 
-            # first.close()
-            # first.deleteLater()
+                def is_done(res):
+                    if res:
+                        msgbox(
+                            'New version downloaded to path: '
+                            + self.local_path
+                            + f"/tigerwallet-{ver[1:len(ver)]}-installer.exe"
+                        )
+
+                        self.thread.quit()
+                        self.duw.quit()
+                        self.thread.deleteLater()
+                        self.duw.deleteLater()
+
+                        self.close()
+                        self.deleteLater()
+
+                        subprocess.run(
+                            [
+                                self.local_path
+                               +  f"tigerwallet-{ver[1 : len(ver)]}-x86-64.AppImage"
+                            ]
+                        )
+
+                self.duw.moveToThread(self.thread)
+                self.duw.dl_prog.connect(self.emit_progress)
+                self.duw.is_finished.connect(is_done)
+                self.thread.started.connect(self.duw.work)
+                self.thread.start()
 
     # Fixed program crash in v1.5
     # when adding an invalid RPC
+    # Visual improvement to scrollbar
     class Settings(QWidget):
         """
         Settings window - used by UserWallet
         """
-
         def __init__(self, master):
             super().__init__()
             self.master = master
@@ -5040,11 +5385,14 @@ def main():
             self.border.move(10, 50)
 
             self.list_ = QListWidget(self)
-            self.list_.resize(510, 340)
+            self.list_.resize(480, 340)
             self.list_.move(40, 90)
             self.list_.setIconSize(QSize(32, 32))
             self.list_.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            )
+            self.list_.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn
             )
             self.list_.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
@@ -5066,16 +5414,16 @@ def main():
         #
         def init_options(self):
             self.list_.clearSelection()
+            self.list_.setStyleSheet('margin-left: 8px;')
 
             self.options = {
-                "rpc": QListWidgetItem("      RPC settings"),
-                "pass": QListWidgetItem("      Change password"),
-                "show_pkey": QListWidgetItem("      Show private key"),
-                "gif_on_off": QListWidgetItem("      Play loading screen gif:"),
-                "lock_wallet": QListWidgetItem(
-                    "      Configure lock settings"
-                ),
-                "about": QListWidgetItem("      About TigerWallet"),
+                "rpc": QListWidgetItem("RPC settings"),
+                "pass": QListWidgetItem("Change password"),
+                "show_pkey": QListWidgetItem("Show private key"),
+                "gif_on_off": QListWidgetItem("Play loading screen gif"),
+                "lock_wallet": QListWidgetItem("Configure lock settings"),
+                "theme_switch": QListWidgetItem("Switch to light mode"),
+                "about": QListWidgetItem("About TigerWallet"),
             }
 
             for option in self.options:
@@ -5091,6 +5439,25 @@ def main():
                 self.options['gif_on_off'].setText(
                     self.options['gif_on_off'].text() + ' OFF'
                 )
+
+            if prog.configs['theme'] == 'default_dark':
+                self.options['theme_switch'].setText(
+                    f"{self.options['theme_switch'].text()} light mode"
+                )
+
+                self.options['theme_switch'].setIcon(
+                    TigerWalletImage.sun_blue
+                )
+
+            elif prog.configs['theme'] == 'default_light':
+                self.options['theme_switch'].setText(
+                    f"{self.options['theme_switch'].text()} dark mode"
+                )
+
+                self.options['theme_switch'].setIcon(
+                    TigerWalletImage.moon_blue
+                )
+
 
             self.options["rpc"].setIcon(TigerWalletImage.rpc_blue)
             self.options["pass"].setIcon(TigerWalletImage.pass_blue)
@@ -5124,7 +5491,7 @@ def main():
 
                         prog.configs['play_loading_gif'] = True
 
-                    with open(prog.conf_file, 'w') as f:
+                    with open(prog.conf_file, mode='w') as f:
                         json.dump(
                             obj=prog.configs,
                             fp=f,
@@ -5145,6 +5512,46 @@ def main():
                 elif item.text() == self.options["about"].text():
                     self.list_.clearSelection()
                     self.launch_about_window()
+
+                elif item.text() == self.options['theme_switch'].text():
+                    self.list_.clearSelection()
+
+                    if prog.configs['theme'] == 'default_dark':
+                        self.options['theme_switch'].setIcon(
+                            TigerWalletImage.sun_blue
+                        )
+
+                        prog.configs["theme"] = "default_light"
+
+                        with open(
+                            prog.local_path + 'light.css',
+                            mode='r',
+                            encoding="utf-8"
+                        ) as f:
+                            app.setStyleSheet(f.read())
+
+                        self.apply_light_mode()
+                        self.master.apply_default_light_theme()
+
+                    elif prog.configs["theme"] == "default_light":
+                        self.options['theme_switch'].setIcon(
+                            TigerWalletImage.moon_blue
+                        )
+
+                        prog.configs["theme"] = "default_dark"
+
+                        with open(
+                            prog.local_path + 'dark.css',
+                            mode='r',
+                            encoding="utf-8"
+                        ) as f:
+                            app.setStyleSheet(f.read())
+
+                        self.apply_dark_mode()
+                        self.master.apply_default_dark_theme()
+
+                    with open(prog.conf_file, "w") as f:
+                        json.dump(prog.configs, f, indent=4)
 
             self.list_.itemClicked.connect(user_choice)
 
@@ -5272,16 +5679,21 @@ def main():
             )
             self.about_parent.hide()
 
-
         def close_self(self):
             self.master.button_box.show()
             self.master.border.show()
             self.master.lock_wallet_button.show()
             self.master.setEnabled(True)
             self.master.donation_button.show()
-            self.master.dark_light_switch.show()
+            self.master.currency_box.show()
             self.master.switch_network_button.show()
             self.master.btn_showhide.show()
+
+            if prog.configs["theme"] == "default_dark":
+                self.master.setStyleSheet('background: #0a0f18;')
+
+            elif prog.configs["theme"] == "default_light":
+                self.master.setStyleSheet('background: #eff1f3;')
 
             self.hide()
 
@@ -5301,22 +5713,22 @@ def main():
                 self.master.del_coin_btn.show()
 
             elif self.master.tab == 1:
-                self.master.show_tab1_contents()
+                self.master.show_tab1()
 
             elif self.master.tab == 2:
-                self.master.show_tab2_contents()
+                self.master.show_tab2()
 
             elif self.master.tab == 3:
-                self.master.show_tab3_contents()
+                self.master.show_tab3()
 
             elif self.master.tab == 4:
-                self.master.show_tab4_contents()
+                self.master.show_tab4()
 
             elif self.master.tab == 5:
-                self.master.show_tab5_contents()
+                self.master.show_tab5()
 
             elif self.master.tab == 6:
-                self.master.show_tab6_contents()
+                self.master.show_tab6()
 
 
         def launch_about_window(self):
@@ -5328,22 +5740,7 @@ def main():
             self.about_parent.setStyleSheet("background-color: transparent;")
 
             self.close_settings_window.setStyleSheet(
-                "QPushButton{background-color:  transparent;"
-                + "font-size: 15px;"
-                + "color: #eff1f3;"
-                + "border-radius: 8px;}"
-                + "QPushButton::hover{background-color: #363636;}"
-            )
-
-            self.list_.setStyleSheet(
-                "QListView {font-size: 20px;"
-                + "color: #b0c4de;"
-                + "padding: 16px;"
-                + "border-radius: 16px;"
-                + "background: transparent;}"
-                + "QListView::item:hover{color: #90B3F3;"
-                "background: #363636;"
-                "border-radius: 8px;}"
+                "QPushButton::hover{background-color: #363636;}"
             )
 
             self.settingslbl.setStyleSheet(
@@ -5394,11 +5791,7 @@ def main():
             )
 
             self.close_about.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
         def apply_light_mode(self):
@@ -5406,22 +5799,7 @@ def main():
             self.about_parent.setStyleSheet("background-color: transparent;")
 
             self.close_settings_window.setStyleSheet(
-                "QPushButton{background-color:  transparent;"
-                + "font-size: 15px;"
-                + "color: #3c598e;"
-                + "border-radius: 8px;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
-            )
-
-            self.list_.setStyleSheet(
-                "QListWidget {font-size: 20px;"
-                + "color: #3c598e;"
-                + "padding: 7px;"
-                + "border: transparent;"
-                + "background: transparent;}"
-                + "QListView::item:hover{color: #3c598e;"
-                + "background: #ced7e9;"
-                + "border-radius: 8px;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.settingslbl.setStyleSheet(
@@ -5465,18 +5843,14 @@ def main():
             )
 
             self.close_about.setStyleSheet(
-                "QPushButton{background-color:  transparent;"
-                + "font-size: 15px;"
-                + "color: #3c598e;"
-                + "border-radius: 8px;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
         def change_rpc(self):
             self.list_.hide()
 
             self.rpc_list_options = QListWidget(self)
-            self.rpc_list_options.resize(530, 196)
+            self.rpc_list_options.resize(550, 196)
             self.rpc_list_options.move(30, 80)
             self.rpc_list_options.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
@@ -5492,7 +5866,7 @@ def main():
                 self.rpc_list_options.insertItem(*item)
 
             for i in range(len(self.rpc_list)):
-                self.rpc_list_options.item(i).setSizeHint(QSize(0, 54))
+                self.rpc_list_options.item(i).setSizeHint(QSize(480, 50))
 
                 if (
                     self.rpc_list[i]
@@ -5547,74 +5921,28 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.delete_rpc_btn.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.add_rpc_btn.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.cancel_rpc_btn.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
-                )
-
-                self.rpc_list_options.setStyleSheet(
-                    "QListView {font-size: 20px;"
-                    + "color: #b0c4de;"
-                    + "padding: 16px;"
-                    + "border-radius: 16px;"
-                    + "background: transparent;}"
-                    + "QListView::item:hover{color: #90B3F3;"
-                    + "background: #363636;"
-                    + "border-radius: 8px;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
             elif prog.configs["theme"] == "default_light":
                 self.delete_rpc_btn.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.add_rpc_btn.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.cancel_rpc_btn.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
-                )
-
-                self.rpc_list_options.setStyleSheet(
-                    "QListWidget {font-size: 20px;"
-                    + "color: #3c598e;"
-                    + "padding: 7px;"
-                    + "border: transparent;"
-                    + "background: transparent;}"
-                    + "QListView::item:hover{color: #3c598e;"
-                    "background: #adb4bf;"
-                    "border-radius: 8px;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
         def add_rpc_window(self):
@@ -5796,7 +6124,7 @@ def main():
                         provider = Web3.HTTPProvider(
                             self.rpc + self.port,
                             exception_retry_configuration=None,
-                            request_kwargs={"timeout": 15},
+                            request_kwargs={"timeout": (5, 1)},
                         )
 
                         patch_provider(provider)
@@ -5908,19 +6236,11 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.cancel_add_rpc.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.add_user_rpc.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.enter_rpc_msg.setStyleSheet(
@@ -5929,28 +6249,10 @@ def main():
                     + "background: transparent;"
                 )
 
-                self.add_rpc_https.setStyleSheet(
-                    "color: #c5d4e7; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
-                )
-
                 self.rpclbl.setStyleSheet(
                     "font-size: 16px;"
                     + "color: #9fb1ca;"
                     + "background: transparent;"
-                )
-
-                self.add_rpc_port.setStyleSheet(
-                    "color: #c5d4e7; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
                 )
 
                 self.portlbl.setStyleSheet(
@@ -5961,19 +6263,11 @@ def main():
 
             elif prog.configs["theme"] == "default_light":
                 self.cancel_add_rpc.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.add_user_rpc.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.enter_rpc_msg.setStyleSheet(
@@ -5982,28 +6276,10 @@ def main():
                     + "background: transparent;"
                 )
 
-                self.add_rpc_https.setStyleSheet(
-                    "color: #3c598e; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
-                )
-
                 self.rpclbl.setStyleSheet(
                     "font-size: 16px;"
                     + "color: #3c598e;"
                     + "background: transparent;"
-                )
-
-                self.add_rpc_port.setStyleSheet(
-                    "color: #3c598e; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
                 )
 
                 self.portlbl.setStyleSheet(
@@ -6220,7 +6496,7 @@ def main():
                 icon=TigerWalletImage.closed_eye
             )
 
-            self.btn_eye1.setIconSize(QSize(28, 28))
+            self.btn_eye1.setIconSize(QSize(32, 32))
             self.btn_eye1.move(521, 132)
             self.btn_eye1.show()
             self.btn_eye1.clicked.connect(_unhide1)
@@ -6230,7 +6506,7 @@ def main():
                 icon=TigerWalletImage.closed_eye
             )
 
-            self.btn_eye2.setIconSize(QSize(28, 28))
+            self.btn_eye2.setIconSize(QSize(32, 32))
             self.btn_eye2.move(521, 192)
             self.btn_eye2.show()
             self.btn_eye2.clicked.connect(_unhide2)
@@ -6240,7 +6516,7 @@ def main():
                 icon=TigerWalletImage.closed_eye
             )
 
-            self.btn_eye3.setIconSize(QSize(28, 28))
+            self.btn_eye3.setIconSize(QSize(32, 32))
             self.btn_eye3.move(521, 252)
             self.btn_eye3.show()
             self.btn_eye3.clicked.connect(_unhide3)
@@ -6313,20 +6589,7 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.cancel_change_passwd.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
-                )
-
-                self.current_password.setStyleSheet(
-                    "color: #90b3f3; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.current_password_lbl.setStyleSheet(
@@ -6335,28 +6598,10 @@ def main():
                     + "background: transparent;"
                 )
 
-                self.new_password1.setStyleSheet(
-                    "color: #90b3f3; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
-                )
-
                 self.new_password1_lbl.setStyleSheet(
                     "font-size: 16px;"
                     + "color: #c5d4e7;"
                     + "background: transparent;"
-                )
-
-                self.new_password2.setStyleSheet(
-                    "color: #90b3f3; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
                 )
 
                 self.new_password2_lbl.setStyleSheet(
@@ -6385,20 +6630,7 @@ def main():
 
             elif prog.configs["theme"] == "default_light":
                 self.cancel_change_passwd.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
-                )
-
-                self.current_password.setStyleSheet(
-                    "color: #3c598e; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.current_password_lbl.setStyleSheet(
@@ -6407,28 +6639,10 @@ def main():
                     + "background: transparent;"
                 )
 
-                self.new_password1.setStyleSheet(
-                    "color: #3c598e; "
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{ color: #767e89; }"
-                )
-
                 self.new_password1_lbl.setStyleSheet(
                     "font-size: 14px;"
                     + "color: #3c598e;"
                     + "background: transparent;"
-                )
-
-                self.new_password2.setStyleSheet(
-                    "color: #3c598e;"
-                    + "font: 14px;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 8px;"
-                    + "padding: 7px;"
-                    + "QLineEdit::placeholder{color: #767e89;}"
                 )
 
                 self.new_password2_lbl.setStyleSheet(
@@ -6560,42 +6774,12 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.close_change_timer.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
-                )
-
-                self.timer_list_options.setStyleSheet(
-                    "QListView {font-size: 18px;"
-                    + "color: #b0c4de;"
-                    + "padding: 16px;"
-                    + "border-radius: 16px;"
-                    + "background: transparent;}"
-                    + "QListView::item:hover{color: #90B3F3;"
-                    "background: #363636;"
-                    "border-radius: 8px;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
             elif prog.configs["theme"] == "default_light":
                 self.close_change_timer.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
-                )
-
-                self.timer_list_options.setStyleSheet(
-                    "QListWidget {font-size: 20px;"
-                    + "color: #3c598e;"
-                    + "padding: 7px;"
-                    + "border: transparent;"
-                    + "background: transparent;}"
-                    + "QListView::item:hover{color: #3c598e;"
-                    + "background: #adb4bf;"
-                    + "border-radius: 8px;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
             self.close_change_timer.show()
@@ -6721,7 +6905,8 @@ def main():
                     )
 
                 msgbox(
-                    'RPC successfully changed to: ' + choice
+                    'RPC successfully changed to: '
+                    + choice
                 )
 
         def _close_change_passwd_window(self):
@@ -6764,7 +6949,6 @@ def main():
             self.has_changes = False
             self.had_error = False
             self.master = master
-            self.data = {}
             self.address = prog.account.address
 
         def work(self):
@@ -6773,23 +6957,41 @@ def main():
 
             dest_path = prog.dest_path
 
-            url = f"https://api.ethplorer.io/getAddressHistory/{self.address}"
-            key = "?apiKey=freekey&limit=100&showZeroValues=false"
+            if prog.chain == 'eth':
+                url = f"https://api.ethplorer.io/getAddressHistory/{self.address}"
+                key = "?apiKey=freekey&limit=100&showZeroValues=false"
 
-            self.data = s.get(url + key)
-            self.data = self.data.json()
+                data = s.get(url + key)
+                data = orjson.loads(data.text)
 
-            if self.data["operations"] != self.master.data:
-                self.has_changes = True
+                if data["operations"] != self.master.data:
+                    self.has_changes = True
+
+            elif prog.chain == 'base':
+                url = (
+                    f"https://base.blockscout.com/api/v2/addresses/{self.address}/token-transfers?"
+                    'type=ERC-20%2CERC-721%2CERC-1155&filter=to%20%7C%20from'
+                )
+
+                data = s.get(url, stream=True)
+                data = orjson.loads(data.text)
+
+                if data != self.master.data:
+                    self.has_changes = True
 
             self.is_done.emit(True)
 
+    # Added history for Base in v3.0
+    # Fixed a bug where load table was not set correctly
     class WalletHistory(QWidget):
-        def __init__(self):
+        def __init__(self, chain='eth'):
             super().__init__()
+            self.chain = chain
             self.max_ = 25
             self.transfers = 0
             self.address = prog.account.address
+            self.total_tx = 0
+            self.data = {}
 
             self.load_file()
 
@@ -6797,6 +6999,7 @@ def main():
             self.init_table()
             self.init_tip()
             self.init_refresh_button()
+            self.init_no_tx_msg()
 
             self.unload_history_data()
             self.init_limit_selector()
@@ -6812,11 +7015,7 @@ def main():
                 self.setStyleSheet("background: #0a0f18;")
 
                 self.refresh.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #9fb1ca;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.history_title.setStyleSheet(
@@ -6831,52 +7030,13 @@ def main():
                     + "background: transparent;"
                 )
 
-                self.history_table.setStyleSheet(
-                    "QTableView{font-size: 16px;"
-                    + "gridline-color: #363636;"
-                    + "border-radius: 16px;"
-                    + "color: #eff1f3;}"
-                    # Upper part of the table
-                    + "QHeaderView::section{background: #0a0f18;"
-                    + "border-radius: 8px;"
-                    + "color: #b0c4de;"
-                    + "margin: 5px;"
-                    + "border: 1px solid gray;"
-                    + "font-size: 16px;}"
-                )
-
-                if os.name == "nt":
-                    self.selector.setStyleSheet(
-                        "QComboBox {border: 2px solid #778ba5;"
-                        + "padding: 8px;"
-                        + "font: 18px;"
-                        + "border-radius: 4px;"
-                        + "background: #0a0f18;"
-                        + "color: #b0c4de;}"
-                        + "QAbstractItemView {background-color: transparent;"
-                        + "color: #b0c4de;"
-                        + "border: 2px solid #778ba5;"
-                        + "border-radius: 4px;"
-                        + "padding: 8px;}"
-                    )
-
-                else:
-                    self.selector.setStyleSheet(
-                        "QComboBox {border: 2px solid #778ba5;"
-                        "border-radius: 4px;"
-                        "color: #b0c4de;"
-                        "font: 18px;}"
-                    )
+                fix_white_borders([self.selector])
 
             elif prog.configs["theme"] == "default_light":
                 self.setStyleSheet("background-color: #eff1f3;")
 
                 self.refresh.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.history_title.setStyleSheet(
@@ -6891,42 +7051,7 @@ def main():
                     + "background: transparent;"
                 )
 
-                self.history_table.setStyleSheet(
-                    "QTableView{font-size: 16px;"
-                    + "gridline-color: #c9cdcd;"
-                    + "border-radius: 16px;"
-                    + "color: black;}"
-                    # Upper part of the table
-                    + "QHeaderView::section{background-color: #eff1f3;"
-                    + "border-radius: 8px;"
-                    + "color: #3c598e;"
-                    + "margin: 5px;"
-                    + "border: 2px solid gray;"
-                    + "font-size: 16px;}"
-                )
-
-                if os.name == "nt":
-                    self.selector.setStyleSheet(
-                        "QComboBox {border: 2px solid #778ba5;"
-                        + "padding: 8px;"
-                        + "font: 18px;"
-                        + "border-radius: 4px;"
-                        + "background: #eff1f3;"
-                        + "color: #3c598e;}"
-                        + "QAbstractItemView {background-color: transparent;"
-                        + "color: #3c598e;"
-                        + "border: 2px solid #778ba5;"
-                        + "border-radius: 4px;"
-                        + "padding: 8px;}"
-                    )
-
-                else:
-                    self.selector.setStyleSheet(
-                        "QComboBox {border: 2px solid #778ba5;"
-                        "border-radius: 4px;"
-                        "color: #3c598e;"
-                        "font: 18px;}"
-                    )
+                fix_white_borders([self.selector], theme='light')
 
         def init_window(self) -> None:
             self.setFixedWidth(1300)
@@ -7001,23 +7126,6 @@ def main():
             self.selector.setCurrentIndex(1)
             self.selector.activated.connect(self.adjust_table)
 
-            if os.name != "nt":
-                pal = self.selector.palette()
-
-                if prog.configs["theme"] == "default_dark":
-                    pal.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#3c598e"),
-                    )
-
-                elif prog.configs["theme"] == "default_light":
-                    pal.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#3c598e"),
-                    )
-
-                self.selector.setPalette(pal)
-
         def init_no_tx_msg(self) -> None:
             self.notx = QLabel(self)
 
@@ -7032,10 +7140,11 @@ def main():
             self.notx.resize(1310, 220)
             self.notx.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.notx.move(0, 200)
+            self.notx.hide()
 
             self.pix_holder = QLabel(self)
             self.pix_holder.resize(64, 64)
-            self.pix_holder.move(368, 280)
+            self.pix_holder.move(340, 280)
             self.pix_holder.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.pix = QPixmap()
             self.pix.load(
@@ -7050,6 +7159,7 @@ def main():
             )
 
             self.pix_holder.setPixmap(self.pix)
+            self.pix_holder.hide()
 
             if prog.configs["theme"] == "default_dark":
                 self.notx.setStyleSheet(
@@ -7098,10 +7208,9 @@ def main():
                     self.uhw.quit()
                     self.ubt.quit()
 
-                    if self.uhw.has_changes:
-                        if not self.notx.isHidden():
-                            self.notx.close()
-                            self.pix_holder.close()
+                    if self.uhw.has_changes and not self.notx.isHidden():
+                        self.notx.close()
+                        self.pix_holder.close()
 
                         # Clear table contents
                         [
@@ -7117,10 +7226,10 @@ def main():
                     if self.uhw.had_error:
                         pass
                     else:
-                        msgbox("No transactions found")
+                        msgbox("No new transactions were found")
 
                     self.refresh.setEnabled(True)
-                    self.refresh.setText("Refresh")
+                    self.refresh.setText(" Refresh")
                     self.refresh.resize(140, 40)
                     self.refresh.move(1000, 92)
 
@@ -7143,63 +7252,147 @@ def main():
             )
 
         def load_file(self) -> None:
-            with open(
-                prog.dest_path
-                + "history.json", "rb"
-            ) as f:
-                self.data = orjson.loads(f.read())
+            if self.chain == 'eth':
+                with open(
+                    prog.dest_path
+                    + "history_eth.json", "rb"
+                ) as f:
+                    self.data = orjson.loads(f.read())
 
-                if "error" in self.data:
-                    self.data = {"operations": []}
+                    if "error" in self.data:
+                        self.data = {"operations": []}
 
-                    self.total_tx = -1
-                    return
+                        self.total_tx = -1
+                        return
 
-                self.data = self.data["operations"]
-                sz = len(self.data)
-                self.total_tx = sz
+                    self.data = self.data["operations"]
+                    self.total_tx = len(self.data)
+
+            elif self.chain == 'base':
+                with open(
+                    prog.dest_path
+                    + "history_base.json", "rb"
+                ) as f:
+                    self.data = orjson.loads(f.read())
+
+                    if "error" in self.data:
+                        self.data = {}
+
+                        self.total_tx = -1
+                        return
+
+                    self.total_tx = len(self.data['items'])
 
         # Timestamps
         def load_block_timestamps(self) -> list:
-            from datetime import datetime
+            times = []
 
-            times = [
-                self.data[n]["timestamp"]
-                for n in range(self.total_tx)
-            ]
+            if self.chain == 'eth':
+                from datetime import datetime
 
-            timess = [
-                datetime.fromtimestamp(times[i])
-                for i in range(self.total_tx)
-            ]
+                times_ = [
+                    self.data[n]["timestamp"]
+                    for n in range(self.total_tx)
+                ]
 
-            return timess
+                times = [
+                    datetime.fromtimestamp(times[n])
+                    for n in range(self.total_tx)
+                ]
+
+            elif self.chain == 'base':
+                if self.total_tx != 0:
+                    times = [
+                        self.data['items'][n]['timestamp'][:10]
+                        for n in range(self.total_tx)
+                    ]
+
+            return times
 
         # Symbols
         def load_symbols(self) -> list:
-            return [
-                self.data[n]["tokenInfo"]["symbol"]
-                for n in range(self.total_tx)
-            ]
+            if self.chain == 'eth':
+                return [
+                    self.data[n]["tokenInfo"]["symbol"]
+                    for n in range(self.total_tx)
+                ]
+
+            elif self.chain == 'base':
+                return [
+                    self.data['items'][i]['token']['symbol']
+                    for i in range(self.total_tx)
+                ]
 
         # From addresses
         def load_from_addresses(self) -> list:
-            return [self.data[n]["from"] for n in range(self.total_tx)]
+            if self.chain == 'eth':
+                return [
+                    self.data[n]["from"]
+                    for n in range(self.total_tx)
+                ]
+
+
+            elif self.chain == 'base':
+                return [
+                    self.data['items'][n]["from"]['hash']
+                    for n in range(self.total_tx)
+                ]
 
         # To addresses
         def load_to_addresses(self) -> list:
-            return [self.data[n]["to"] for n in range(self.total_tx)]
+            if self.chain == 'eth':
+                return [
+                    self.data[n]["to"]
+                    for n in range(self.total_tx)
+                ]
+
+
+            elif self.chain == 'base':
+                return [
+                    self.data['items'][n]["to"]['hash']
+                    for n in range(self.total_tx)
+                ]
 
         # Hashes
         def load_hashes(self) -> list:
-            return [
-                self.data[n]["transactionHash"]
-                for n in range(self.total_tx)
-            ]
+            if self.chain == 'eth':
+                return [
+                    self.data[n]["transactionHash"]
+                    for n in range(self.total_tx)
+                ]
+
+
+            elif self.chain == 'base':
+                return [
+                    self.data['items'][n]["transaction_hash"]
+                    for n in range(self.total_tx)
+                ]
 
         # Amount
         def load_amount(self) -> list:
-            return [self.data[n]["value"] for n in range(self.total_tx)]
+            if self.chain == 'eth':
+                return [
+                    self.data[n]["value"]
+                    for n in range(self.total_tx)
+                ]
+
+            elif self.chain == 'base':
+                amount_in_wei = [
+                    self.data['items'][n]["total"]['value']
+                    for n in range(self.total_tx)
+                ]
+
+                decimals = [
+                    self.data['items'][n]["total"]['decimals']
+                    for n in range(self.total_tx)
+                ]
+
+                amount = [
+                    int(item) / (10**int(dec))
+                    for item, dec in zip(amount_in_wei, decimals)
+                ]
+
+                return amount
 
         def unload_history_data(self) -> None:
             """
@@ -7208,6 +7401,15 @@ def main():
 
             The table gets filled up pretty much instantly.
             """
+            if self.total_tx == 0:
+                self.history_table.setRowCount(0)
+                self.notx.show()
+                self.pix_holder.show()
+                return
+
+            elif self.total_tx < self.max_:
+                self.history_table.setRowCount(self.total_tx)
+
             with ThreadPoolExecutor(max_workers=15) as pool:
                 self.times = pool.submit(self.load_block_timestamps).result()
                 self.symbols = pool.submit(self.load_symbols).result()
@@ -7216,18 +7418,13 @@ def main():
                 self.hashes = pool.submit(self.load_hashes).result()
                 self.amount = pool.submit(self.load_amount).result()
 
-                if self.total_tx == 0:
-                    self.history_table.setRowCount(0)
-                    self.init_no_tx_msg()
-                    return
-
                 # Timestamps
                 pool.submit(
                     [
                         self.history_table.setItem(
                             item, 0, QTableWidgetItem(str(self.times[item]))
                         )
-                        for item in range(self.max_)
+                        for item in range(self.total_tx)
                     ]
                 )
 
@@ -7237,7 +7434,7 @@ def main():
                         self.history_table.setItem(
                             item, 1, QTableWidgetItem(self.symbols[item])
                         )
-                        for item in range(self.max_)
+                        for item in range(self.total_tx)
                     ]
                 )
 
@@ -7247,7 +7444,7 @@ def main():
                         self.history_table.setItem(
                             item, 2, QTableWidgetItem(self.faddr[item])
                         )
-                        for item in range(self.max_)
+                        for item in range(self.total_tx)
                     ]
                 )
 
@@ -7257,7 +7454,7 @@ def main():
                         self.history_table.setItem(
                             item, 3, QTableWidgetItem(self.taddr[item])
                         )
-                        for item in range(self.max_)
+                        for item in range(self.total_tx)
                     ]
                 )
 
@@ -7267,7 +7464,7 @@ def main():
                         self.history_table.setItem(
                             item, 4, QTableWidgetItem(self.hashes[item])
                         )
-                        for item in range(self.max_)
+                        for item in range(self.total_tx)
                     ]
                 )
 
@@ -7280,34 +7477,12 @@ def main():
                             QTableWidgetItem(
                                 rm_scientific_notation(
                                     float(self.amount[item])
-                                )[:15]
+                                )[:14]
                             ),
                         )
-                        for item in range(self.max_)
+                        for item in range(self.total_tx)
                     ]
                 )
-
-            # Align labels to the center
-            [
-                self.history_table.item(i, ii).setTextAlignment(
-                    Qt.AlignmentFlag.AlignCenter
-                )
-                for i in range(self.max_)
-                for ii in range(6)
-            ]
-
-            # Make the labels less crammed
-            [
-                self.history_table.item(i, ii).setSizeHint(
-                    QSize(self.header_sizes[ii], 52)
-                )
-                for i in range(self.max_)
-                for ii in range(6)
-            ]
-
-            # Apply the setSizeHint settings
-            self.history_table.resizeColumnsToContents()
-            self.history_table.resizeRowsToContents()
 
         def copy_clicked_item(self):
             if self.total_tx == 0:
@@ -7327,22 +7502,9 @@ def main():
                 )
 
                 self.clicked_item = self.item.text()
-                self.addr = None
 
-                if self.column == 2:
-                    self.addr = self.data[self.row]["from"]
-                    self.clicked_item = (
-                        f"{self.clicked_item} (Address: {self.addr})"
-                    )
-
-                elif self.column == 3:
-                    self.addr = self.data[self.row]["to"]
-                    self.clicked_item = (
-                        f"{self.clicked_item} (Address: {self.addr})"
-                    )
-
-                QApplication.clipboard().setText(self.addr)
-                msgbox(f"{self.clicked_item} copied to copy_blue")
+                QApplication.clipboard().setText(self.clicked_item)
+                msgbox(f"{self.clicked_item} copied to clipboard")
 
         def adjust_table(self, i) -> None:
             self.selection = int(self.options[i])
@@ -7363,16 +7525,279 @@ def main():
             # Fill table contents
             self.unload_history_data()
 
+    class UniSwap:
+        uniswap_abi = orjson.loads(
+            """[{"inputs":[{"components":[{"internalType":"address","name":"permit2","type":"address"},{"internalType":"address","name":"weth9","type":"address"},{"internalType":"address","name":"seaport","type":"address"},{"internalType":"address","name":"nftxZap","type":"address"},{"internalType":"address","name":"x2y2","type":"address"},{"internalType":"address","name":"foundation","type":"address"},{"internalType":"address","name":"sudoswap","type":"address"},{"internalType":"address","name":"nft20Zap","type":"address"},{"internalType":"address","name":"cryptopunks","type":"address"},{"internalType":"address","name":"looksRare","type":"address"},{"internalType":"address","name":"routerRewardsDistributor","type":"address"},{"internalType":"address","name":"looksRareRewardsDistributor","type":"address"},{"internalType":"address","name":"looksRareToken","type":"address"},{"internalType":"address","name":"v2Factory","type":"address"},{"internalType":"address","name":"v3Factory","type":"address"},{"internalType":"bytes32","name":"pairInitCodeHash","type":"bytes32"},{"internalType":"bytes32","name":"poolInitCodeHash","type":"bytes32"}],"internalType":"struct RouterParameters","name":"params","type":"tuple"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"ContractLocked","type":"error"},{"inputs":[],"name":"ETHNotAccepted","type":"error"},{"inputs":[{"internalType":"uint256","name":"commandIndex","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"}],"name":"ExecutionFailed","type":"error"},{"inputs":[],"name":"FromAddressIsNotOwner","type":"error"},{"inputs":[],"name":"InsufficientETH","type":"error"},{"inputs":[],"name":"InsufficientToken","type":"error"},{"inputs":[],"name":"InvalidBips","type":"error"},{"inputs":[{"internalType":"uint256","name":"commandType","type":"uint256"}],"name":"InvalidCommandType","type":"error"},{"inputs":[],"name":"InvalidOwnerERC1155","type":"error"},{"inputs":[],"name":"InvalidOwnerERC721","type":"error"},{"inputs":[],"name":"InvalidPath","type":"error"},{"inputs":[],"name":"InvalidReserves","type":"error"},{"inputs":[],"name":"LengthMismatch","type":"error"},{"inputs":[],"name":"NoSlice","type":"error"},{"inputs":[],"name":"SliceOutOfBounds","type":"error"},{"inputs":[],"name":"SliceOverflow","type":"error"},{"inputs":[],"name":"ToAddressOutOfBounds","type":"error"},{"inputs":[],"name":"ToAddressOverflow","type":"error"},{"inputs":[],"name":"ToUint24OutOfBounds","type":"error"},{"inputs":[],"name":"ToUint24Overflow","type":"error"},{"inputs":[],"name":"TransactionDeadlinePassed","type":"error"},{"inputs":[],"name":"UnableToClaim","type":"error"},{"inputs":[],"name":"UnsafeCast","type":"error"},{"inputs":[],"name":"V2InvalidPath","type":"error"},{"inputs":[],"name":"V2TooLittleReceived","type":"error"},{"inputs":[],"name":"V2TooMuchRequested","type":"error"},{"inputs":[],"name":"V3InvalidAmountOut","type":"error"},{"inputs":[],"name":"V3InvalidCaller","type":"error"},{"inputs":[],"name":"V3InvalidSwap","type":"error"},{"inputs":[],"name":"V3TooLittleReceived","type":"error"},{"inputs":[],"name":"V3TooMuchRequested","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardsSent","type":"event"},{"inputs":[{"internalType":"bytes","name":"looksRareClaim","type":"bytes"}],"name":"collectRewards","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes","name":"commands","type":"bytes"},{"internalType":"bytes[]","name":"inputs","type":"bytes[]"}],"name":"execute","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"bytes","name":"commands","type":"bytes"},{"internalType":"bytes[]","name":"inputs","type":"bytes[]"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"execute","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256[]","name":"","type":"uint256[]"},{"internalType":"uint256[]","name":"","type":"uint256[]"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"onERC1155BatchReceived","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"onERC1155Received","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"onERC721Received","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"int256","name":"amount0Delta","type":"int256"},{"internalType":"int256","name":"amount1Delta","type":"int256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"uniswapV3SwapCallback","outputs":[],"stateMutability":"nonpayable","type":"function"},{"stateMutability":"payable","type":"receive"}]
+            """
+        )
+
+        permit2_abi = orjson.loads(
+            '''[{"inputs":[{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"AllowanceExpired","type":"error"},{"inputs":[],"name":"ExcessiveInvalidation","type":"error"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"InsufficientAllowance","type":"error"},{"inputs":[{"internalType":"uint256","name":"maxAmount","type":"uint256"}],"name":"InvalidAmount","type":"error"},{"inputs":[],"name":"InvalidContractSignature","type":"error"},{"inputs":[],"name":"InvalidNonce","type":"error"},{"inputs":[],"name":"InvalidSignature","type":"error"},{"inputs":[],"name":"InvalidSignatureLength","type":"error"},{"inputs":[],"name":"InvalidSigner","type":"error"},{"inputs":[],"name":"LengthMismatch","type":"error"},{"inputs":[{"internalType":"uint256","name":"signatureDeadline","type":"uint256"}],"name":"SignatureExpired","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint160","name":"amount","type":"uint160"},{"indexed":false,"internalType":"uint48","name":"expiration","type":"uint48"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"address","name":"spender","type":"address"}],"name":"Lockdown","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint48","name":"newNonce","type":"uint48"},{"indexed":false,"internalType":"uint48","name":"oldNonce","type":"uint48"}],"name":"NonceInvalidation","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint160","name":"amount","type":"uint160"},{"indexed":false,"internalType":"uint48","name":"expiration","type":"uint48"},{"indexed":false,"internalType":"uint48","name":"nonce","type":"uint48"}],"name":"Permit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"uint256","name":"word","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"mask","type":"uint256"}],"name":"UnorderedNonceInvalidation","type":"event"},{"inputs":[],"name":"DOMAIN_SEPARATOR","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint160","name":"amount","type":"uint160"},{"internalType":"uint48","name":"expiration","type":"uint48"},{"internalType":"uint48","name":"nonce","type":"uint48"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint160","name":"amount","type":"uint160"},{"internalType":"uint48","name":"expiration","type":"uint48"}],"name":"approve","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint48","name":"newNonce","type":"uint48"}],"name":"invalidateNonces","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"wordPos","type":"uint256"},{"internalType":"uint256","name":"mask","type":"uint256"}],"name":"invalidateUnorderedNonces","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"internalType":"struct IAllowanceTransfer.TokenSpenderPair[]","name":"approvals","type":"tuple[]"}],"name":"lockdown","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"nonceBitmap","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"components":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint160","name":"amount","type":"uint160"},{"internalType":"uint48","name":"expiration","type":"uint48"},{"internalType":"uint48","name":"nonce","type":"uint48"}],"internalType":"struct IAllowanceTransfer.PermitDetails[]","name":"details","type":"tuple[]"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"sigDeadline","type":"uint256"}],"internalType":"struct IAllowanceTransfer.PermitBatch","name":"permitBatch","type":"tuple"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"permit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"components":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint160","name":"amount","type":"uint160"},{"internalType":"uint48","name":"expiration","type":"uint48"},{"internalType":"uint48","name":"nonce","type":"uint48"}],"internalType":"struct IAllowanceTransfer.PermitDetails","name":"details","type":"tuple"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"sigDeadline","type":"uint256"}],"internalType":"struct IAllowanceTransfer.PermitSingle","name":"permitSingle","type":"tuple"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"permit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"internalType":"struct ISignatureTransfer.TokenPermissions","name":"permitted","type":"tuple"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"internalType":"struct ISignatureTransfer.PermitTransferFrom","name":"permit","type":"tuple"},{"components":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"requestedAmount","type":"uint256"}],"internalType":"struct ISignatureTransfer.SignatureTransferDetails","name":"transferDetails","type":"tuple"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"permitTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"internalType":"struct ISignatureTransfer.TokenPermissions[]","name":"permitted","type":"tuple[]"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"internalType":"struct ISignatureTransfer.PermitBatchTransferFrom","name":"permit","type":"tuple"},{"components":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"requestedAmount","type":"uint256"}],"internalType":"struct ISignatureTransfer.SignatureTransferDetails[]","name":"transferDetails","type":"tuple[]"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"permitTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"internalType":"struct ISignatureTransfer.TokenPermissions","name":"permitted","type":"tuple"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"internalType":"struct ISignatureTransfer.PermitTransferFrom","name":"permit","type":"tuple"},{"components":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"requestedAmount","type":"uint256"}],"internalType":"struct ISignatureTransfer.SignatureTransferDetails","name":"transferDetails","type":"tuple"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"bytes32","name":"witness","type":"bytes32"},{"internalType":"string","name":"witnessTypeString","type":"string"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"permitWitnessTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"internalType":"struct ISignatureTransfer.TokenPermissions[]","name":"permitted","type":"tuple[]"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"internalType":"struct ISignatureTransfer.PermitBatchTransferFrom","name":"permit","type":"tuple"},{"components":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"requestedAmount","type":"uint256"}],"internalType":"struct ISignatureTransfer.SignatureTransferDetails[]","name":"transferDetails","type":"tuple[]"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"bytes32","name":"witness","type":"bytes32"},{"internalType":"string","name":"witnessTypeString","type":"string"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"permitWitnessTransferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint160","name":"amount","type":"uint160"},{"internalType":"address","name":"token","type":"address"}],"internalType":"struct IAllowanceTransfer.AllowanceTransferDetails[]","name":"transferDetails","type":"tuple[]"}],"name":"transferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint160","name":"amount","type":"uint160"},{"internalType":"address","name":"token","type":"address"}],"name":"transferFrom","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+            '''
+        )
+
+        router_addresses = {
+            "ethereum": "0x66a9893cc07d91d95644aedd05d03f95e1dba8af",
+            "base": "0x6ff5693b99212da76ad316178a184ab56d299b43",
+        }
+
+        def __init__(
+            self,
+        ):
+            self.chain_id = 1 if prog.chain == 'eth' else 8453
+            self.chain = 'ethereum' if self.chain_id == 1 else 'base'
+            self.w3 =  Web3(
+                    Web3.HTTPProvider(
+                        prog.configs["rpc"]['eth']
+                    )
+                )
+
+            self.router_address = self.w3.to_checksum_address(
+               '0x66a9893cc07d91d95644aedd05d03f95e1dba8af'
+            )
+
+            self.router = self.w3.eth.contract(
+                address=self.router_address,
+                abi=self.uniswap_abi,
+            )
+
+            self.zero_in_hex = '0x0000000000000000000000000000000000000000'
+
+            self.permit2 = self.w3.eth.contract(
+                address=w3.to_checksum_address(
+                    "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+                ),
+                abi=self.permit2_abi,
+            )
+
+        def approve_permit2(self, token_address, amount) -> int:
+            token_contract = self.w3.eth.contract(
+                token_address,
+                abi=prog.abi
+            )
+
+            approve_contract =  token_contract.functions.approve(
+                self.permit2.address,
+                2**256 - 1
+            )
+
+            # Does not cost anything, but whines if gas is omitted
+            tx = approve_contract.build_transaction({
+                "from": prog.account.address,
+                "gas": 500_000,
+                "maxFeePerGas": self.w3.eth.gas_price,
+                "type": 2,
+                "nonce": self.w3.eth.get_transaction_count(
+                    prog.account.address
+                ),
+                'chainId': self.chain_id
+            })
+
+            signed_tx = self.w3.eth.account.sign_transaction(
+                tx,
+                prog.account.key
+            )
+
+            try:
+                tx_hash = self.w3.eth.send_raw_transaction(
+                    signed_tx.raw_transaction
+                )
+            except Exception:
+                errbox('Not enough ETH to pay for permit2 allowance')
+                return 0
+
+            return 1
+
+        def create_permit_signature(self, token_address)-> tuple:
+            token_address = self.w3.to_checksum_address(token_address)
+
+            permit2_contract = self.w3.eth.contract(
+                address=self.permit2.address,
+                abi=self.permit2_abi
+            )
+
+            p2_amount, p2_expiration, p2_nonce = (
+                permit2_contract.functions.allowance(
+                    prog.account.address,
+                    token_address,
+                    self.router_address
+                )
+                .call()
+            )
+
+            codec = RouterCodec()
+            allowance_amount = 2**160 - 1
+
+            permit_data, signable_message = (
+                codec.create_permit2_signable_message(
+                    token_address,
+                    allowance_amount,
+                    codec.get_default_expiration(),
+                    p2_nonce,
+                    self.router_address,
+                    codec.get_default_deadline(),
+                    self.chain_id
+                )
+            )
+
+            signed = prog.account.sign_message(signable_message)
+
+            return permit_data, signed
+
+        def has_permit2_allowance(self, token_address) -> bool:
+            """
+            Check if token has already been approved for Permit2
+            True if sufficient allowance exists, False otherwise
+            """
+
+            in_address_is_eth = token_address == self.zero_in_hex
+
+            if in_address_is_eth:
+                return True
+
+            token_contract = self.w3.eth.contract(
+                address=w3.to_checksum_address(token_address),
+                abi=prog.abi
+            )
+
+            # Check allowance for Permit2 contract
+            permit2_allowance = (
+                token_contract.functions.allowance(
+                    prog.account.address,
+                    self.permit2.address
+                )
+                .call()
+            )
+
+            if (
+                isinstance(permit2_allowance, tuple)
+                and prog.chain == 'base'
+            ):
+                bwp = Web3.HTTPProvider(
+                    endpoint_uri='https://base.drpc.org',
+                    exception_retry_configuration=None,
+                    request_kwargs={
+                        "timeout": (5, 10),
+                        "allow_redirects": False
+                    },
+                    session=s,
+                )
+
+                bw3 = Web3(bwp)
+
+                token_contract = bw3.eth.contract(
+                    address=w3.to_checksum_address(token_address),
+                    abi=prog.abi
+                )
+
+                permit2_allowance = (
+                    token_contract.functions.allowance(
+                        prog.account.address,
+                        self.permit2.address
+                    )
+                    .call()
+                )
+
+            approval_threshold = 2**200
+
+            return permit2_allowance > approval_threshold
+
+        def swap(
+            self,
+            from_token,
+            to_token,
+            amount,
+            min_amount_out, # amount - slippage (5%)
+            fee=3000, # 0.3% fee
+        ) -> hex:
+            # Determine if input is native token (ETH/MATIC)
+            in_address_is_eth = from_token == self.zero_in_hex
+
+            if not in_address_is_eth:
+                approved = self.approve_permit2(from_token, amount)
+
+                if not approved:
+                    return
+
+            permit_data, signed_message = \
+                self.create_permit_signature(from_token)
+
+            amount_in_wei = amount
+            codec = RouterCodec()
+
+            tick_spacing = 60
+
+            pool_key = codec.encode.v4_pool_key(
+                from_token,
+                to_token,
+                fee,
+                tick_spacing,
+            )
+
+            self.nonce = self.w3.eth.get_transaction_count(
+                prog.account.address
+            )
+
+            encoded_data = (
+                codec
+                .encode
+                .chain()
+                .v4_swap()
+                .swap_exact_in_single(
+                    pool_key=pool_key,
+                    zero_for_one=True,
+                    amount_in=amount_in_wei,
+                    amount_out_min=min_amount_out,
+                )
+                .take_all(to_token, 0)
+                .settle_all(from_token, amount_in_wei)
+                .build_v4_swap()
+                .build(deadline=codec.get_default_deadline())
+            )
+
+            tx_params = {
+                "from": prog.account.address,
+                "value": amount_in_wei,
+                "to": self.router_address,
+                "chainId": self.chain_id,
+                "nonce": self.nonce,
+                "type": 2,
+                "gas": 500_000,
+                "maxFeePerGas": self.w3.eth.gas_price,
+                "maxPriorityFeePerGas": self.w3.eth.max_priority_fee,
+                "data": encoded_data,
+            }
+
+            signed_tx = \
+                self.w3.eth.account.sign_transaction(
+                    tx_params,
+                    prog.account.key
+                )
+
+            tx_hash = 0x0
+
+            try:
+                tx_hash = self.w3.eth.send_raw_transaction(
+                    signed_tx.raw_transaction
+                )
+            except Exception:
+                errbox('Not enough ETH to pay for swap gas fees')
+                return
+
+            return tx_hash.hex()
+
     # Actual user wallet
     # Added ENS support in v2.0
+    # Base support in v3.0
     class UserWallet(QWidget):
         def __init__(self):
             super().__init__()
+            self.init_threads()
+
             self.setMouseTracking(True)
             self.setup_main()
 
             self.init_afk_timer()
-            self.init_threads()
             self.init_table()
             self.init_coin_row()
             self.init_side_bar()
@@ -7387,11 +7812,15 @@ def main():
             self.init_settings_window()
             self.init_history_window()
 
+            if prog.configs['currency'] == 'USD':
+                self.init_total_balance(0)
+            else:
+                self.init_total_balance(1)
+
             self.start_afk_timer()
 
             with ThreadPoolExecutor() as pool:
                 pool.submit(self.fill_up_table)
-
 
             if "default" in prog.configs["theme"]:
                 # The border that fills up space
@@ -7415,7 +7844,7 @@ def main():
 
                 self.unlock_wallet_lbl.setStyleSheet(
                     "border: 0px solid #1e1e1e;"
-                    "font: 21px;"
+                    "font: 19px;"
                     "color: #eff1f3;"
                 )
 
@@ -7432,9 +7861,11 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.apply_default_dark_theme()
+                self.setStyleSheet('background: #0a0f18;')
 
             elif prog.configs["theme"] == "default_light":
                 self.apply_default_light_theme()
+                self.setStyleSheet('background: #eff1f3;')
 
         def closeEvent(self, event):
             if (
@@ -7456,14 +7887,27 @@ def main():
                 if event.type() != Qt.MouseButton.NoButton:
                     self.black_out_window()
                     self.unlock_wallet_box.show()
-                    self.setStyleSheet("background: #0a0f18;")
+                    self.setEnabled(False)
 
             self.afk_timer.timeout.connect(verify_if_afk)
+
+        def _update_currency_setting(self):
+            self.update_balance_thread.quit()
+            self.update_balance_thread.wait()
+
+            with open(prog.conf_file, 'w') as f:
+                json.dump(
+                    obj=prog.configs,
+                    fp=f,
+                    indent=4
+                )
+
+            self.update_balance_thread.start()
+            self.update_balance_worker.start()
 
         def setup_main(self):
             self.setFixedWidth(1100)
             self.setFixedHeight(740)
-            self.setWindowTitle(" ")
             self.setWindowTitle(f"TigerWallet  -  {prog.nameofwallet}")
             align_to_center(self)
 
@@ -7481,14 +7925,31 @@ def main():
             self.eth_price = prog.eth_price
             self.eth_amount = prog.eth_amount
 
-            self.money = (
-                float(self.eth_amount)
-                * float(self.eth_price)
-            )
-
-            self.val.setText(f"Balance: ${str(self.money)}")
             self.val.resize(458, 40)
             self.val.move(306, 132)
+
+            # New in v3.0
+            self.currency_box = QComboBox(self)
+            self.clist = QtWidgets.QListView(self.currency_box)
+            self.clist.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            self.currency_box.insertItem(0, 'USD')
+            self.currency_box.insertItem(1, 'ETH')
+            self.currency_box.setView(self.clist)
+            self.currency_box.setAttribute(
+                Qt.WidgetAttribute.WA_MacShowFocusRect,
+                False
+            )
+            self.currency_box.resize(140, 34)
+            self.currency_box.move(850, 136)
+            self.currency_box.currentIndexChanged.connect(
+                self.init_total_balance
+            )
+
+            if prog.configs['currency'] == 'USD':
+                self.currency_box.setCurrentIndex(0)
+
+            else:
+                self.currency_box.setCurrentIndex(1)
 
             self.tab = 0
             self.rm_wallet_tab = False
@@ -7512,6 +7973,48 @@ def main():
             self.btn_showhide.setIconSize(QSize(24, 24))
             self.btn_showhide.move(760, 142)
             self.btn_showhide.clicked.connect(self.unhide)
+
+        def init_total_balance(self, index):
+            total = 0.0
+
+            if index == 0:
+                total_list = [
+                    float(val)
+                    * float(price)
+                    for val in prog.assets_details[prog.chain]['value']
+                    for price in prog.assets_details[prog.chain]['price']
+                ]
+
+                for item in total_list:
+                    total += item
+
+                total += (
+                    float(prog.eth_amount)
+                    * float(self.eth_price)
+                )
+                total = round(total, 20)
+
+                self.val.setText(f"Balance: ${str(total)}")
+
+            else:
+                total_list = [
+                    float(val)
+                    / float(self.eth_price)
+                    for val in prog.assets_details[prog.chain]['value']
+                ]
+
+                for item in total_list:
+                    # convert to a positive decimal/integer
+                    if item < 0:
+                        item -= (item * 2)
+
+                    total += item
+
+                total += float(prog.eth_amount)
+                total = round(total, 20)
+                total = rm_scientific_notation(total)
+
+                self.val.setText(f"Balance: {str(total)} ETH")
 
         def init_afk_timer(self):
             self.afk_timer = QTimer()
@@ -7539,7 +8042,6 @@ def main():
             self.thread.started.connect(
                 lambda: self.worker.timer.start(10000)
             )
-            self.thread.start()
 
             self.update_balance_thread = QThread()
             self.update_balance_worker = TimedUpdateTotalBalance()
@@ -7556,7 +8058,6 @@ def main():
             self.update_balance_thread.started.connect(
                 lambda: self.update_balance_worker.timer.start(10000)
             )
-            self.update_balance_thread.start()
 
             # Gas update Thread/Worker
             self._gas_th = QThread()
@@ -7567,7 +8068,6 @@ def main():
             self._gas_th.started.connect(
                 lambda: self._gasupdate.timer.start(5000)
             )
-            self._gas_th.start()
 
             # Price update Thread/Worker
             self.update_price_worker = TimedUpdatePriceOfAssetsWorker()
@@ -7584,8 +8084,19 @@ def main():
 
             self.tm = QTimer()
             self.tm.timeout.connect(self.update_price)
-            self.tm.start(15000)
-            self.update_price_thread.start()
+
+
+            try:
+                self.thread.start()
+                self.update_balance_thread.start()
+                self._gas_th.start()
+                self.tm.start(15000)
+                self.update_price_thread.start()
+            except Exception:
+                self._kill_threads()
+
+                errbox('Internal error')
+                quit()
 
         def _kill_threads(self):
             # End threads
@@ -7614,8 +8125,28 @@ def main():
             self.update_price_worker.quit()
             self.update_price_worker.wait()
 
+            #  Stop timer
             self.tm.stop()
 
+        def _start_threads(self):
+            self.thread.start()
+            self.worker.start()
+
+            self.update_balance_thread.start()
+            self.update_balance_worker.start()
+
+            self._gas_th.start()
+            self._gasupdate.start()
+
+            self.update_price_thread.start()
+            self.update_price_worker.start()
+
+            self.tm.start(15000)
+
+        ''' TODO:
+            ~~1. Make sure confirm send gas fees are chain-based~~
+            2. Create mac installer
+        '''
         def init_table(self):
             self.table = QTableWidget(self)
 
@@ -7624,58 +8155,50 @@ def main():
             )
 
             self.table.setColumnCount(3)
-            self.table.setColumnWidth(0, 360)
-            self.table.setColumnWidth(1, 300)
-            self.table.setColumnWidth(2, 360)
+            self.table.setColumnWidth(0, 380)
+            self.table.setColumnWidth(1, 340)
+            self.table.setColumnWidth(2, 300)
             self.table.verticalHeader().setVisible(False)
             self.table.horizontalHeader().setVisible(True)
-            self.table.resize(1040, 454)
+            self.table.resize(1040, 450)
             self.table.move(32, 182)
 
             self.first_amount_cell = QLineEdit(self.table)
             self.first_amount_cell.setReadOnly(True)
-            self.first_amount_cell.setText(
-                str(self.eth_amount)[:22]
-            )
             self.first_amount_cell.setFocusPolicy(
                 Qt.FocusPolicy.NoFocus
             )
-
-            self.entry_table_cells = [
-                QLineEdit(self.table)
-                for item in prog.asset['eth']['name']
-            ]
-
-            for item in self.entry_table_cells:
-                item.setReadOnly(True)
-
-            self.table.setCellWidget(0, 1, self.first_amount_cell)
-            self.table.setItem(0, 0, QTableWidgetItem(" ETHER (ETH)"))
-            self.table.setItem(0, 2, QTableWidgetItem(self.eth_price))
-            self.table.item(0, 0).setIcon(TigerWalletImage.eth_img)
 
             self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self.table.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOff
             )
-
             self.table.setEditTriggers(
                 QAbstractItemView.EditTrigger.NoEditTriggers
             )
             self.table.setSelectionMode(
                 QAbstractItemView.SelectionMode.NoSelection
             )
-
             self.table.horizontalHeader().setSectionResizeMode(
                 QtWidgets.QHeaderView.ResizeMode.Fixed
             )
-
             self.table.setHorizontalHeaderItem(0, QTableWidgetItem("Asset"))
             self.table.setHorizontalHeaderItem(1, QTableWidgetItem("Amount"))
             self.table.setHorizontalHeaderItem(
                 2, QTableWidgetItem("Market Price")
             )
             self.table.setIconSize(QSize(32, 32))
+
+            self._init_table_cells()
+
+        def _init_table_cells(self):
+            self.entry_table_cells = [
+                QLineEdit(self.table)
+                for item in prog.asset[prog.chain]['name']
+            ]
+
+            for item in self.entry_table_cells:
+                item.setReadOnly(True)
 
         def init_coin_row(self):
             self.add_coin_btn = QPushButton(
@@ -7684,11 +8207,14 @@ def main():
                 icon=TigerWalletImage.plus_blue
             )
 
+            self.add_coin_btn.setToolTip('Add a cryptocurrency')
             self.add_coin_btn.setFixedSize(160, 52)
             self.add_coin_btn.setIconSize(QSize(32, 32))
             self.add_coin_btn.move(160, 652)
             self.add_coin_btn.show()
-            self.add_coin_btn.clicked.connect(self.init_add_coin_window)
+            self.add_coin_btn.clicked.connect(
+                lambda: self.init_add_coin_window(prog.chain)
+            )
 
             self.default_coin_btn = QPushButton(
                 "Restore default coin list", self
@@ -7704,13 +8230,14 @@ def main():
                 parent=self,
                 icon=TigerWalletImage.delete_blue
             )
+            self.del_coin_btn.setToolTip('Remove a cryptocurrency')
             self.del_coin_btn.setFixedSize(190, 52)
             self.del_coin_btn.setIconSize(QSize(32, 32))
             self.del_coin_btn.move(760, 652)
             self.del_coin_btn.show()
             self.del_coin_btn.clicked.connect(self.init_rm_coin_window)
 
-        def init_add_coin_window(self):
+        def init_add_coin_window(self, chain=prog.chain):
             self.addcointab = True
             self.add_coin_btn.hide()
             self.del_coin_btn.hide()
@@ -7775,7 +8302,10 @@ def main():
 
             def _fetch_token_info():
                 try:
-                    self.c = create_contract(self.coinaddr.text())
+                    self.c = create_contract(
+                        self.coinaddr.text(),
+                        chain=chain
+                    )
 
                     self.coinname.setText(
                         self.c.functions.name().call()
@@ -7808,7 +8338,7 @@ def main():
                     else:
                         self.errlbl.hide()
 
-                    if addr in prog.asset['eth']['address']:
+                    if addr in prog.asset[chain]['address']:
                         self.errlbl.setText(
                             "Asset is already in your asset list"
                         )
@@ -7817,9 +8347,6 @@ def main():
 
                     thhh = Thread(target=_fetch_token_info)
                     thhh.start()
-
-                    #with ThreadPoolExecutor() as pool:
-                        #pool.submit(_fetch_token_info)
 
                 else:
                     self.errlbl.hide()
@@ -7857,26 +8384,7 @@ def main():
             self.close_add_coin_btn.move(290, 540)
             self.close_add_coin_btn.show()
             self.close_add_coin_btn.clicked.connect(
-                lambda: [
-                    self.coinaddr.close(),
-                    self.errlbl.close(),
-                    self.contractlbl.close(),
-                    self.coinname.close(),
-                    self.coinnamelbl.close(),
-                    self.coinsym.close(),
-                    self.coinsymlbl.close(),
-                    self.coindec.close(),
-                    self.coindeclbl.close(),
-                    self.continue_add_coin_btn.close(),
-                    self.close_add_coin_btn.close(),
-
-                    self.add_coin_btn.show(),
-                    self.del_coin_btn.show(),
-                    self.default_coin_btn.show(),
-                    self.table.show(),
-                    self.val.show(),
-                    self.btn_showhide.show()
-                ]
+                self.close_add_coin_window
             )
 
             self.coinaddr.textChanged.connect(_validate_address)
@@ -7896,20 +8404,7 @@ def main():
                 )
 
                 self.close_add_coin_btn.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
-                )
-
-                # Address
-                self.coinaddr.setStyleSheet(
-                    "color: #c5d4e7;"
-                    + "border: 1px solid #778ba5;"
-                    + "font-size: 18px;"
-                    + "border-radius: 16px;"
-                    + "padding: 4px;"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.contractlbl.setStyleSheet(
@@ -8094,7 +8589,13 @@ def main():
             self.rm_coin_cancel.move(300, 652)
             self.rm_coin_cancel.show()
             self.rm_coin_cancel.clicked.connect(
-                self.clear_rm_coin_tab
+                lambda: [
+                    self.table.clearSelection(),
+                    self.table.setSelectionMode(
+                        QAbstractItemView.SelectionMode.NoSelection
+                    ),
+                    self.clear_rm_coin_tab()
+                ]
             )
 
             self.rm_coin_continue = QPushButton(
@@ -8118,19 +8619,11 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.rm_coin_continue.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.rm_coin_cancel.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.uppermsg.setStyleSheet(
@@ -8173,7 +8666,7 @@ def main():
             self.switch_network_button.setFixedSize(72, 72)
             self.switch_network_button.move(20, 28)
             self.switch_network_button.setIconSize(QSize(32, 32))
-
+            self.switch_network_button.clicked.connect(self.switch_networks)
             self.switch_network_button.setIcon(
                 TigerWalletImage.eth_img
             )
@@ -8188,88 +8681,71 @@ def main():
                 self.sidebar_button[i].setFixedSize(72, 72)
                 self.sidebar_button[i].setIconSize(QSize(32, 32))
 
+            self.home_button = QPushButton(self.button_box)
+            self.home_button.setIcon(TigerWalletImage.home_blue)
+            self.home_button.setFixedSize(72, 72)
+            self.home_button.setIconSize(QSize(32, 32))
+            self.home_button.move(150, 28)
+            self.home_button.clicked.connect(lambda: self.close_tab(self.tab))
+            self.home_button.setToolTip('Return to main screen')
+            self.home_button.setEnabled(False)
 
             # Change wallet
             self.sidebar_button[0].setIcon(TigerWalletImage.wallet_blue)
-            self.sidebar_button[0].move(160, 28)
-            self.sidebar_button[0].clicked.connect(self.show_tab1_contents)
+            self.sidebar_button[0].move(240, 28)
+            self.sidebar_button[0].clicked.connect(self.show_tab1)
             self.sidebar_button[0].setToolTip('Pop out wallet menu')
 
             # Send
             self.sidebar_button[1].setIcon(TigerWalletImage.send_blue)
-            self.sidebar_button[1].move(250, 28)
-            self.sidebar_button[1].clicked.connect(self.show_tab2_contents)
+            self.sidebar_button[1].move(330, 28)
+            self.sidebar_button[1].clicked.connect(self.show_tab2)
             self.sidebar_button[1].setToolTip('Send crypto to another wallet')
 
             # Receieve
             self.sidebar_button[2].setIcon(TigerWalletImage.receive_blue)
-            self.sidebar_button[2].move(340, 28)
-            self.sidebar_button[2].clicked.connect(self.show_tab3_contents)
+            self.sidebar_button[2].move(420, 28)
+            self.sidebar_button[2].clicked.connect(self.show_tab3)
             self.sidebar_button[2].setToolTip("Display your wallet's address")
 
             # Swap
             self.sidebar_button[3].setIcon(TigerWalletImage.swap_blue)
-            self.sidebar_button[3].move(430, 28)
-            self.sidebar_button[3].clicked.connect(self.show_tab4_contents)
+            self.sidebar_button[3].move(510, 28)
+            self.sidebar_button[3].clicked.connect(self.show_tab4)
             self.sidebar_button[3].setToolTip('Swap tokens')
 
             # Address book
             self.sidebar_button[4].setIcon(TigerWalletImage.address_book_blue)
-            self.sidebar_button[4].move(520, 28)
-            self.sidebar_button[4].clicked.connect(self.show_tab5_contents)
+            self.sidebar_button[4].move(600, 28)
+            self.sidebar_button[4].clicked.connect(self.show_tab5)
             self.sidebar_button[4].setToolTip('Show your contacts')
 
             # History
             self.sidebar_button[5].setIcon(TigerWalletImage.history_blue)
-            self.sidebar_button[5].move(610, 28)
-            self.sidebar_button[5].clicked.connect(self.show_tab6_contents)
+            self.sidebar_button[5].move(690, 28)
+            self.sidebar_button[5].clicked.connect(self.show_tab6)
             self.sidebar_button[5].setToolTip('Display your past transactions')
 
             # Settings
             self.sidebar_button[6].setIcon(TigerWalletImage.settings_blue)
             self.sidebar_button[6].move(1006, 28)
-            self.sidebar_button[6].clicked.connect(self.show_tab7_contents)
+            self.sidebar_button[6].clicked.connect(self.show_tab7)
             self.sidebar_button[6].setToolTip('Change TigerWallet settings')
-
-
-
-            # Dark/light mode switch
-            self.dark_light_switch = QPushButton(self)
-            self.dark_light_switch.setFixedSize(72, 72)
-            self.dark_light_switch.move(700, 30)
-            self.dark_light_switch.setIconSize(QSize(32, 32))
-            self.dark_light_switch.clicked.connect(self.toggle_mode)
 
             # Donation button
             self.donation_button = QPushButton(self)
             self.donation_button.setFixedSize(72, 72)
             self.donation_button.setIcon(TigerWalletImage.donate_blue)
-            self.donation_button.move(790, 30)
+            self.donation_button.move(780, 30)
             self.donation_button.setIconSize(QSize(32, 32))
             self.donation_button.clicked.connect(self.init_donate_window)
-            self.donation_button.setToolTip('Send me a coffee')
-
-            if prog.configs["theme"] == "default_dark":
-                self.dark_light_switch.setIcon(
-                    TigerWalletImage.moon_blue
-                )
-                self.dark_light_switch.setToolTip(
-                    'Switch to light mode'
-                )
-
-            else:
-                self.dark_light_switch.setIcon(
-                    TigerWalletImage.sun_blue
-                )
-                self.dark_light_switch.setToolTip(
-                    'Switch to dark mode'
-                )
+            self.donation_button.setToolTip('Buy me a coffee')
 
             self.lock_wallet_button = QPushButton(
                 parent=self,
                 icon=TigerWalletImage.pass_blue,
             )
-            self.lock_wallet_button.move(880, 28)
+            self.lock_wallet_button.move(870, 28)
             self.lock_wallet_button.resize(72, 72)
             self.lock_wallet_button.setIconSize(QSize(32, 32))
             self.lock_wallet_button.setToolTip(
@@ -8285,6 +8761,61 @@ def main():
 
             self.button_box.show()
 
+        def init_sidebar_style(self):
+            if prog.configs["theme"] == "default_dark":
+                for i in range(7):
+                    self.sidebar_button[i].setStyleSheet(
+                         "QPushButton {background-color: transparent;"
+                        + "border-radius: 36px;}"
+                        + "QPushButton::hover{background: #1e1e1e;}"
+                        + 'QPushButton::menu-indicator{image: none;}'
+                    )
+
+                self.donation_button.setStyleSheet(
+                    "QPushButton {background-color: transparent;"
+                    + "border-radius: 36px;}"
+                    + "QPushButton::hover{background: #1e1e1e;}"
+                )
+
+                self.switch_network_button.setStyleSheet(
+                    "QPushButton {background: transparent;"
+                    + "border-radius: 36px;}"
+                    + "QPushButton::hover{background: #1e1e1e;}"
+                )
+
+                self.home_button.setStyleSheet(
+                    "QPushButton {background-color: transparent;"
+                    + "border-radius: 36px;}"
+                    + "QPushButton::hover{background: #1e1e1e;}"
+                )
+
+            elif prog.configs["theme"] == "default_light":
+                for i in range(7):
+                    self.sidebar_button[i].setStyleSheet(
+                         "QPushButton {background-color: transparent;"
+                        + "border-radius: 36px;}"
+                        + "QPushButton::hover{background: #ced7e9;}"
+                        + 'QPushButton::menu-indicator{image: none;}'
+                    )
+
+                self.donation_button.setStyleSheet(
+                    "QPushButton {background-color: transparent;"
+                    + "border-radius: 36px;}"
+                    + "QPushButton::hover{background: #ced7e9;}"
+                )
+
+                self.switch_network_button.setStyleSheet(
+                    "QPushButton {background: transparent;"
+                    + "border-radius: 36px;}"
+                    + "QPushButton::hover{background: #ced7e9;}"
+                )
+
+                self.home_button.setStyleSheet(
+                    "QPushButton {background-color: transparent;"
+                    + "border-radius: 36px;}"
+                    + "QPushButton::hover{background: #ced7e9;}"
+                )
+
         def init_wallet_btn_options(self):
             self.wallet_menu = QtWidgets.QMenu()
 
@@ -8297,7 +8828,7 @@ def main():
 
             self.wallet_menu.addAction(
                 _w_options[0],
-                self.show_tab1_contents
+                self.show_tab1
             )
 
             def launch_create_wallet():
@@ -8330,39 +8861,6 @@ def main():
             )
 
             self.sidebar_button[0].setMenu(self.wallet_menu)
-
-
-            if prog.configs['theme'] == 'default_dark':
-                self.wallet_menu.setStyleSheet(
-                    'QMenu{background: transparent;'
-                    'color:  #b0c4de;'
-                    'border: 1px solid gray;'
-                    'outline: 0;'
-                    'border-radius: 8px;}'
-                    + 'QMenu::item{'
-                    'background: #0a0f18;'
-                    'color:  #b0c4de;'
-                    'font: 15px;'
-                    'border: 0px solid gray;'
-                    'outline: 0;}'
-                    'QMenu::item:selected{background: #353535;}'
-                )
-
-            elif prog.configs['theme'] == 'default_light':
-                self.wallet_menu.setStyleSheet(
-                    'QMenu{background: transparent;'
-                    'color:  #3c598e;'
-                    'border: 1px solid gray;'
-                    'outline: 0;'
-                    'border-radius: 8px;}'
-                    + 'QMenu::item{'
-                    'background: #eff1f3;'
-                    'color:  #3c598e;'
-                    'font: 15px;'
-                    'border: 0px solid gray;'
-                    'outline: 0;}'
-                    'QMenu::item:selected{background: #ced7e9;}'
-                )
 
         # FIRST button
         def init_change_wallet_window(self):
@@ -8445,7 +8943,7 @@ def main():
                 lambda: self.launch_chosen_wallet(self.item)
             )
 
-            self.cancel.clicked.connect(self.clear_tab1_contents)
+            self.cancel.clicked.connect(self.clear_tab1)
 
         # SECOND button
         # Added ENS support in v2.0
@@ -8456,8 +8954,12 @@ def main():
             self.box2.move(166, 126)
             self.box2.hide()
 
-            self.asset_list_ = prog.asset['eth']
-            self.assetsval = prog.assets_details["eth"]['value']
+            self.eth_ns = ENS(
+                web3_provider
+            )
+
+            self.asset_list_ = prog.asset[prog.chain]
+            self.assetsval = prog.assets_details[prog.chain]['value']
 
             self.assets_addr = self.asset_list_['address']
             self.names = self.asset_list_["name"]
@@ -8465,17 +8967,12 @@ def main():
 
             self.index = 0
 
-            try:
-                bal2 = w3.from_wei(
-                    w3.eth.get_balance(self.address),
-                    "ether"
-                )
-            except TypeError:
-                bal2 = w3.from_wei(
-                    w3.eth.get_balance(self.address),
-                    "ether"
-                )
-            self.ethamount = f"~{str(bal2)[:22]} ETH"
+            self.ethamount = (
+                f"~{str(prog.eth_amount)[:18]} ETH"
+                if prog.chain == 'eth'
+                else f"~{str(prog.base_eth_amount)[:18]} ETH"
+            )
+
             self.lblsize = [78, 30]
 
             self.sendlabel = QLabel("Send crypto", self.box2)
@@ -8506,23 +9003,6 @@ def main():
             self.qlist.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self.asset_list.setView(self.qlist)
 
-            if os.name != "nt":
-                pal = self.asset_list.palette()
-
-                if prog.configs["theme"] == "default_dark":
-                    pal.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#b0c4de"),
-                    )
-
-                elif prog.configs["theme"] == "default_light":
-                    pal.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#3c598e"),
-                    )
-
-                self.asset_list.setPalette(pal)
-
             for i in range(0, len(self.names)):
                 self.asset_list.insertItem(
                     i + 1,
@@ -8549,7 +9029,7 @@ def main():
 
             """ Display user balance of chosen asset """
             self.estimate_amount = QLabel(self.box2)
-            self.estimate_amount.resize(230, 40)
+            self.estimate_amount.resize(240, 40)
             self.estimate_amount.move(550, 176)
 
             if self.ethamount != 0:
@@ -8557,7 +9037,7 @@ def main():
                     w3.eth.get_balance(self.address),
                     "ether"
                 )
-                self.estimate_amount.setText(f"~{str(bal)[:22]} ETH")
+                self.estimate_amount.setText(f"~{str(bal)[:18]} ETH")
 
             else:
                 self.estimate_amount.setText("0 (ETH)")
@@ -8578,17 +9058,13 @@ def main():
                         )
 
                     else:
-                        amnt = str(w3.from_wei(self.c, "ether"))[:22]
+                        amount = self.assetsval[:18]
                         self.estimate_amount.setText(
-                            f"~{amnt} {self.symbols[num - 1].upper()}"
+                            f"~{amount} {self.symbols[num - 1].upper()}"
                         )
 
             self.estimate_amount.show()
             self.asset_list.currentIndexChanged.connect(_update_avail)
-
-            self.eth_ns =  ENS(
-                web3_provider
-            )
 
             # Send to
             def _validate_address(inp):
@@ -8650,6 +9126,20 @@ def main():
             self.typeaddr.setMaxLength(42)
             self.typeaddr.textChanged.connect(_validate_address)
 
+            self.paste_addr = QPushButton(
+                parent=self.box2,
+                icon=TigerWalletImage.copy_blue
+            )
+            self.paste_addr.setIconSize(QSize(32, 32))
+            self.paste_addr.resize(70, 40)
+            self.paste_addr.move(562, 258)
+            self.paste_addr.clicked.connect(
+                lambda: self.typeaddr.setText(
+                    QApplication.clipboard().text()
+                )
+            )
+
+
             self.sendtolbl = QLabel("Send to:", self.box2)
             self.sendtolbl.resize(*self.lblsize)
             self.sendtolbl.move(48, 258)
@@ -8686,23 +9176,24 @@ def main():
 
             def _update(num):
                 if self.asset_list.currentIndex() == 0:
-                    self._bal = bal2
+                    bal = (
+                        prog.eth_amount if prog.chain == 'eth'
+                        else prog.base_eth_amount
+                    )
 
                     if self.slider.value() == 0:
                         self.amount.setText("")
 
                     elif self.slider.value() == 100:
-                        self.amount.setText(str(self._bal)[:22])
+                        self.amount.setText(str(bal)[:18])
 
                     else:
                         self.amount.setText(
                             rm_scientific_notation(
-                                str(
-                                    float(self._bal)
-                                    / float(100 / num)
-                                )
-                                [:22]
+                                float(bal)
+                                / float(100 / num)
                             )
+                            [:18]
                         )
 
                 else:
@@ -8713,9 +9204,9 @@ def main():
                         rm_scientific_notation(
                             str(
                                 float(self.assetsval)
-                                / float(100/num)
+                                / float(100 / num)
                             )
-                            [:22]
+                            [:18]
                         )
                     )
 
@@ -8807,11 +9298,7 @@ def main():
                         )
 
                         self.cancel.setStyleSheet(
-                            'QPushButton{'
-                            + "border-radius: 8;"
-                            + "font-size: 20px;"
-                            + "color: #6495ed;}"
-                            + "QPushButton::hover{background-color: #1e1e1e;}"
+                            "QPushButton::hover{background-color: #1e1e1e;}"
                         )
 
                     if prog.configs["theme"] == "default_dark":
@@ -8897,14 +9384,6 @@ def main():
                             + "border-radius: 16px;"
                         )
 
-                        self.send_field.setStyleSheet(
-                            "color: #c5d4e7; "
-                            + "font: 16px;"
-                            + "border: 1px solid #778ba5;"
-                            + "border-radius: 8px;"
-                            + "padding: 7px;"
-                        )
-
                         self.pass_label.setStyleSheet(
                             "font-size: 22px;"
                             + "color: #9fb1ca;"
@@ -8915,22 +9394,6 @@ def main():
                             "QPushButton{background-color:  #778ba5;"
                             + "border-radius: 8px;}"
                             + "QPushButton::hover{background-color: #ced7e9;}"
-                        )
-
-                        self.send.setStyleSheet(
-                            "QPushButton{background-color:  #4f86f7;"
-                            + "border-radius: 24px;"
-                            + "font-size: 23px;"
-                            + "color: black}"
-                            + "QPushButton::hover{background-color: #6495ed;}"
-                        )
-
-                        self.cancel.setStyleSheet(
-                            'QPushButton{'
-                            + "border-radius: 8;"
-                            + "font-size: 20px;"
-                            + "color: #6495ed;}"
-                            + "QPushButton::hover{background-color: #1e1e1e;}"
                         )
 
                     elif prog.configs["theme"] == "default_light":
@@ -9016,14 +9479,6 @@ def main():
                             + "border-radius: 16px;"
                         )
 
-                        self.send_field.setStyleSheet(
-                            "color: #3c598e; "
-                            + "font: 16px;"
-                            + "border: 1px solid #778ba5;"
-                            + "border-radius: 8px;"
-                            + "padding: 7px;"
-                        )
-
                         self.pass_label.setStyleSheet(
                             "font-size: 22px;"
                             + "color: #3c598e;"
@@ -9037,19 +9492,11 @@ def main():
                         )
 
                         self.send.setStyleSheet(
-                            'QPushButton {background-color: transparent;'
-                            + "border-radius: 8;"
-                            + "font-size: 20px;"
-                            + "color: #3c598e;}"
-                            + "QPushButton::hover{background-color: #ced7e9;}"
+                            "QPushButton::hover{background-color: #ced7e9;}"
                         )
 
                         self.cancel.setStyleSheet(
-                            'QPushButton {background-color: transparent;'
-                            + "border-radius: 8;"
-                            + "font-size: 20px;"
-                            + "color: #3c598e;}"
-                            + "QPushButton::hover{background-color: #ced7e9;}"
+                            "QPushButton::hover{background-color: #ced7e9;}"
                         )
 
                 def init_confirmation(self):
@@ -9350,10 +9797,8 @@ def main():
                             signed.raw_transaction
                         )
                     except Exception:
-                        pass
-
-                        #errbox('Not enough funds to complete this transaction')
-                        #return
+                        errbox('Not enough funds to complete this transaction')
+                        return
 
                     self.wait_for_tx_to_finalize()
 
@@ -9492,10 +9937,10 @@ def main():
                         errbox("Please enter a password")
                         return
 
-                    with open(prog.nameofwallet, "r") as f:
+                    with open(prog.nameofwallet, "rb") as f:
                         try:
                             Account.decrypt(
-                                json.load(f),
+                                orjson.load(f.read()),
                                 password=passwd
                             )
 
@@ -9524,7 +9969,7 @@ def main():
                 self.cas.show()
 
             self.send_btn.clicked.connect(_continue_send)
-            self.close_send_btn.clicked.connect(self.clear_tab2_contents)
+            self.close_send_btn.clicked.connect(self.clear_tab2)
 
         # THIRD button
         def init_receive_window(self):
@@ -9587,7 +10032,7 @@ def main():
             self.closebtn.setFixedSize(200, 54)
             self.closebtn.setIconSize(QSize(32, 32))
             self.closebtn.move(288, 568)
-            self.closebtn.clicked.connect(self.clear_tab3_contents)
+            self.closebtn.clicked.connect(self.clear_tab3)
 
             self.copy_address = QPushButton(
                 text=None,
@@ -9604,6 +10049,8 @@ def main():
                 ]
             )
 
+        # Massive improvements in v3.0
+        # Supports base in v3.0
         # FOURTH button
         def init_swap_window(self):
             self.box4 = QWidget(self)
@@ -9611,15 +10058,17 @@ def main():
             self.box4.move(32, 80)
             self.box4.hide()
 
+            self.uniswap = UniSwap()
+
             self.swap_title = QLabel(
                 text=(
                     'Warning! Swapping is still in beta!\n'
-                    'Do not use large funds when performing a swap'
+                    'Do not use large funds when performing a swap!'
                 ),
                 parent=self.box4
             )
 
-            self.swap_title.resize(1016, 80)
+            self.swap_title.resize(1026, 80)
             self.swap_title.setAlignment(
                 Qt.AlignmentFlag.AlignCenter
             )
@@ -9644,15 +10093,15 @@ def main():
             self.from_droplist.setView(self.qlist2)
             self.from_droplist.setIconSize(QSize(32, 32))
 
-            for i in range(len(prog.asset['eth']['name'])):
+            for i in range(len(prog.asset[prog.chain]['name'])):
                 self.from_droplist.insertItem(
                     i+1,
-                    prog.asset['eth']['name'][i].upper()
-                    + f" ({prog.asset['eth']['symbol'][i].upper()})"
+                    prog.asset[prog.chain]['name'][i].upper()
+                    + f" ({prog.asset[prog.chain]['symbol'][i].upper()})"
                 )
                 self.from_droplist.setItemIcon(
                     i+1,
-                    QIcon(prog.asset['eth']['image'][i])
+                    QIcon(prog.asset[prog.chain]['image'][i])
                 )
 
             self.to_droplist = QComboBox(self.box4)
@@ -9670,53 +10119,24 @@ def main():
 
             self.swap_token_detail = {}
 
-            if os.name != "nt":
-                pal1 = self.from_droplist.palette()
-                pal2 = self.to_droplist.palette()
-
-                if prog.configs["theme"] == "default_dark":
-                    pal1.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#b0c4de"),
-                    )
-
-                    pal2.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#b0c4de"),
-                    )
-
-                elif prog.configs["theme"] == "default_light":
-                    pal2.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#3c598e"),
-                    )
-
-                    pal2.setColor(
-                        QtGui.QPalette.ColorRole.ButtonText,
-                        QtGui.QColor("#3c598e"),
-                    )
-
-                self.from_droplist.setPalette(pal1)
-                self.to_droplist.setPalette(pal2)
-
             with open(
                 prog.dest_path
                 + 'swap_token_details.json',
-                'r'
+                mode='rb'
             ) as f:
-                file_contents = json.load(f)
+                file_contents = orjson.loads(f.read())
                 self.swap_token_detail = file_contents
 
-                for i in range(len(file_contents['name'])):
+                for i in range(len(file_contents['name']['eth'])):
                     self.to_droplist.insertItem(
                         i,
-                        file_contents['name'][i].upper()
-                        + f" ({file_contents['symbol'][i].upper()})"
+                        file_contents['name']['eth'][i].upper()
+                        + f" ({file_contents['symbol']['eth'][i].upper()})"
                     )
 
                     self.to_droplist.setItemIcon(
                         i,
-                        QIcon(file_contents['image'][i])
+                        QIcon(file_contents['image']['eth'][i])
                     )
 
             # Image in-between the two checkboxes
@@ -9727,61 +10147,317 @@ def main():
             self.arrow_img.setIconSize(QSize(32, 32))
             self.arrow_img.move(490, 252)
 
-            '''
-                First choice on the list.
-
-                Because Ether has no contract,
-                we must first wrap the Ether.
-                The first address is the contract
-                address for  wrapped Ether.
-            '''
-            self.chosen_address_from_list1 = (
-                '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2' # WETH
-            )
+            self.network = prog.chain
+            self.zero_in_hex = '0x0000000000000000000000000000000000000000'
+            self.chosen_address_from_list = self.zero_in_hex # ETH
 
             # Also first choice on the list
-            self.chosen_address_from_list2 = (
-                prog.asset['eth']['address'][0]
+            self.chosen_address_to_list = (
+                self.swap_token_detail['address'][self.network][0]
             )
 
-            self.chosen_item_index = 0
+            self.index1 = 0
+            self.index2 = 0
+            self.to_token_decimals = 0
+            self.eth_price_ = get_eth_price()
+            self.__gas = 0.0
+            self.in_price = self.eth_price_
+            self.out_price = self.eth_price_
+            self.out_symbol = 'WETH'
 
-            def get_item_from_list_one(item):
-                self.chosen_address_from_list1 = (
-                    self.swap_token_detail['address'][item]
-                )
-
-                self.chosen_item_index = item
-
-            def get_item_from_list_two(item):
-                self.chosen_address_from_list2 = (
-                    self.swap_token_detail['address'][item]
-                )
-
-                self.chosen_item_index = item
-
-            self.from_droplist.currentIndexChanged.connect(
-                get_item_from_list_one
-            )
-
-            self.to_droplist.currentIndexChanged.connect(
-                get_item_from_list_two
+            self.min_amount_out = (
+                float(self.in_price)
+                / float(self.out_price)
             )
 
             self.swap_amount = QLineEdit(self.box4)
-            self.swap_amount.resize(300, 44)
-            self.swap_amount.move(370, 376)
+            self.swap_amount.resize(480, 44)
+            self.swap_amount.move(280, 376)
             self.swap_amount.setPlaceholderText(
-                'Amount to swap'
+                'Amount to swap (minimum value of $9)'
             )
 
             validator = QtGui.QDoubleValidator()
             validator.setBottom(0.0000000000001)
-            validator.setDecimals(21)
-            validator.setTop(1000000000)
+            validator.setDecimals(40)
+            validator.setTop(1000000000000)
             validator.setNotation(validator.Notation.StandardNotation)
 
             self.swap_amount.setValidator(validator)
+
+            def get_gas_fee():
+                gas = 0.0
+
+                if prog.chain == 'eth':
+                    gas = float(w3.eth.gas_price)
+
+                else:
+                    gas = float(base_w3.eth.gas_price)
+
+                gas *= 500_000
+                gas = float(w3.from_wei(gas, 'ether'))
+
+                self.__gas = gas
+
+            self.gas_thread_fee = Thread(target=get_gas_fee)
+            self.gas_thread_fee.start()
+
+            self.min_out_lbl = QLabel(
+                text=(
+                    '<u>Rate:</u> 1 ETH = '
+                    + f"~{str(self.min_amount_out)[:14]} WETH"
+                ),
+                parent=self.box4
+            )
+            self.min_out_lbl.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse
+            )
+            self.min_out_lbl.resize(500, 44)
+            self.min_out_lbl.move(320, 430)
+
+            self.total_fee_lbl = QLabel(self.box4)
+            self.total_fee_lbl.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse
+            )
+            self.total_fee_lbl.resize(500, 44)
+            self.total_fee_lbl.move(320, 476)
+
+            self.min_received = QLabel(self.box4)
+            self.min_received.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse
+            )
+            self.min_received.resize(500, 44)
+            self.min_received.move(320, 522)
+            self.min_received.hide()
+
+            def get_exchange_rate():
+                item = self.index1
+
+                if item != 0:
+                    from_token_contract = create_contract(
+                        self.chosen_address_from_list,
+                        chain=self.network
+                    )
+
+                    from_token_decimals = (
+                        from_token_contract
+                        .functions
+                        .decimals()
+                        .call()
+                    )
+
+                    from_token_symbol = \
+                        prog.asset[self.network]['symbol'][self.index1-1]
+
+                    if self.index2 == 0:
+                        self.chosen_address_to_list = \
+                            self.swap_token_detail['address'][self.network][0]
+
+                    to_token_contract = create_contract(
+                        self.chosen_address_to_list,
+                        chain=self.network
+                    )
+
+                    to_token_symbol = (
+                        to_token_contract
+                        .functions
+                        .symbol()
+                        .call()
+                    )
+
+                    self.in_price = get_price(
+                        from_token_symbol
+                    )
+
+                    self.out_price = get_price(
+                        to_token_symbol
+                    )
+
+                    self.min_amount_out = (
+                        (
+                            float(self.in_price)
+                            / float(self.out_price)
+                        )
+                    )
+
+                    mao = rm_scientific_notation(self.min_amount_out)
+
+                    self.min_out_lbl.setText(
+                        f"<u>Rate:</u> 1 {from_token_symbol.upper()} = "
+                        + f"~{mao[:14]} "
+                        + to_token_symbol.upper()
+                    )
+
+                    self.out_symbol = to_token_symbol
+
+                    amount_received()
+
+                else:
+                    to_token_contract = create_contract(
+                        self.chosen_address_to_list,
+                        chain=self.network
+                    )
+
+                    to_token_symbol = (
+                        to_token_contract
+                        .functions
+                        .symbol()
+                        .call()
+                    )
+
+                    price_of_in_token = get_eth_price()
+
+                    price_of_out_token = get_price(
+                        to_token_symbol
+                    )
+
+                    self.min_amount_out = (
+                        (
+                            float(price_of_in_token)
+                            / float(price_of_out_token)
+                        )
+                    )
+
+                    mao = rm_scientific_notation(self.min_amount_out)
+
+                    self.min_out_lbl.setText(
+                        '<u>Rate:</u> 1 ETH = '
+                        + f"~{mao[:14]} "
+                        + to_token_symbol.upper()
+                    )
+
+                    self.out_symbol = to_token_symbol.upper()
+
+                    amount_received()
+
+            def amount_received():
+                amount_to_send = self.swap_amount.text()
+
+                if (
+                    len(amount_to_send) == 0
+                    and len(self.min_received.text()) != 0
+                ):
+                    self.min_out_lbl.hide()
+                    self.min_received.hide()
+                    self.total_fee_lbl.hide()
+
+                if (
+                    not amount_to_send.startswith('.')
+                    and len(amount_to_send) != 0
+                ):
+                    self.min_out_lbl.show()
+                    self.min_received.show()
+                    self.total_fee_lbl.show()
+
+                    gas = round(self.__gas, 12)
+                    gas = rm_scientific_notation(gas)
+
+                    amount_to_send = float(amount_to_send)
+
+                    fee = amount_to_send * 0.003
+                    fee = rm_scientific_notation(fee)
+
+                    if self.index1 != 0:
+                        symbol = (
+                            prog.asset[self.network]
+                            ['symbol']
+                            [self.index1-1]
+                            .upper()
+                        )
+
+                        self.total_fee_lbl.setText(
+                            '<u>Fee</u>: '
+                            + fee[:10]
+                            + f" {symbol}"
+                            + f" + {gas} ETH (gas)"
+                        )
+
+                    else:
+                        self.total_fee_lbl.setText(
+                            '<u>Fee</u>: '
+                            +  fee[:10]
+                            + f" ETH + {gas} ETH (gas)"
+                        )
+
+                    amount_to_send = float(amount_to_send)
+                    amount_to_send *= self.min_amount_out
+
+                    if amount_to_send < 0:
+                        amount_to_send = '0'
+
+                    amount_to_send = rm_scientific_notation(
+                        amount_to_send
+                    )
+
+                    if self.index2 != 0:
+                        self.min_received.setText(
+                            '<u>You will receive</u>: ~'
+                            + amount_to_send[:14]
+                            + f" {self.out_symbol.upper()}"
+                        )
+
+                    else:
+                        amount_to_send = float(amount_to_send)
+                        amount_to_send -= float(fee) - float(gas)
+                        amount_to_send = (
+                            rm_scientific_notation(
+                                amount_to_send
+                            )
+                        )
+
+                        self.min_received.setText(
+                            '<u>You will receive</u>: ~'
+                            + amount_to_send[:14]
+                            + ' WETH'
+                        )
+
+            def get_item_from_list_one(item):
+                self.index1 = item
+
+                if item == 0:
+                    get_gas_fee()
+
+                    self.chosen_address_from_list = (
+                        '0x0000000000000000000000000000000000000000'
+                    )
+
+                    ger = Thread(target=get_exchange_rate)
+                    ger.start()
+
+                    if not ger.running():
+                        return
+
+                self.chosen_address_from_list = (
+                    prog.asset[self.network]
+                    ['address']
+                    [self.index1-1]
+                )
+
+                get_gas_fee()
+
+                if not self.uniswap.has_permit2_allowance(
+                    self.chosen_address_from_list
+                ):
+                    self.__gas *= 2
+
+                ger = Thread(target=get_exchange_rate)
+                ger.start()
+                #get_exchange_rate()
+
+            def get_item_from_list_two(item):
+                self.index2 = item
+
+                self.chosen_address_to_list = (
+                    self.swap_token_detail
+                    ['address']
+                    [self.network]
+                    [item]
+                )
+
+                ger = Thread(target=get_exchange_rate)
+                ger.start()
+
+                #get_exchange_rate()
 
             self.execute_swap = QPushButton(
                 text='Swap tokens ',
@@ -9790,27 +10466,89 @@ def main():
             )
             self.execute_swap.resize(200, 44)
             self.execute_swap.setIconSize(QSize(32, 32))
-            self.execute_swap.move(514, 450)
+            self.execute_swap.move(524, 576)
             self.execute_swap.setLayoutDirection(
                 QtCore.Qt.LayoutDirection.RightToLeft
             )
 
             def validate_input():
-                inp = self.swap_amount.text()
+                swap_amount = self.swap_amount.text()
 
-                if (
-                    len(inp) != 0
-                    and not inp.startswith('.')
-                ):
-                    self.swap_tokens(
-                        from_token_amount=float(inp),
-                        from_token=HexBytes(
-                            self.chosen_address_from_list1
-                        ),
-                        to_token=HexBytes(
-                            self.chosen_address_from_list2
-                        ),
+                if len(swap_amount) == 0:
+                    errbox('Please enter how many tokens you wish to swap')
+                    return
+
+                if not swap_amount.startswith('.'):
+                    self.chosen_address_from_list = \
+                        w3.to_checksum_address(
+                            self.chosen_address_from_list
+                        )
+
+                    self.chosen_address_to_list = \
+                        w3.to_checksum_address(
+                            self.chosen_address_to_list
+                        )
+
+                    swap_amount = w3.to_wei(swap_amount, 'wei')
+
+                    min_out = float(self.min_amount_out)
+                    min_out -= (min_out * 0.05)
+                    min_out = w3.to_wei(min_out, 'wei')
+
+                    swap_tx = self.uniswap.swap(
+                        self.chosen_address_from_list,
+                        self.chosen_address_to_list,
+                        swap_amount,
+                        min_out
                     )
+
+                    if swap_tx != 0x0 and swap_tx is not None:
+                        self.l = QLabel(
+                            text=(
+                                'Swap confirmed!\n\n Transaction hash:\n'
+                                + f"{swap_tx}\n",
+                            ),
+                            parent=self,
+                        )
+                        self.l.resize(520, 240)
+
+                        self.l.setTextInteractionFlags(
+                            Qt.TextInteractionFlag.TextSelectableByMouse
+                        )
+                        self.l.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.l.setStyleSheet(
+                            'background: #111212;'
+                            'color: #b0c4de;'
+                            'border: 3px solid gray;'
+                            'border-radius: 16px;'
+                            'font: 21px;'
+                        )
+                        self.l.show()
+                        add_round_corners(self.l)
+
+                        self.l.move(280, 260)
+
+                        self.b = QPushButton(
+                            text='Close',
+                            parent=self,
+                            icon=TigerWalletImage.close_blue
+                        )
+                        self.b.setStyleSheet(
+                            "QPushButton::hover{background-color: #1e1e1e;}"
+                        )
+                        self.b.resize(180, 44)
+                        self.b.setIconSize(QSize(32, 32))
+                        self.b.move(448, 444)
+                        self.b.clicked.connect(
+                            lambda: [
+                                self.l.close(),
+                                self.b.close(),
+                                self.l.deleteLater(),
+                                self.b.deleteLater(),
+                            ]
+                        )
+                        self.b.show()
+                        return
 
                 else:
                     errbox('Invalid amount')
@@ -9818,17 +10556,26 @@ def main():
 
             self.execute_swap.clicked.connect(validate_input)
             self.swap_amount.returnPressed.connect(validate_input)
+            self.swap_amount.textEdited.connect(amount_received)
 
             self.close_swap = QPushButton(
-                text='Close',
+                text=' Close',
                 parent=self.box4,
                 icon=TigerWalletImage.close_blue
             )
             self.close_swap.resize(200, 44)
             self.close_swap.setIconSize(QSize(32, 32))
-            self.close_swap.move(290, 450)
+            self.close_swap.move(310, 576)
             self.close_swap.clicked.connect(
-                self.clear_tab4_contents
+                self.clear_tab4
+            )
+
+            self.from_droplist.activated.connect(
+                get_item_from_list_one
+            )
+
+            self.to_droplist.activated.connect(
+                get_item_from_list_two
             )
 
         # FIFTH button
@@ -9943,7 +10690,7 @@ def main():
             self.close_book.setFixedSize(200, 52)
             self.close_book.setIconSize(QSize(32, 32))
             self.close_book.move(426, 568)
-            self.close_book.clicked.connect(self.clear_tab5_contents)
+            self.close_book.clicked.connect(self.clear_tab5)
 
         # SIXTH button
         def init_history_window(self):
@@ -9954,26 +10701,12 @@ def main():
             """ Settings window """
             self.s = Settings(self)
 
-        #
+        # Donation
         def init_donate_window(self):
             self.selected_donobtn_style()
+            self.close_tab(self.tab)
 
-            if self.tab == 1:
-                self.clear_tab1_contents()
-
-            elif self.tab == 2:
-                self.clear_tab2_contents()
-
-            elif self.tab == 3:
-                self.clear_tab3_contents()
-
-            elif self.tab == 4:
-                self.clear_tab4_contents()
-
-            elif self.tab == 5:
-                self.clear_tab5_contents()
-
-            elif self.rm_wallet_tab:
+            if self.rm_wallet_tab:
                 self.clear_rm_wallet_tab()
 
             elif self.rmcointab:
@@ -9983,28 +10716,18 @@ def main():
 
             self.val.hide()
             self.table.hide()
-            #self.stop_thread()
             self.add_coin_btn.hide()
             self.default_coin_btn.hide()
             self.del_coin_btn.hide()
             self.btn_showhide.hide()
-
-            self.dono_label = QLabel(
-                #text="Donate crypto",
-                parent=self
-            )
-
-            self.dono_label.resize(1100, 38)
-            self.dono_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.dono_label.move(0, 148)
-            self.dono_label.show()
+            self.currency_box.hide()
 
             self.dono_msg = QLabel(
                 text="If you like my work, buy me a coffee!",
                 parent=self
             )
 
-            self.dono_msg.resize(1100, 32)
+            self.dono_msg.resize(1100, 34)
             self.dono_msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.dono_msg.move(0, 148)
             self.dono_msg.show()
@@ -10300,17 +11023,7 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.close_dono.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
-                )
-
-                self.dono_label.setStyleSheet(
-                    "font-size: 30px;"
-                    + "color: #6495ed;"
-                    + "background: #0a0f18;"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.dono_msg.setStyleSheet(
@@ -10321,17 +11034,7 @@ def main():
 
             elif prog.configs["theme"] == "default_light":
                 self.close_dono.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
-                )
-
-                self.dono_label.setStyleSheet(
-                    "font-size: 30px;"
-                    + "color: #3c598e;"
-                    + "background: #eff1f3;"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.dono_msg.setStyleSheet(
@@ -10431,19 +11134,11 @@ def main():
 
             if prog.configs["theme"] == "default_dark":
                 self.close_add.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.continue_add.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.cname.setStyleSheet(
@@ -10454,22 +11149,6 @@ def main():
                 self.caddr.setStyleSheet(
                     "font-size: 20px;"
                     + "color: #9fb1ca;"
-                )
-
-                self.form1.setStyleSheet(
-                    "color: #c5d4e7;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 16px;"
-                    + "font-size: 16px;"
-                    + "padding: 5px;"
-                )
-
-                self.form2.setStyleSheet(
-                    "color: #c5d4e7;"
-                    + "border: 1px solid #778ba5;"
-                    + "border-radius: 16px;"
-                    + "font-size: 16px;"
-                    + "padding: 5px;"
                 )
 
                 self.enter_details.setStyleSheet(
@@ -10480,19 +11159,11 @@ def main():
 
             elif prog.configs["theme"] == "default_light":
                 self.close_add.setStyleSheet(
-                    "QPushButton{background-color:  transparent;"
-                    + "font-size: 15px;"
-                    + "color: #3c598e;"
-                    + "border-radius: 8px;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.continue_add.setStyleSheet(
-                    "QPushButton{background-color:  transparent;"
-                    + "font-size: 15px;"
-                    + "color: #3c598e;"
-                    + "border-radius: 8px;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.cname.setStyleSheet(
@@ -10503,22 +11174,6 @@ def main():
                 self.caddr.setStyleSheet(
                     "font-size: 20px;"
                     + "color: #3c598e;"
-                )
-
-                self.form1.setStyleSheet(
-                    "color: #3c598e;"
-                    + "border: 2px solid #778ba5;"
-                    + "border-radius: 16px;"
-                    + "font-size: 16px;"
-                    + "padding: 5px;"
-                )
-
-                self.form2.setStyleSheet(
-                    "color: #3c598e;"
-                    + "border: 2px solid #778ba5;"
-                    + "border-radius: 16px;"
-                    + "font-size: 16px;"
-                    + "padding: 5px;"
                 )
 
                 self.enter_details.setStyleSheet(
@@ -10600,19 +11255,11 @@ def main():
 
             if prog.configs["theme"] == 'default_dark':
                 self.close_rm.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.continue_rm.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
             elif prog.configs["theme"] == 'default_light':
@@ -10632,61 +11279,6 @@ def main():
                     + "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
-        def init_sidebar_style(self):
-            if prog.configs["theme"] == "default_dark":
-                for i in range(7):
-                    self.sidebar_button[i].setStyleSheet(
-                         "QPushButton {background-color: transparent;"
-                        + "border-radius: 36px;}"
-                        + "QPushButton::hover{background: #1e1e1e;}"
-                        + 'QPushButton::menu-indicator{image: none;}'
-                    )
-
-                self.dark_light_switch.setStyleSheet(
-                        "QPushButton {background-color: transparent;"
-                        + "border-radius: 36px;}"
-                        + "QPushButton::hover{background: #1e1e1e;}"
-                    )
-
-                self.donation_button.setStyleSheet(
-                    "QPushButton {background-color: transparent;"
-                    + "border-radius: 36px;}"
-                    + "QPushButton::hover{background: #1e1e1e;}"
-                )
-
-                self.switch_network_button.setStyleSheet(
-                    "QPushButton {background: transparent;"
-                    + "border-radius: 0px;}"
-                    + "QPushButton::hover{background: transparent;}"
-                )
-
-            elif prog.configs["theme"] == "default_light":
-                for i in range(7):
-                    self.sidebar_button[i].setStyleSheet(
-                         "QPushButton {background-color: transparent;"
-                        + "border-radius: 36px;}"
-                        + "QPushButton::hover{background: #ced7e9;}"
-                        + 'QPushButton::menu-indicator{image: none;}'
-                    )
-
-                self.dark_light_switch.setStyleSheet(
-                        "QPushButton {background-color: transparent;"
-                        + "border-radius: 36px;}"
-                        + "QPushButton::hover{background: #ced7e9;}"
-                    )
-
-                self.donation_button.setStyleSheet(
-                    "QPushButton {background-color: transparent;"
-                    + "border-radius: 36px;}"
-                    + "QPushButton::hover{background: #ced7e9;}"
-                )
-
-                self.switch_network_button.setStyleSheet(
-                    "QPushButton {background: transparent;"
-                    + "border-radius: 0px;}"
-                    + "QPushButton::hover{background: transparent;}"
-                )
-
         # new in v1.3
         def init_unlock_wallet(self):
             self.opt = 1
@@ -10704,7 +11296,7 @@ def main():
             )
 
             self.unlock_wallet_lbl.resize(390, 40)
-            self.unlock_wallet_lbl.move(60, 40)
+            self.unlock_wallet_lbl.move(72, 40)
 
             def unhide():
                 if self.opt == 1:
@@ -10774,170 +11366,261 @@ def main():
 
             self.unlock_wallet_box.hide()
 
+        # New in v3.0
+        def switch_networks(self):
+            self._kill_threads()
 
-        def swap_tokens(
-            self,
-            from_token_amount,
-            from_token,
-            to_token
-        ):
-            # Check if the addresses are the same
-            if from_token == to_token:
-                errbox('Cannot swap the same token')
-                return
+            if prog.chain == 'eth':
+                prog.chain = 'base'
 
-            elif from_token_amount == 0:
-                errbox(
-                    'Please enter how many tokens you want to swap'
+                self.switch_network_button.setIcon(
+                    TigerWalletImage.base_img
                 )
-                return
 
-            elif from_token_amount == '0.0':
-                errbox('Invalid swap amount')
-                return
+                self._start_threads()
 
-            # Create the contracts
-            from_token_contract = create_contract(from_token)
-            to_token_contract  = create_contract(to_token)
+                self._init_table_cells()
+                self.fill_up_table(chain='base')
 
-            uniswap_router_address = HexBytes(
-                '0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B'
-            )
-
-            uniswap_abi = orjson.loads(
-                """[{"inputs":[{"components":[{"internalType":"address","name":"permit2","type":"address"},{"internalType":"address","name":"weth9","type":"address"},{"internalType":"address","name":"seaport","type":"address"},{"internalType":"address","name":"nftxZap","type":"address"},{"internalType":"address","name":"x2y2","type":"address"},{"internalType":"address","name":"foundation","type":"address"},{"internalType":"address","name":"sudoswap","type":"address"},{"internalType":"address","name":"nft20Zap","type":"address"},{"internalType":"address","name":"cryptopunks","type":"address"},{"internalType":"address","name":"looksRare","type":"address"},{"internalType":"address","name":"routerRewardsDistributor","type":"address"},{"internalType":"address","name":"looksRareRewardsDistributor","type":"address"},{"internalType":"address","name":"looksRareToken","type":"address"},{"internalType":"address","name":"v2Factory","type":"address"},{"internalType":"address","name":"v3Factory","type":"address"},{"internalType":"bytes32","name":"pairInitCodeHash","type":"bytes32"},{"internalType":"bytes32","name":"poolInitCodeHash","type":"bytes32"}],"internalType":"struct RouterParameters","name":"params","type":"tuple"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"ContractLocked","type":"error"},{"inputs":[],"name":"ETHNotAccepted","type":"error"},{"inputs":[{"internalType":"uint256","name":"commandIndex","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"}],"name":"ExecutionFailed","type":"error"},{"inputs":[],"name":"FromAddressIsNotOwner","type":"error"},{"inputs":[],"name":"InsufficientETH","type":"error"},{"inputs":[],"name":"InsufficientToken","type":"error"},{"inputs":[],"name":"InvalidBips","type":"error"},{"inputs":[{"internalType":"uint256","name":"commandType","type":"uint256"}],"name":"InvalidCommandType","type":"error"},{"inputs":[],"name":"InvalidOwnerERC1155","type":"error"},{"inputs":[],"name":"InvalidOwnerERC721","type":"error"},{"inputs":[],"name":"InvalidPath","type":"error"},{"inputs":[],"name":"InvalidReserves","type":"error"},{"inputs":[],"name":"LengthMismatch","type":"error"},{"inputs":[],"name":"NoSlice","type":"error"},{"inputs":[],"name":"SliceOutOfBounds","type":"error"},{"inputs":[],"name":"SliceOverflow","type":"error"},{"inputs":[],"name":"ToAddressOutOfBounds","type":"error"},{"inputs":[],"name":"ToAddressOverflow","type":"error"},{"inputs":[],"name":"ToUint24OutOfBounds","type":"error"},{"inputs":[],"name":"ToUint24Overflow","type":"error"},{"inputs":[],"name":"TransactionDeadlinePassed","type":"error"},{"inputs":[],"name":"UnableToClaim","type":"error"},{"inputs":[],"name":"UnsafeCast","type":"error"},{"inputs":[],"name":"V2InvalidPath","type":"error"},{"inputs":[],"name":"V2TooLittleReceived","type":"error"},{"inputs":[],"name":"V2TooMuchRequested","type":"error"},{"inputs":[],"name":"V3InvalidAmountOut","type":"error"},{"inputs":[],"name":"V3InvalidCaller","type":"error"},{"inputs":[],"name":"V3InvalidSwap","type":"error"},{"inputs":[],"name":"V3TooLittleReceived","type":"error"},{"inputs":[],"name":"V3TooMuchRequested","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardsSent","type":"event"},{"inputs":[{"internalType":"bytes","name":"looksRareClaim","type":"bytes"}],"name":"collectRewards","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes","name":"commands","type":"bytes"},{"internalType":"bytes[]","name":"inputs","type":"bytes[]"}],"name":"execute","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"bytes","name":"commands","type":"bytes"},{"internalType":"bytes[]","name":"inputs","type":"bytes[]"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"execute","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256[]","name":"","type":"uint256[]"},{"internalType":"uint256[]","name":"","type":"uint256[]"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"onERC1155BatchReceived","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"onERC1155Received","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"onERC721Received","outputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"int256","name":"amount0Delta","type":"int256"},{"internalType":"int256","name":"amount1Delta","type":"int256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"uniswapV3SwapCallback","outputs":[],"stateMutability":"nonpayable","type":"function"},{"stateMutability":"payable","type":"receive"}]
-                """
-            )
-
-            to_token_decimals = (
-                to_token_contract
-                .functions
-                .decimals()
-                .call()
-            )
-
-            amount_in = (
-                from_token_amount
-                * 10
-                ** to_token_decimals
-            )
-
-            from_token_decimals = (
-                from_token_contract
-                .functions
-                .decimals()
-                .call()
-            )
-
-            price_of_out_token = get_price(
-                self.swap_token_detail['symbol']
-                [self.chosen_item_index]
-            )
-
-            min_amount_out = (
-                (
-                    float(get_eth_price())
-                    / float(price_of_out_token)
-                )
-                * 10
-                ** from_token_decimals
-                - 5
-            )
-
-            path = [from_token, to_token]
-            codec = RouterCodec()
-
-            if from_token != HexBytes(
-                '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-            ):
-                encoded_input = (
-                    codec
-                    .encode
-                    .chain()
-                    #.wrap_eth(FunctionRecipient.ROUTER, amount_in)
-                    .v2_swap_exact_in(
-                        FunctionRecipient.SENDER,
-                        int(amount_in),
-                        int(min_amount_out),
-                        path,
-                        payer_is_sender=False
+                for i in range(len(prog.asset['base']['name'])):
+                    self.entry_table_cells[i].setStyleSheet(
+                        'border: transparent;'
+                        'color: #b0c4de;'
+                        'font-size: 18px;'
                     )
-                    .build(codec.get_default_deadline())
+
+                self.asset_list.clear()
+                self.asset_list.insertItem(0, "ETHER (ETH)")
+                self.asset_list.setItemIcon(0, TigerWalletImage.eth_img)
+
+                for index in range(len(prog.asset['base']['name'])):
+                    self.asset_list.insertItem(
+                        index + 1,
+                        f"{prog.asset['base']['name'][index].upper()}"
+                        f" ({prog.asset['base']['symbol'][index].upper()})"
+                    )
+
+                    self.asset_list.setItemIcon(
+                        index + 1,
+                        QIcon(prog.asset['base']['image'][index])
+                    )
+
+                base_eth_amount = w3.from_wei(
+                    base_w3.eth.get_balance(self.address),
+                    "ether"
                 )
 
-            else:
-                encoded_input = (
-                    codec
-                    .encode
-                    .chain()
-                    .wrap_eth(
-                        FunctionRecipient.ROUTER,
-                        int(amount_in)
-                    )
-                    .v2_swap_exact_in(
-                        FunctionRecipient.SENDER,
-                        int(amount_in),
-                        int(min_amount_out),
-                        path,
-                        payer_is_sender=False
-                    )
-                    .build(codec.get_default_deadline())
+                self.estimate_amount.setText(
+                    f"~{rm_scientific_notation(base_eth_amount)[:18]} ETH"
                 )
 
-            priority_fee = w3.eth.max_priority_fee
-            priority_fee += (priority_fee * 0.75)
+                self.from_droplist.clear()
+                self.to_droplist.clear()
 
-            transaction = {
-                "from": prog.account.address,
-                "to": uniswap_router_address,
-                "gas": 500_000,
-                "maxPriorityFeePerGas": int(priority_fee),
-                "maxFeePerGas": 100 * 10**9,
-                "type": '0x2',
-                "chainId": 1,
-                "value": int(amount_in),
-                "nonce": w3.eth.get_transaction_count(
-                    prog.account.address
-                ),
-                "data": encoded_input,
-            }
+                self.from_droplist.insertItem(
+                    0,
+                    'Ether'
+                    + ' (ETH)'
+                )
+                self.from_droplist.setItemIcon(
+                    0,
+                    TigerWalletImage.eth_img
+                )
 
-            self.tx = w3.eth.account.sign_transaction(
-                transaction,
-                prog.account.key
-            )
+                for i in range(len(prog.asset[prog.chain]['name'])):
+                    self.from_droplist.insertItem(
+                        i+1,
+                        prog.asset[prog.chain]['name'][i].upper()
+                        + f" ({prog.asset[prog.chain]['symbol'][i].upper()})"
+                    )
+                    self.from_droplist.setItemIcon(
+                        i+1,
+                        QIcon(prog.asset[prog.chain]['image'][i])
+                    )
 
-            self.tx_hash = 0x0
+                with open(
+                    prog.dest_path
+                    + 'swap_token_details.json',
+                    mode='rb'
+                ) as f:
+                    file_contents = orjson.loads(f.read())
+                    self.swap_token_detail = file_contents
 
-            def print_receipt_hash():
-                current_block = w3.eth.get_block('latest', True)
+                    for i in range(len(file_contents['name']['base'])):
+                        self.to_droplist.insertItem(
+                            i,
+                            file_contents['name']['base'][i].upper()
+                            + f" ({file_contents['symbol']['base'][i].upper()})"
+                        )
 
-                for tx in current_block.transactions:
-                    if (
-                        tx['hash'] == self.tx_hash
-                    ):
-                        hash_ = '0x' + tx['hash']
+                        self.to_droplist.setItemIcon(
+                            i,
+                            QIcon(file_contents['image']['base'][i])
+                        )
 
-                        msgbox( f"Transaction hash: {hash_}")
+                gas = float(base_w3.eth.gas_price)
 
-                        self._timer.stop()
-                        self._timer.deleteLater()
+                gas *= 500_000
+                gas = float(w3.from_wei(gas, 'ether'))
 
+                self.__gas = gas
 
-            self._timer = QTimer()
-            self._timer.timeout.connect(print_receipt_hash)
+                self.swap_amount.setText('')
+                self.total_fee_lbl.setText('')
+                self.min_received.setText('')
 
-            try:
-                self.tx_hash =  str(
-                    w3.eth.send_raw_transaction(
-                        tx.raw_transaction
+                self.chosen_address_from_list = self.zero_in_hex
+
+                # Also first choice on the list
+                self.chosen_address_to_list = (
+                    self.swap_token_detail['address']['base'][0]
+                )
+
+                self.uniswap = UniSwap()
+                self.uniswap.w3 = Web3(
+                    Web3.HTTPProvider(
+                        prog.configs["rpc"]['base']
                     )
                 )
 
-                self._timer.start(5000)
-            except Exception:
-                errbox('insufficient funds for gas + swap amount')
-                return
+                self.wh = WalletHistory(chain='base')
+                self.eth_ns = ENS(base_web3_provider)
+                self.network = 'base'
+
+            elif prog.chain == 'base':
+                prog.chain = 'eth'
+
+                self.switch_network_button.setIcon(
+                    TigerWalletImage.eth_img
+                )
+
+                self._init_table_cells()
+                self.fill_up_table(chain='eth')
+
+                for i in range(len(prog.asset['eth']['name'])):
+                    self.entry_table_cells[i].setStyleSheet(
+                        'border: transparent;'
+                        'color: #b0c4de;'
+                        'font-size: 18px;'
+                    )
+
+                self.asset_list.clear()
+                self.asset_list.insertItem(0, "ETHER (ETH)")
+                self.asset_list.setItemIcon(0, TigerWalletImage.eth_img)
+
+                for index in range(len(prog.asset['eth']['name'])):
+                    self.asset_list.insertItem(
+                        index + 1,
+                        f"{prog.asset['eth']['name'][index].upper()}"
+                        f" ({prog.asset['eth']['symbol'][index].upper()})"
+                    )
+
+                    self.asset_list.setItemIcon(
+                        index + 1,
+                        QIcon(prog.asset['eth']["image"][index])
+                    )
+
+                eth_amount = w3.from_wei(
+                    w3.eth.get_balance(self.address),
+                    "ether"
+                )
+
+                self.estimate_amount.setText(
+                    f"~{rm_scientific_notation(eth_amount)[:18]} ETH"
+                )
+
+                self.from_droplist.clear()
+                self.to_droplist.clear()
+
+                self.from_droplist.insertItem(
+                    0,
+                    'Ether'
+                    + ' (ETH)'
+                )
+                self.from_droplist.setItemIcon(
+                    0,
+                    TigerWalletImage.eth_img
+                )
+
+                for i in range(len(prog.asset[prog.chain]['name'])):
+                    self.from_droplist.insertItem(
+                        i+1,
+                        prog.asset[prog.chain]['name'][i].upper()
+                        + f" ({prog.asset[prog.chain]['symbol'][i].upper()})"
+                    )
+                    self.from_droplist.setItemIcon(
+                        i+1,
+                        QIcon(prog.asset[prog.chain]['image'][i])
+                    )
+
+                with open(
+                    prog.dest_path
+                    + 'swap_token_details.json',
+                    mode='rb'
+                ) as f:
+                    file_contents = orjson.loads(f.read())
+                    self.swap_token_detail = file_contents
+
+                    for i in range(len(file_contents['name']['eth'])):
+                        self.to_droplist.insertItem(
+                            i,
+                            file_contents['name']['eth'][i].upper()
+                            + f" ({file_contents['symbol']['eth'][i].upper()})"
+                        )
+
+                        self.to_droplist.setItemIcon(
+                            i,
+                            QIcon(file_contents['image']['eth'][i])
+                        )
+
+                gas = float(w3.eth.gas_price)
+
+                gas *= 500_000
+                gas = float(w3.from_wei(gas, 'ether'))
+
+                self.__gas = gas
+
+                self.swap_amount.setText('')
+                self.total_fee_lbl.setText('')
+                self.min_received.setText('')
+
+                self.chosen_address_from_list = self.zero_in_hex
+
+                # Also first choice on the list
+                self.chosen_address_to_list = (
+                    self.swap_token_detail['address']['eth'][0]
+                )
+
+                self.uniswap = UniSwap()
+                self.uniswap.w3 = Web3(
+                    Web3.HTTPProvider(
+                        prog.configs["rpc"]['eth']
+                    )
+                )
+
+                self.wh = WalletHistory()
+                self.eth_ns = ENS(web3_provider)
+                self.network = 'eth'
+
+        def close_add_coin_window(self):
+            self.coinaddr.close()
+            self.errlbl.close()
+            self.contractlbl.close()
+            self.coinname.close()
+            self.coinnamelbl.close()
+            self.coinsym.close()
+            self.coinsymlbl.close()
+            self.coindec.close()
+            self.coindeclbl.close()
+            self.continue_add_coin_btn.close()
+            self.close_add_coin_btn.close()
+
+            self.add_coin_btn.show()
+            self.del_coin_btn.show()
+            self.default_coin_btn.show()
+            self.table.show()
+            self.val.show()
+            self.btn_showhide.show()
 
         def unhide(self):
             if self.opt == 1:
@@ -10986,7 +11669,7 @@ def main():
                 )
 
                 self.first_amount_cell.setText(
-                    str(self.eth_amount)[:22]
+                    str(self.eth_amount)[:18]
                 )
 
                 for i in range(len(self.entry_table_cells)):
@@ -10994,7 +11677,7 @@ def main():
 
                     if '*' in item.text():
                         item.setText(
-                            prog.assets_details['eth']['value'][i][:22]
+                            prog.assets_details['eth']['value'][i][:18]
                         )
 
                 for item in self.entry_table_cells:
@@ -11009,22 +11692,10 @@ def main():
                 )
                 return
 
-
             self.selected_btn1_style()
+            self.close_tab(self.tab)
 
-            if self.tab == 2:
-                self.clear_tab2_contents()
-
-            elif self.tab == 3:
-                self.clear_tab3_contents()
-
-            elif self.tab == 4:
-                self.clear_tab4_contents()
-
-            elif self.tab == 5:
-                self.clear_tab5_contents()
-
-            elif self.donation_window_active:
+            if self.donation_window_active:
                 self.clear_donation_tab()
 
             self.rm_wallet_tab = True
@@ -11130,33 +11801,11 @@ def main():
 
             if prog.configs['theme'] == 'default_dark':
                 self.cancel_rm_wallet.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.continue_rm_wallet.setStyleSheet(
-                    'QPushButton{'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #6495ed;}"
-                    + "QPushButton::hover{background-color: #1e1e1e;}"
-                )
-
-                self.rm_wallet_list.setStyleSheet(
-                    "QListView {font-size: 18px;"
-                    + "color: #b0c4de;"
-                    + "padding: 16px;"
-                    + "border-radius: 16px;"
-                    + "background: transparent;}"
-                    + "QListView::item:hover{color: #90B3F3;"
-                    + "background: #363636;"
-                    + "border-radius: 8px;}"
-                    + 'QListView::item:selected{color: #90B3F3;'
-                    + "background: #252627;"
-                    + 'border-radius: 8px};'
+                    "QPushButton::hover{background-color: #1e1e1e;}"
                 )
 
                 self.rm_wallet_title.setStyleSheet(
@@ -11168,33 +11817,11 @@ def main():
 
             elif prog.configs['theme'] == 'default_light':
                 self.cancel_rm_wallet.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.continue_rm_wallet.setStyleSheet(
-                    'QPushButton {background-color: transparent;'
-                    + "border-radius: 8;"
-                    + "font-size: 20px;"
-                    + "color: #3c598e;}"
-                    + "QPushButton::hover{background-color: #ced7e9;}"
-                )
-
-                self.rm_wallet_list.setStyleSheet(
-                    "QListView {font-size: 18px;"
-                    + "color: #3c598e;"
-                    + "padding: 16px;"
-                    + "border-radius: 16px;"
-                    + "background: transparent;}"
-                    + "QListView::item:hover{color: #3c598e;"
-                    + "background: #ced7e9;"
-                    + "border-radius: 8px;}"
-                    + 'QListView::item:selected{color: #3c598e;'
-                    + "background: #ced7e9;"
-                    + 'border-radius: 8px};'
+                    "QPushButton::hover{background-color: #ced7e9;}"
                 )
 
                 self.rm_wallet_title.setStyleSheet(
@@ -11217,7 +11844,7 @@ def main():
             if resp:
                 __row = self.rm_wallet_row
 
-                with open(prog.conf_file, 'w') as f:
+                with open(prog.conf_file, mode='w') as f:
                     self.rm_wallet_list.takeItem(__row)
                     del prog.configs['wallets'][__row]
                     del wallets[__row]
@@ -11248,14 +11875,8 @@ def main():
             elif not resp:
                 return
 
-        def clear_main_table_contents(self):
-            sz = len(prog.asset['eth']["name"])
-
-            [
-                self.table.takeItem(i, ii)
-                for i in range(sz + 1)
-                for ii in range(3)
-            ]
+        def clear_main_table(self, chain=prog.chain):
+            sz = len(prog.asset[chain]["name"])
 
         # new in v1.3
         def black_out_window(self):
@@ -11263,10 +11884,9 @@ def main():
             self.border.hide()
             self.lock_wallet_button.hide()
             self.donation_button.hide()
-            self.dark_light_switch.hide()
             self.switch_network_button.hide()
             self.btn_showhide.hide()
-
+            self.currency_box.hide()
 
             if self.tab == 0:
                 if self.donation_window_active:
@@ -11274,7 +11894,6 @@ def main():
                     self.donation_button.setEnabled(True)
                     self.close_dono.close()
                     self.dono_msg.close()
-                    self.dono_label.close()
 
                     self.widg1.close()
                     self.widg2.close()
@@ -11333,23 +11952,17 @@ def main():
             self.unlock_wallet_pbox.clear()
 
             if prog.configs["theme"] == "default_dark":
-                self.setStyleSheet(
-                    ":enabled {background: #0a0f18;}"
-                    ":disabled {background-color: black;}"
-                )
+                self.setStyleSheet('background: #0a0f18;')
 
             elif prog.configs["theme"] == "default_light":
-                self.setStyleSheet(
-                    ":enabled {background-color: #eff1f3;}"
-                    ":disabled {background-color: black;}"
-                )
+                self.setStyleSheet('background: #eff1f3;')
 
             self.button_box.show()
             self.border.show()
             self.lock_wallet_button.show()
             self.donation_button.show()
-            self.dark_light_switch.show()
             self.switch_network_button.show()
+            self.currency_box.show()
 
             if self.tab == 0:
                 if self.donation_window_active:
@@ -11384,23 +11997,28 @@ def main():
 
             self.afk_timer.start(afk_time)
 
+        # new in v3.0
+        def close_tab(self, tab):
+            ''' pythonic way to close tabs '''
+            tabs = {
+                1: self.clear_tab1,
+                2: self.clear_tab2,
+                3: self.clear_tab3,
+                4: self.clear_tab4,
+                5: self.clear_tab5,
+                6: self.clear_tab6
+            }
+
+            if tab != 0:
+                return tabs[tab]()
+
         # Wallet menu
-        def show_tab1_contents(self):
+        def show_tab1(self):
             self.selected_btn1_style()
+            self.close_tab(self.tab)
+            self.home_button.setEnabled(True)
 
-            if self.tab == 2:
-                self.clear_tab2_contents()
-
-            elif self.tab == 3:
-                self.clear_tab3_contents()
-
-            elif self.tab == 4:
-                self.clear_tab4_contents()
-
-            elif self.tab == 5:
-                self.clear_tab5_contents()
-
-            elif self.donation_window_active:
+            if self.donation_window_active:
                 self.clear_donation_tab()
 
             elif self.rm_wallet_tab:
@@ -11414,31 +12032,21 @@ def main():
 
             self.table.hide()
             self.val.hide()
-            #self.stop_thread()
             self.add_coin_btn.hide()
             self.default_coin_btn.hide()
             self.del_coin_btn.hide()
             self.btn_showhide.hide()
+            self.currency_box.hide()
 
             self.box1.show()
 
         # Send
-        def show_tab2_contents(self):
+        def show_tab2(self):
             self.selected_btn2_style()
+            self.close_tab(self.tab)
+            self.home_button.setEnabled(True)
 
-            if self.tab == 1:
-                self.clear_tab1_contents()
-
-            elif self.tab == 3:
-                self.clear_tab3_contents()
-
-            elif self.tab == 4:
-                self.clear_tab4_contents()
-
-            elif self.tab == 5:
-                self.clear_tab5_contents()
-
-            elif self.donation_window_active:
+            if self.donation_window_active:
                 self.clear_donation_tab()
 
             elif self.rm_wallet_tab:
@@ -11450,33 +12058,23 @@ def main():
             self.tab = 2
             self.sidebar_button[1].setEnabled(False)
 
-            self.border.show()
             self.table.hide()
             self.val.hide()
             self.add_coin_btn.hide()
             self.default_coin_btn.hide()
             self.del_coin_btn.hide()
             self.btn_showhide.hide()
+            self.currency_box.hide()
 
             self.box2.show()
 
         # Receive
-        def show_tab3_contents(self):
+        def show_tab3(self):
             self.selected_btn3_style()
+            self.close_tab(self.tab)
+            self.home_button.setEnabled(True)
 
-            if self.tab == 1:
-                self.clear_tab1_contents()
-
-            elif self.tab == 2:
-                self.clear_tab2_contents()
-
-            elif self.tab == 4:
-                self.clear_tab4_contents()
-
-            elif self.tab == 5:
-                self.clear_tab5_contents()
-
-            elif self.donation_window_active:
+            if self.donation_window_active:
                 self.clear_donation_tab()
 
             elif self.rm_wallet_tab:
@@ -11491,28 +12089,21 @@ def main():
             self.border.show()
             self.table.hide()
             self.val.hide()
-            #self.stop_thread()
             self.add_coin_btn.hide()
             self.default_coin_btn.hide()
             self.del_coin_btn.hide()
             self.btn_showhide.hide()
+            self.currency_box.hide()
 
             self.box3.show()
 
         # Swap
-        def show_tab4_contents(self):
+        def show_tab4(self):
             self.selected_btn4_style()
+            self.close_tab(self.tab)
+            self.home_button.setEnabled(True)
 
-            if self.tab == 1:
-                self.clear_tab1_contents()
-
-            elif self.tab == 2:
-                self.clear_tab2_contents()
-
-            elif self.tab == 5:
-                self.clear_tab5_contents()
-
-            elif self.donation_window_active:
+            if self.donation_window_active:
                 self.clear_donation_tab()
 
             elif self.rm_wallet_tab:
@@ -11524,34 +12115,24 @@ def main():
             self.tab = 4
             self.sidebar_button[3].setEnabled(False)
 
-            self.border.show()
+            self._kill_threads()
             self.table.hide()
             self.val.hide()
-            #self.stop_thread()
             self.add_coin_btn.hide()
             self.default_coin_btn.hide()
             self.del_coin_btn.hide()
             self.btn_showhide.hide()
+            self.currency_box.hide()
 
             self.box4.show()
 
         # Address book
-        def show_tab5_contents(self):
+        def show_tab5(self):
             self.selected_btn5_style()
+            self.close_tab(self.tab)
+            self.home_button.setEnabled(True)
 
-            if self.tab == 1:
-                self.clear_tab1_contents()
-
-            elif self.tab == 2:
-                self.clear_tab2_contents()
-
-            elif self.tab == 3:
-                self.clear_tab3_contents()
-
-            elif self.tab == 4:
-                self.clear_tab4_contents()
-
-            elif self.donation_window_active:
+            if self.donation_window_active:
                 self.clear_donation_tab()
 
             elif self.rm_wallet_tab:
@@ -11563,37 +12144,22 @@ def main():
             self.tab = 5
             self.sidebar_button[4].setEnabled(False)
 
-            self.border.show()
             self.table.hide()
             self.val.hide()
-            #self.stop_thread()
             self.add_coin_btn.hide()
             self.default_coin_btn.hide()
             self.del_coin_btn.hide()
             self.btn_showhide.hide()
+            self.currency_box.hide()
 
             self.box5.show()
 
         # History
-        def show_tab6_contents(self):
+        def show_tab6(self):
             self.selected_btn6_style()
+            self.close_tab(self.tab)
 
-            if self.tab == 1:
-                self.clear_tab1_contents()
-
-            elif self.tab == 2:
-                self.clear_tab2_contents()
-
-            elif self.tab == 3:
-                self.clear_tab3_contents()
-
-            elif self.tab == 4:
-                self.clear_tab4_contents()
-
-            elif self.tab == 5:
-                self.clear_tab5_contents()
-
-            elif self.rm_wallet_tab:
+            if self.rm_wallet_tab:
                 self.clear_rm_wallet_tab()
 
             elif self.rmcointab:
@@ -11615,41 +12181,25 @@ def main():
                     time.sleep(0.1)
 
                     if not self.wh.isVisible():
-                        self.default_btn5_style()
-                        self.sidebar_button[4].setEnabled(True)
-                        return
+                        self.default_btn6_style()
+                        self.sidebar_button[5].setEnabled(True)
+                        self.tab = 0
                 return
 
             _thread = Thread(target=_check_if_active)
             _thread.start()
 
         # Settings
-        def show_tab7_contents(self):
+        def show_tab7(self):
             self.s.show()
             self.black_out_window()
             self.setEnabled(False)
 
         ## Applies default_dark theme
         def apply_default_dark_theme(self):
-            # Window background
             self.setStyleSheet(
                 ":enabled {background-color: #0a0f18;}"
                 ":disabled {background: black;}"
-                'QToolTip{background-color: black;'
-                'color: #b0c4de;'
-                'border-radius: 4px;'
-                'font: 15px;'
-                'padding: 4px;' # gives the text some space
-                'border: 1px dotted #6ca0dc;}'
-            )
-
-            self.button_box.setStyleSheet(
-                'QToolTip{background-color: black;'
-                'color: #b0c4de;'
-                'border-radius: 4px;'
-                'font: 15px;'
-                'padding: 4px;'
-                'border: 1px dotted #6ca0dc;}'
             )
 
             self.init_sidebar_style()
@@ -11667,75 +12217,51 @@ def main():
             )
 
             self.add_coin_btn.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.default_coin_btn.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.del_coin_btn.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.cancel.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.continue_btn.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.closebtn.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.add_contact.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.del_contact.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.close_book.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
+            )
+
+            self.execute_swap.setStyleSheet(
+                "QPushButton::hover{background-color: #1e1e1e;}"
+            )
+
+            self.close_swap.setStyleSheet(
+                "QPushButton::hover{background-color: #1e1e1e;}"
+            )
+
+            self.paste_addr.setStyleSheet(
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.errlabel.setStyleSheet(
@@ -11745,43 +12271,11 @@ def main():
             )
 
             self.close_send_btn.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.send_btn.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
-            )
-
-            self.swap_amount.setStyleSheet(
-                "color: #c5d4e7;"
-                + "border: 1px solid #6ca0dc;"
-                + "font-size: 15px;"
-                + "border-radius: 8;"
-                + 'padding-left: 8px;'
-            )
-
-            self.execute_swap.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
-            )
-
-            self.close_swap.setStyleSheet(
-                'QPushButton{'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #6495ed;}"
-                + "QPushButton::hover{background-color: #1e1e1e;}"
+                "QPushButton::hover{background-color: #1e1e1e;}"
             )
 
             self.val.setStyleSheet(
@@ -11791,25 +12285,7 @@ def main():
                 + "background: transparent;"
             )
 
-            self.table.setStyleSheet(
-                "QTableView{font-size: 18px;"
-                + "gridline-color: #0a0f18;"
-                + "color: #b0c4de;"
-                + "border-radius: 18px;}"
-                # Upper part of the table
-                + "QHeaderView::section{background-color: #0a0f18;"
-                + "padding : 3px;"
-                + "border-radius: 8px;"
-                + "color: #b0c4de;"
-                + "border: 1px solid gray;"
-                + "margin: 1px;"
-                + "font-size: 16px;}"
-                # Will be used when removing coins
-                + "QTableView:item:selected{background: #353535;"
-                + 'color: #c5d4e7;}'
-            )
-
-            for i in range(len(prog.asset['eth']['name'])):
+            for i in range(len(prog.asset[prog.chain]['name'])):
                 self.entry_table_cells[i].setStyleSheet(
                     'border: transparent;'
                     'color: #b0c4de;'
@@ -11820,20 +12296,6 @@ def main():
                 "font-size: 30px;"
                 + "color: #6495ed;"
                 + "background: #0a0f18;"
-            )
-
-            self.wallet_list.setStyleSheet(
-                "QListView {font-size: 18px;"
-                + "color: #b0c4de;"
-                + "padding: 16px;"
-                + "border-radius: 16px;"
-                + "background: transparent;}"
-                + "QListView::item:hover{color: #90B3F3;"
-                + "background: #363636;"
-                + "border-radius: 8px;}"
-                + 'QListView::item:selected{color: #90B3F3;'
-                + "background: #252627;"
-                + 'border-radius: 8px};'
             )
 
             self.addr.setStyleSheet(
@@ -11860,30 +12322,6 @@ def main():
                 + "border-radius: 4px;"
                 + "background: transparent;}"
                 + "QPushButton::hover{background-color: #ced7e9;}"
-            )
-
-            self.contact_table.setStyleSheet(
-                "QTableView{font-size: 15px;"
-                + "gridline-color: #1e1e1e;"
-                + "color: #c5d4e7;"
-                + "border: 0px solid #363636;"
-                + "border-radius: 16px;}"
-                # Upper part of the table
-                + "QHeaderView::section{background: #0a0f18;"
-                + "padding : 3px;"
-                + "color: #6495ed;"
-                + 'left: 0px solid gray;'
-                + "right: 0px solid gray;"
-                + "bottom: 1px solid gray;"
-                + "top: 0px solid gray;"
-                + "border-radius: 1px;"
-                + "margin: 16px;"
-                + "font-size: 19px;}"
-                + "QHeaderView::section:checked{background-color: transparent;"
-                + "font-size: 15px;"
-                + "color: #6495ed;}"
-                + "QTableView:item:selected{background: #353535;"
-                + 'color: #c5d4e7;}'
             )
 
             self.contactlbl.setStyleSheet(
@@ -11928,56 +12366,12 @@ def main():
                 + "background: transparent;"
             )
 
-            self.asset_list.setStyleSheet(
-                "QComboBox {border: 1px solid #778ba5;"
-                + "font: 18px;"
-                + "border-radius: 4px;"
-                + "background: #0a0f18;"
-                + "color: #b0c4de;}"
-                + "QAbstractItemView {background-color: #0a0f18;"
-                + "color: #b0c4de;"
-                + 'outline: 0;'
-                + 'font: 16px;'
-                + "border: 1px solid #778ba5;}"
-                + "QListView:item::hover{background-color: #1e1e1e;"
-                + "color: #b0c4de;"
-                + 'border: 1px solid #1e1e1e;'
-                + "font: 18px;}"
-            )
-
-            self.from_droplist.setStyleSheet(
-                "QComboBox {border: 1px solid #778ba5;"
-                + "font: 18px;"
-                + "border-radius: 4px;"
-                + "background: #0a0f18;"
-                + "color: #b0c4de;}"
-                + "QAbstractItemView {background-color: #0a0f18;"
-                + "color: #b0c4de;"
-                + 'outline: 0;'
-                + 'font: 16px;'
-                + "border: 1px solid #778ba5;}"
-                + "QListView:item::hover{background-color: #1e1e1e;"
-                + "color: #b0c4de;"
-                + 'border: 1px solid #1e1e1e;'
-                + "font: 18px;}"
-            )
-
-            self.to_droplist.setStyleSheet(
-                "QComboBox {border: 1px solid #778ba5;"
-                + "font: 18px;"
-                + "border-radius: 4px;"
-                + "background: #0a0f18;"
-                + "color: #b0c4de;}"
-                + "QAbstractItemView {background-color: #0a0f18;"
-                + "color: #b0c4de;"
-                + 'outline: 0;'
-                + 'font: 16px;'
-                + "border: 1px solid #778ba5;}"
-                + "QListView:item::hover{background-color: #1e1e1e;"
-                + "color: #b0c4de;"
-                + 'border: 1px solid #1e1e1e;'
-                + "font: 18px;}"
-            )
+            fix_white_borders([
+                self.asset_list,
+                self.from_droplist,
+                self.to_droplist,
+                self.currency_box
+            ])
 
             self.typeaddr.setStyleSheet(
                 "color: #c5d4e7;"
@@ -12030,28 +12424,42 @@ def main():
                 + 'QPushButton::menu-indicator{image: none;}'
             )
 
+            self.total_fee_lbl.setStyleSheet(
+                "font-size: 20px;"
+                + "color: #9fb1ca;"
+                + "background: transparent;"
+            )
+
+            self.min_out_lbl.setStyleSheet(
+                "font-size: 20px;"
+                + "color: #9fb1ca;"
+                + "background: transparent;"
+            )
+
+            self.min_received.setStyleSheet(
+                "font-size: 20px;"
+                + "color: #9fb1ca;"
+                + "background: transparent;"
+            )
+
         ## Applies default_light theme
         def apply_default_light_theme(self):
             self.setStyleSheet(
                 ":enabled {background-color: #eff1f3;}"
                 ":disabled {background: black;}"
-                'QToolTip{background-color: #eff1f3;'
-                'color: #3c598e;'
-                'border-radius: 4px;'
-                'font: 15px;'
-                'padding: 4px;' # gives the text some space
-                'border: 1px dotted #6ca0dc;}'
             )
 
-            self.button_box.setStyleSheet(
-                'QToolTip{background-color: #eff1f3;'
-                'color: #3c598e;'
-                'border-radius: 4px;'
-                'font: 15px;'
-                'padding: 4px;'
-                'border: 2px dotted #6ca0dc;}'
-            )
             self.init_sidebar_style()
+
+            fix_white_borders(
+                [
+                    self.asset_list,
+                    self.from_droplist,
+                    self.to_droplist,
+                    self.currency_box
+                ],
+                theme='light'
+            )
 
             self.btn_showhide.setStyleSheet(
                 "QPushButton{background-color:  transparent;"
@@ -12061,80 +12469,48 @@ def main():
 
             self.first_amount_cell.setStyleSheet(
                 'border: transparent;'
-                'color: #3c598e;'
+                'color: #0a0f18;'
                 'font-size: 18px;'
             )
 
             self.add_coin_btn.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.default_coin_btn.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.del_coin_btn.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.cancel.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.continue_btn.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.closebtn.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.add_contact.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.del_contact.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.close_book.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
+            )
+
+            self.paste_addr.setStyleSheet(
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.errlabel.setStyleSheet(
@@ -12144,43 +12520,19 @@ def main():
             )
 
             self.close_send_btn.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.send_btn.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
-            )
-
-            self.swap_amount.setStyleSheet(
-                "color: #3c598e;"
-                + "border: 1px solid #6ca0dc;"
-                + "font-size: 15px;"
-                + "border-radius: 8;"
-                + 'padding-left: 8px;'
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.execute_swap.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.close_swap.setStyleSheet(
-                'QPushButton {background-color: transparent;'
-                + "border-radius: 8;"
-                + "font-size: 20px;"
-                + "color: #3c598e;}"
-                + "QPushButton::hover{background-color: #ced7e9;}"
+                "QPushButton::hover{background-color: #ced7e9;}"
             )
 
             self.val.setStyleSheet(
@@ -12190,29 +12542,10 @@ def main():
                 + "background: transparent;"
             )
 
-            self.table.setStyleSheet(
-                # The table its self
-                "QTableView{font-size: 16px bold;"
-                + "gridline-color: #eff1f3;"
-                + "color: #39577F;"
-                + "border-radius: 16px;}"
-                # Upper part of the table
-                + "QHeaderView::section{background-color: #eff1f3;"
-                + "padding : 3px;"
-                + "border-radius: 8px;"
-                + "color: #39577F;"
-                + "border: 1px solid gray;"
-                + "margin: 1px;"
-                + "font-size: 16px;}"
-                # Will be used when removing coins
-                + "QTableView:item:selected{background: #ced7e9;"
-                + 'color: #3c598e;}'
-            )
-
-            for i in range(len(prog.asset['eth']['name'])):
+            for i in range(len(prog.asset[prog.chain]['name'])):
                 self.entry_table_cells[i].setStyleSheet(
                     'border: transparent;'
-                    'color: #3c598e;'
+                    'color: #0a0f18;'
                     'font-size: 18px;'
                 )
 
@@ -12220,20 +12553,6 @@ def main():
                 "font-size: 30px;"
                 + "color: #6495ed;"
                 + "background: #eff1f3;"
-            )
-
-            self.wallet_list.setStyleSheet(
-                "QListView {font-size: 18px;"
-                + "color: #3c598e;"
-                + "padding: 16px;"
-                + "border-radius: 16px;"
-                + "background: transparent;}"
-                + "QListView::item:hover{color: #3c598e;"
-                + "background: #ced7e9;"
-                + "border-radius: 8px;}"
-                + 'QListView::item:selected{color: #3c598e;'
-                + "background: #ced7e9;"
-                + 'border-radius: 8px};'
             )
 
             self.addr.setStyleSheet(
@@ -12259,30 +12578,6 @@ def main():
                 'QPushButton {background-color: transparent;'
                 + "border-radius: 4px;"
                 + "QPushButton::hover{background-color: #ced7e9;}"
-            )
-
-            self.contact_table.setStyleSheet(
-                "QTableView{font-size: 15px;"
-                + "gridline-color: #1e1e1e;"
-                + "color: #3c598e;"
-                + "border: 0px solid gray;"
-                + "border-radius: 16px;}"
-                # Upper part of the table
-                + "QHeaderView::section{background: #eff1f3;"
-                + "padding : 3px;"
-                + "color: #3c598e;"
-                + 'left: 0px solid gray;'
-                + "right: 0px solid gray;"
-                + "bottom: 1px solid gray;"
-                + "top: 0px solid gray;"
-                + "border-radius: 1px;"
-                + "margin: 16px;"
-                + "font-size: 19px;}"
-                + "QHeaderView::section:checked{background-color: transparent;"
-                + "font-size: 15px;"
-                + "color: #3c598e;}"
-                + "QTableView:item:selected{background: #353535;"
-                + 'color: #3c598e;}'
             )
 
             self.contactlbl.setStyleSheet(
@@ -12327,56 +12622,6 @@ def main():
                 + "background: transparent;"
             )
 
-            self.asset_list.setStyleSheet(
-                "QComboBox {border: 1px solid #778ba5;"
-                + "font: 18px;"
-                + "border-radius: 4px;"
-                + "background: #eff1f3;"
-                + "color: #3c598e;}"
-                + "QAbstractItemView {background-color: #eff1f3;"
-                + "color: #3c598e;"
-                + 'outline: 0;'
-                + 'font: 16px;'
-                + "border: 1px solid #778ba5;}"
-                + "QListView:item::hover{background-color: #ced7e9;"
-                + "color: #3c598e;"
-                + 'border: 1px solid #ced7e9;'
-                + "font: 18px;}"
-            )
-
-            self.from_droplist.setStyleSheet(
-                "QComboBox {border: 1px solid #778ba5;"
-                + "font: 18px;"
-                + "border-radius: 4px;"
-                + "background: #eff1f3;"
-                + "color: #3c598e;}"
-                + "QAbstractItemView {background-color: #eff1f3;"
-                + "color: #3c598e;"
-                + 'outline: 0;'
-                + 'font: 16px;'
-                + "border: 1px solid #778ba5;}"
-                + "QListView:item::hover{background-color: #ced7e9;"
-                + "color: #3c598e;"
-                + 'border: 1px solid #ced7e9;'
-                + "font: 18px;}"
-            )
-
-            self.to_droplist.setStyleSheet(
-                "QComboBox {border: 1px solid #778ba5;"
-                + "font: 18px;"
-                + "border-radius: 4px;"
-                + "background: #eff1f3;"
-                + "color: #3c598e;}"
-                + "QAbstractItemView {background-color: #eff1f3;"
-                + "color: #3c598e;"
-                + 'outline: 0;'
-                + 'font: 16px;'
-                + "border: 1px solid #778ba5;}"
-                + "QListView:item::hover{background-color: #ced7e9;"
-                + "color: #3c598e;"
-                + 'border: 1px solid #ced7e9;'
-                + "font: 18px;}"
-            )
 
             self.typeaddr.setStyleSheet(
                 "color: #3c598e;"
@@ -12454,7 +12699,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #1e1e1e;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
             elif prog.configs["theme"] == "default_light":
@@ -12462,7 +12706,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Receive
@@ -12472,7 +12715,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #1e1e1e;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
             elif prog.configs["theme"] == "default_light":
@@ -12480,7 +12722,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Swap
@@ -12490,7 +12731,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #1e1e1e;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
             elif prog.configs["theme"] == "default_light":
@@ -12498,7 +12738,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Address book
@@ -12508,7 +12747,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #1e1e1e;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
             elif prog.configs["theme"] == "default_light":
@@ -12516,7 +12754,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # History
@@ -12526,7 +12763,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #1e1e1e;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
             elif prog.configs["theme"] == "default_light":
@@ -12534,7 +12770,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Settings
@@ -12544,7 +12779,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #1e1e1e;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
             elif prog.configs["theme"] == "default_light":
@@ -12552,7 +12786,6 @@ def main():
                     "QPushButton {background-color: transparent;"
                     + "border-radius: 36px;}"
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Donate
@@ -12607,7 +12840,6 @@ def main():
                     + "border-radius: 36px;"
                     + 'border: 1px solid #242A32;}'
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Receive
@@ -12626,7 +12858,6 @@ def main():
                     + "border-radius: 36px;"
                     + 'border: 1px solid #242A32;}'
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Swap
@@ -12645,7 +12876,6 @@ def main():
                     + "border-radius: 36px;"
                     + 'border: 1px solid #242A32;}'
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Address book
@@ -12664,7 +12894,6 @@ def main():
                     + "border-radius: 36px;"
                     + 'border: 1px solid #242A32;}'
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # History
@@ -12683,7 +12912,6 @@ def main():
                     + "border-radius: 36px;"
                     + 'border: 1px solid #242A32;}'
                     + "QPushButton::hover{background: #ced7e9;}"
-                    + 'QPushButton::menu-indicator{image: none;}'
                 )
 
         # Settings
@@ -12740,21 +12968,45 @@ def main():
                 return
 
         # Load up the list
-        def fill_up_table(self):
-            self.table.item(0, 0).setSizeHint(QSize(360, 50))
-            self.table.item(0, 2).setSizeHint(QSize(360, 50))
+        def fill_up_table(self, chain='eth'):
+            if chain != 'eth':
+                def get_base_eth():
+                    prog.base_eth_amount = float(
+                        base_w3.eth.get_balance(prog.account.address)
+                    )
 
-            for i in range(len(prog.asset['eth']['name'])):
-                self.entry_table_cells[i].resize(300, 50)
+                yet_another_eth_thread = Thread(target=get_base_eth)
+                yet_another_eth_thread.start()
+
+                self.first_amount_cell.setText(
+                    str(prog.base_eth_amount)[:18]
+                )
+
+            self.table.setCellWidget(0, 1, self.first_amount_cell)
+            self.table.setItem(0, 0, QTableWidgetItem(" ETHER (ETH)"))
+            self.table.setItem(0, 2, QTableWidgetItem(self.eth_price))
+            self.table.item(0, 0).setIcon(TigerWalletImage.eth_img)
+            self.table.setRowCount(
+                len(prog.asset[chain]['name']) + 1
+            )
+            self.table.item(0, 0).setSizeHint(QSize(360, 50))
+            self.table.item(0, 2).setSizeHint(QSize(300, 50))
+
+            self.first_amount_cell.setText(
+                str(self.eth_amount)[:18]
+            )
+
+            for i in range(len(prog.asset[chain]['name'])):
+                self.entry_table_cells[i].resize(340, 50)
                 self.entry_table_cells[i].setFocusPolicy(
                     Qt.FocusPolicy.NoFocus
                 )
 
-            self.asset = prog.asset['eth']
-            self.value = prog.assets_details['eth']["value"]
-            self._tp = prog.assets_details['eth']["price"]
+            self.asset = prog.asset[chain]
+            self.value = prog.assets_details[chain]["value"]
+            self._tp = prog.assets_details[chain]["price"]
 
-            for pos in range(len(self.asset['name'])):
+            for pos in range(len(prog.asset[chain]['name'])):
                 pos += 1
 
                 asset_name = self.asset['name'][pos-1]
@@ -12777,7 +13029,7 @@ def main():
                 # Amount of asset user holds
                 if self.value[pos - 1] != "0.0":
                     self.entry_table_cells[pos-1].setText(
-                        str(self.value[pos - 1])[:22]
+                        str(self.value[pos - 1])[:18]
                     )
 
                 else:
@@ -12787,11 +13039,11 @@ def main():
                 self.table.setItem(
                     pos,
                     2,
-                    QTableWidgetItem(self._tp[pos - 1][:22])
+                    QTableWidgetItem(self._tp[pos - 1][:18])
                 )
 
                 self.table.item(pos, 0).setSizeHint(QSize(360, 50))
-                self.table.item(pos, 2).setSizeHint(QSize(360, 50))
+                self.table.item(pos, 2).setSizeHint(QSize(300, 50))
 
                 self.table.setCellWidget(
                     pos, 1, self.entry_table_cells[pos-1]
@@ -12799,52 +13051,16 @@ def main():
 
             self.table.resizeRowsToContents()
 
-        # Stop main thread (which stops the timer)
-        def stop_thread(self):
-            self.worker.quit()
-            self.thread.quit()
-
-        def toggle_mode(self):
-            if prog.configs["theme"] == "default_dark":
-                self.dark_light_switch.setIcon(TigerWalletImage.sun_blue)
-                self.dark_light_switch.setToolTip(
-                    'Switch to light mode'
-                )
-
-                prog.configs["theme"] = "default_light"
-                self.apply_default_light_theme()
-
-                """
-                    Apply light/dark mode to settings window.
-                    If settings window isn't initilized, do nothing
-                """
-                try:
-                    self.s.apply_light_mode()
-                except AttributeError:
-                    pass
-
-            elif prog.configs["theme"] == "default_light":
-                self.dark_light_switch.setIcon(TigerWalletImage.moon_blue)
-                self.dark_light_switch.setToolTip(
-                    'Switch to dark mode'
-                )
-
-                prog.configs["theme"] = "default_dark"
-                self.apply_default_dark_theme()
-
-
-                try:
-                    self.s.apply_dark_mode()
-                except AttributeError:
-                    pass
-
-            with open(prog.conf_file, "w") as f:
-                json.dump(prog.configs, f, indent=4)
-
         # Update balance
         def update_balance(self, number):
             num = rm_scientific_notation(number)
-            self.val.setText(f"Balance: ${str(num)}")
+
+            if prog.configs['currency'] == 'USD':
+                self.val.setText(f"Balance: ${str(num)}")
+
+            else:
+
+                self.val.setText(f"Balance: {str(num)} ETH")
 
             if num == '0':
                 self.val.setText(f"Balance: ${str(0.0)}")
@@ -12854,13 +13070,12 @@ def main():
 
         #
         def update_price(self):
-            if prog.chain == 'eth':
-                for pos in range(len(prog.asset['eth']['address'])):
-                    item = QTableWidgetItem(
-                        prog.assets_details['eth']["price"][pos]
-                    )
+            for pos in range(len(prog.asset[prog.chain]['address'])):
+                item = QTableWidgetItem(
+                    prog.assets_details[prog.chain]["price"][pos]
+                )
 
-                    self.table.setItem(pos + 1, 2, item)
+                self.table.setItem(pos + 1, 2, item)
 
         def update_eth_price(self, new_price):
             self.table.setItem(
@@ -12881,7 +13096,10 @@ def main():
 
             def get_bal():
                 if not invoked_from_worker:
-                    contract = create_contract(coin_address)
+                    contract = create_contract(
+                        coin_address,
+                        chain=prog.chain
+                    )
 
                     bal = contract.functions.balanceOf(
                         self.address
@@ -12892,7 +13110,7 @@ def main():
                     asset['address'].append(coin_address)
 
                     prog.assets_details[prog.chain]["value"].append(
-                        str(bal)[:22]
+                        str(bal)[:18]
                     )
 
             with ThreadPoolExecutor() as pool:
@@ -12918,10 +13136,19 @@ def main():
             self.table.setRowCount(self.table.rowCount() + 1)
 
             # Clear table
-            self.clear_main_table_contents()
+            self.clear_main_table(prog.chain)
 
             self.table.setItem(0, 0, QTableWidgetItem(" ETHER (ETH)"))
-            self.table.setItem(0, 1, self.ethbal)
+            self.table.setItem(
+                0,
+                1,
+                QTableWidgetItem(
+                    str(
+                        prog.eth_amount if prog.chain == 1
+                        else prog.base_eth_amount
+                    )
+                )
+            )
             self.table.setItem(0, 2, QTableWidgetItem(self.eth_price))
             self.table.item(0, 0).setIcon(TigerWalletImage.eth_img)
 
@@ -13003,14 +13230,25 @@ def main():
                     ]
                 )
 
-            with open(prog.assets_json, 'w') as f:
+            with open(prog.assets_json, mode='w') as f:
                 json.dump(
                     obj=prog.asset,
                     fp=f,
                     indent=4
                 )
 
-            self.table.resizeColumnsToContents()
+                [
+                    self.table.item(pos, 0)
+                    .setSizeHint(QSize(360, 50))
+                    for pos in range(sz)
+                ]
+
+                [
+                    self.table.item(pos, 2)
+                    .setSizeHint(QSize(340, 50))
+                    for pos in range(sz)
+                ]
+
             self.table.resizeRowsToContents()
 
             if not invoked_from_worker:
@@ -13033,34 +13271,45 @@ def main():
 
         # Remove coin function
         def rm_coin(self):
-            self.ind = self.table.selectionModel().selectedRows()
+            chain = 'eth' if prog.chain == 'eth' else 'base'
 
-            amount_rows_selected = len(self.ind)
+            ind = self.table.selectionModel().selectedRows()
+            amount_rows_selected = len(ind)
+
+            model = self.table.model()
 
             if amount_rows_selected == 0:
                 errbox("No coin was selected")
                 return
 
-            if 0 in self.ind:
+            if 0 in ind:
                 errbox("Ether cannot be removed")
                 self.table.clearSelection()
                 return
 
             # Get tokens' value(s)
-            removed_items_value = [
-                self.table.item(self.ind[i].row(), 1).text()
-                for i in range(amount_rows_selected)
-            ]
+            removed_items_value = (
+                [
+                    self.table.itemFromIndex(
+                        model.index(ind[i].row(), 1)
+                    )
+                    for i in range(amount_rows_selected)
+                ]
+            )
 
-            # Get tokens' price
-            removed_items_price = [
-                self.table.item(self.ind[i].row(), 2).text()
-                for i in range(amount_rows_selected)
-            ]
+            # Get tokens' price(s)
+            removed_items_price = (
+                [
+                    self.table.itemFromIndex(
+                        model.index(ind[i].row(), 2)
+                    )
+                    for i in range(amount_rows_selected)
+                ]
+            )
 
             amount_to_deduct = [
-                float(amount)
-                * float(price) if not ' N/A' else 0.0
+                float(amount.text())
+                * float(price.text()) if not ' N/A' else 0.0
                 for amount in removed_items_value
                 for price in removed_items_price
             ]
@@ -13082,16 +13331,14 @@ def main():
 
             default_symbols = prog.default_symbols
 
-            self.asset_ = []
-
             # https://stackoverflow.com/questions/37786299how-to-delete-row-rows-from-a-qtableview-in-pyqt/
-            for row in reversed(sorted(self.ind)):
+            for row in reversed(sorted(ind)):
                 self.table.removeRow(row.row())
 
-                del prog.asset['eth']['address'][row.row() - 1]
-                del prog.asset['eth']['name'][row.row() - 1]
-                del prog.asset['eth']['symbol'][row.row() - 1]
-                del prog.asset['eth']['image'][row.row() - 1]
+                del prog.asset[chain]['address'][row.row() - 1]
+                del prog.asset[chain]['name'][row.row() - 1]
+                del prog.asset[chain]['symbol'][row.row() - 1]
+                del prog.asset[chain]['image'][row.row() - 1]
 
             with open(prog.assets_json, "w") as f:
                 json.dump(
@@ -13147,7 +13394,7 @@ def main():
             #self.hide()
 
 
-            with open(prog.assets_json, 'w') as f:
+            with open(prog.assets_json, mode='w') as f:
                 json.dump(
                     obj=prog.asset_default,
                     fp=f,
@@ -13168,26 +13415,25 @@ def main():
                 errbox("No address was provided")
                 return
 
-            try:
-                ens_address = self.eth_ns.address(a)
-
-                if (
-                    ens_address is None
-                    and not w3.is_address(a)
-                ):
-                    errbox("Invalid address or ENS")
+            if inp.endswith('.eth'):
+                if inp == '.eth':
+                    errbox("Invalid ENS name")
                     return
 
-            except Exception:
-                errbox('Invalid ENS. Did you type it correctly?')
-                return
+                try:
+                    ens_address = self.eth_ns.address(a)
 
-            if w3.is_address(a) and len(a) < 42:
-                errbox(
-                    'You are trying to add a contract '
-                    'address, not a wallet address!'
-                )
-                return
+                    if ens_address is None:
+                        errbox(
+                            "This ENS is not registered to any address"
+                        )
+                        return
+
+                except Exception:
+                    errbox(
+                        "Invalid ENS name. Did you type it correctly?"
+                    )
+                    return
 
             if name in self.contacts["name"]:
                 errbox("A contact with this name already exists")
@@ -13267,11 +13513,12 @@ def main():
                 ]
             )
 
-        #
-        def clear_tab1_contents(self):
+        # wallet
+        def clear_tab1(self):
             self.default_btn1_style()
             self.sidebar_button[0].setEnabled(True)
 
+            self.home_button.setEnabled(False)
             self.box1.hide()
             self.thread.start()
             self.table.show()
@@ -13281,13 +13528,16 @@ def main():
             self.default_coin_btn.show()
             self.del_coin_btn.show()
             self.btn_showhide.show()
+            self.currency_box.show()
             self.tab = 0
             return
 
-        def clear_tab2_contents(self):
+        # Send
+        def clear_tab2(self):
             self.default_btn2_style()
             self.sidebar_button[1].setEnabled(True)
 
+            self.home_button.setEnabled(False)
             self.box2.hide()
             self.thread.start()
             self.table.show()
@@ -13297,13 +13547,16 @@ def main():
             self.default_coin_btn.show()
             self.del_coin_btn.show()
             self.btn_showhide.show()
+            self.currency_box.show()
             self.tab = 0
             return
 
-        def clear_tab3_contents(self):
+        # Receive
+        def clear_tab3(self):
             self.default_btn3_style()
             self.sidebar_button[2].setEnabled(True)
 
+            self.home_button.setEnabled(False)
             self.box3.hide()
             self.thread.start()
             self.table.show()
@@ -13313,28 +13566,33 @@ def main():
             self.default_coin_btn.show()
             self.del_coin_btn.show()
             self.btn_showhide.show()
+            self.currency_box.show()
             self.tab = 0
             return
 
-        def clear_tab4_contents(self):
+        # Swap
+        def clear_tab4(self):
             self.default_btn4_style()
             self.sidebar_button[3].setEnabled(True)
             self.box4.hide()
 
-            self.thread.start()
+            self.home_button.setEnabled(False)
+            self._start_threads()
             self.table.show()
             self.val.show()
-            self.border.show()
             self.add_coin_btn.show()
             self.default_coin_btn.show()
             self.del_coin_btn.show()
             self.btn_showhide.show()
+            self.currency_box.show()
             self.tab = 0
 
-        def clear_tab5_contents(self):
+        # History
+        def clear_tab5(self):
             self.default_btn5_style()
             self.sidebar_button[4].setEnabled(True)
 
+            self.home_button.setEnabled(False)
             self.box5.hide()
             self.thread.start()
             self.table.show()
@@ -13344,57 +13602,11 @@ def main():
             self.default_coin_btn.show()
             self.del_coin_btn.show()
             self.btn_showhide.show()
+            self.currency_box.show()
             self.tab = 0
 
-            # Add contact
-            if self.add_contact_section2:
-                self.cname.close()
-                self.caddr.close()
-                self.form1.close()
-                self.form2.close()
-                self.close_add.close()
-                self.continue_add.close()
-                self.enter_details.close()
-                self.contact_table.itemDoubleClicked.connect(
-                    lambda: [
-                        QApplication.clipboard().setText(
-                            self.contacts["address"][
-                                self.contact_table.currentRow()
-                            ]
-                        ),
-                        msgbox("Contact address has been copied!"),
-                    ]
-                )
-
-                # self.add_contact_section2 = False
-
-            # Remove contact
-            elif self.add_contact_section3:
-                self.close_rm.close()
-                self.continue_rm.close()
-
-                # Remove the piece of trash selection highlighting
-                self.contact_table.setSelectionMode(
-                    QAbstractItemView.SelectionMode.NoSelection
-                )
-
-                self.contact_table.setSelectionBehavior(
-                    QAbstractItemView.SelectionBehavior.SelectItems
-                )
-
-                self.contact_table.itemDoubleClicked.connect(
-                    lambda: [
-                        QApplication.clipboard().setText(
-                            self.contacts["address"][
-                                self.contact_table.currentRow()
-                            ]
-                        ),
-                        msgbox("Contact address has been copied!"),
-                    ]
-                )
-            return
-
-        def clear_tab6_contents(self):
+        # Settings
+        def clear_tab6(self):
             self.default_btn6_style()
 
             self.wh.hide()
@@ -13405,7 +13617,6 @@ def main():
             self.donation_button.setEnabled(True)
             self.close_dono.close()
             self.dono_msg.close()
-            self.dono_label.close()
 
             self.widg1.close()
             self.widg2.close()
@@ -13425,8 +13636,10 @@ def main():
             self.default_coin_btn.show()
             self.del_coin_btn.show()
             self.donation_window_active = False
-            self.tab = 0
             self.btn_showhide.show()
+            self.currency_box.show()
+            self.tab = 0
+
             return
 
         def clear_rm_wallet_tab(self):
@@ -13469,7 +13682,21 @@ def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(TigerWalletImage.eth_img)
 
-    msgbox(prog.local_path)
+    if prog.configs['theme'] == 'default_dark':
+        with open(
+            prog.local_path + 'dark.css',
+            mode='r',
+            encoding="utf-8"
+        ) as f:
+            app.setStyleSheet(f.read())
+
+    else:
+        with open(
+            prog.local_path + 'light.css',
+            mode='r',
+            encoding="utf-8"
+        ) as f:
+            app.setStyleSheet(f.read())
 
     json_contents = {}
 
@@ -13489,7 +13716,6 @@ def main():
         'https://raw.githubusercontent.com/Serpenseth/'
         + 'TigerWallet/refs/heads/main/pyproject.toml'
     )
-
     updates.show()
 
     app.exec()
