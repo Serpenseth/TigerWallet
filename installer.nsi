@@ -1,10 +1,10 @@
-!define PRODUCT_NAME "tigerwallet"
-!define PRODUCT_VERSION "2.1"
+!define PRODUCT_NAME "TigerWallet"
+!define PRODUCT_VERSION "3.0"
 !define PY_VERSION "3.10.0"
 !define PY_MAJOR_VERSION "3.10"
 !define BITNESS "64"
 !define ARCH_TAG ".amd64"
-!define INSTALLER_NAME "tigerwallet_2.1.exe"
+!define INSTALLER_NAME "tigerwallet-3.0-installer.exe"
 !define PRODUCT_ICON "eth.ico"
 
 ; Marker file to tell the uninstaller that it's a user installation
@@ -21,7 +21,7 @@ SetCompressor lzma
 !define MULTIUSER_INSTALLMODE_DEFAULT_CURRENTUSER
 !define MULTIUSER_MUI
 !define MULTIUSER_INSTALLMODE_COMMANDLINE
-!define MULTIUSER_INSTALLMODE_INSTDIR "tigerwallet"
+!define MULTIUSER_INSTALLMODE_INSTDIR "TigerWallet"
 !define MULTIUSER_INSTALLMODE_FUNCTION correct_prog_files
 !include MultiUser.nsh
 !include FileFunc.nsh
@@ -76,6 +76,8 @@ Section "!${PRODUCT_NAME}" sec_app
       File "tigerwallet.pyw"
       File "README.md"
       File "eth.ico"
+      File "dark.css"
+      File "light.css"
 
   ; Install directories
     SetOutPath "$INSTDIR\Python"
@@ -134,10 +136,7 @@ Section "!${PRODUCT_NAME}" sec_app
   ; Install shortcuts
   ; The output path becomes the working directory for shortcuts
   SetOutPath "%HOMEDRIVE%\%HOMEPATH%"
-    CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-      CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\TigerWallet.exe.lnk" "$INSTDIR\tigerwallet.pyw" \
-      '' "$INSTDIR\eth.ico"
-      CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\uninstall.exe.lnk" "$INSTDIR\uninstall.exe" \
+      CreateShortCut "$INSTDIR\uninstall.exe.lnk" "$INSTDIR\uninstall.exe" \
       '' "$INSTDIR\eth.ico"
       CreateShortCut "$INSTDIR\TigerWallet.exe.lnk" "$INSTDIR\tigerwallet.pyw" \
       '' "$INSTDIR\eth.ico"
@@ -192,12 +191,14 @@ Section "Uninstall"
     Delete "$INSTDIR\LICENSE"
     Delete "$INSTDIR\tigerwallet.pyw"
     Delete "$INSTDIR\README.md"
+    Delete "$INSTDIR\light.css"
+    Delete "$INSTDIR\dark.css"
   ; Uninstall directories
     RMDir /r "$INSTDIR\Python"
     RMDir /r "$INSTDIR\images"
 
   ; Uninstall shortcuts
-      Delete "$SMPROGRAMS\tigerwallet.lnk"
+      Delete "$Desktop\TigerWallet.exe.lnk"
   RMDir $INSTDIR
   DeleteRegKey SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 SectionEnd
