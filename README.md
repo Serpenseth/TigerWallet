@@ -18,14 +18,14 @@ It currently supports the Ethereum mainnet, meaning that most* Ethereum tokens c
    * In theory, it should work in Mac, too, but that has not been tested, yet
 
 
-**Cons of using TigerWallet**:
-1. Only supports Ethereum mainnet
-2. No NFT support
-3. No dApps and WalletConnect support
-4. No Buy/Sell tokens with fiat (from i.e Onramper)
-5. No in-app staking
-6. No QR code scanning
-   
+**Current cons of using TigerWallet (working on it!)**:
+1. No NFT support
+2. No dApps and WalletConnect support
+3. No Buy/Sell tokens with fiat (i.e Onramper)
+4. No in-app staking
+5. No QR code scanning
+
+~~Only supports Ethereum mainnet~~
 ~~No ENS support (changing in next update)~~   
 ~~No in-app swap~~
 
