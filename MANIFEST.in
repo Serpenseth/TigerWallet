@@ -1,2 +1,4 @@
-include images/*
-include images/token_images/*
+include src/TigerWallet/images/*
+include src/TigerWallet/images/token_images/*
+include src/TigerWallet/light.css
+include src/TigerWallet/dark.css
