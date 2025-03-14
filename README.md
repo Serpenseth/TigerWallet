@@ -124,7 +124,8 @@ To run tigerwallet, execute the following command:
 tigerwallet
 ```
 
-# Building the executables
+# Building the pyinstaller executables
+
 To build the executables, you will need `pyinstaller`
 
 1. Install `pyinstaller` by using the following command:
