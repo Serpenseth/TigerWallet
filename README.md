@@ -145,9 +145,9 @@ cd %userprofile%\\TigerWallet
 
 3. Issue the following command to build tigerwallet
 ```
-pyinstaller tigerwallet.py --onefile --add-data "images/:images" --add-data "images/token_images/*:images/token_images" --add-data "README.md:README.md" --add-data "LICENSE:LICENSE" -i "eth.ico" --windowed -n "tigerwallet-2.1-x86-64"
+pyinstaller tigerwallet.py --onefile --add-data "images/:images" --add-data "images/token_images/*:images/token_images" --add-data "README.md:." --add-data "LICENSE:." --add-data "dark.css:." --add-data "light.css:." -i "eth.ico" --windowed -n "tigerwallet-3.0-x86-64"
 ```
-The `-n` command gives the executable a name. Make sure you change the numbers `2.1` to the current version
+The `-n` command gives the executable a name. Make sure you change the numbers `3.0` to the current version
 
 ## Running the executables
 To run tigerwallet, double click the executable
