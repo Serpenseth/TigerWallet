@@ -26,7 +26,9 @@ It currently supports the Ethereum mainnet, meaning that most* Ethereum tokens c
 5. No QR code scanning
 
 ~~Only supports Ethereum mainnet~~
+
 ~~No ENS support (changing in next update)~~   
+
 ~~No in-app swap~~
 
 # Requirements for running TigerWallet
