@@ -32,24 +32,37 @@ It currently supports the Ethereum mainnet, and Base. Most* Ethereum/Base tokens
 ~~No in-app swap~~
 
 # Requirements for running TigerWallet
-TigerWallet requires `python3`. 
+TigerWallet requires `python3.11` or higher. 
 
-Windows users can get python from the official [python website](https://www.python.org/downloads/windows/)
+Windows users can get `python3.11` from the official [python website](https://www.python.org/downloads/windows/)
 
 Mac users can get the installer from the official [python website](https://www.python.org/downloads/macos/)
 
 ## Linux
-Linux these days typically comes bundled with `python3` out of the box. You can check if you have `python3` by using the following command:
-```
-which python3
-```
-If nothing is written to the terminal, then you need to install `python3`
+Linux these days typically comes bundled with `python3` out of the box. 
 
-Install it using your distro's package manager, for example:
-Ubuntu/Debian users install `python3` by issuing the following command:
+Check the system's python by using the following command:
+
 ```
-sudo apt install python3
+python3 --version
 ```
+
+If the version is lower than `python3.11`, then you will need to update your Python.
+
+Execute the following list of commands by pasting them into the terminal (if you execute them one by one, remove `&& \` for every command):
+
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa && \
+sudo apt update && \
+sudo apt install python3.11 && \
+sudo apt install python3.11-dev && \
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 && \
+exec /usr/bin/env python3.11 -m pip install --upgrade setuptools
+```
+
+You now have `python3.11` installed.
+
+For every command that says `python3`, replace it with `python3.11`
 
 Ubuntu/Debian users require the following package to be installed: `libxcb-cursor-dev`
 Install it using:
@@ -137,10 +150,11 @@ pip install pyinstaller
 
 2. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
 
-**Linux/mac users**, issue the following command to change directories
+**Linux**, issue the following command to change directories
 ```
 cd ~/TigerWallet
 ```
+
 **Windows users**, issue the following command to change directories
 ```
 cd %userprofile%\\TigerWallet
