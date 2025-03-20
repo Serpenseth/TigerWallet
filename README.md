@@ -96,7 +96,9 @@ pip install build
 3. Optional. You will need `git` if you don't want to download the source code as a `zip`.
 
 Windows users: download and install `git` from the [official website](https://git-scm.com/downloads/win)
+
 Linux users: install `git` by following the instructions from [official website](https://git-scm.com/downloads/linux)
+
 Mac users: install `git` by following the instructions from [official website](https://git-scm.com/downloads/mac)
 
 
