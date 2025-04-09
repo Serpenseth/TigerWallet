@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Non-custodial crypto wallet"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: MIT License",
