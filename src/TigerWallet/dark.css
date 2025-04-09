@@ -10,8 +10,8 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 /*  QLineEdit */
 QLineEdit {
-    color: #c5d4e7;
-    border: 1px solid #778ba5;
+    color: #9EB0C8;
+    border: 1px solid #52647c;
     font-size: 16px;
     border-radius: 8;
     padding-left: 8px;
@@ -39,12 +39,13 @@ QScrollBar::handle:vertical {
     border-radius: 3px;
     margin-top: 9px;
     margin-bottom: 9px;
-    width: 3px;
+    width: 4px;
 }
+
 
 /*  QToolTip */
 QToolTip {
-    background-color: black;
+    background: transparent;
     color: #b0c4de;
     border-radius: 4px;
     font: 15px;
@@ -54,16 +55,17 @@ QToolTip {
 
 /*  QComboBox */
 QComboBox {
-    border: 1px solid #778ba5;
-    font: 14px;
+    border: 1px solid #52647c;
+    font: 15px;
     border-radius: 4px;
     background: #0a0f18;
-    color: #b0c4de;
+    color: #9EB0C8;
+    padding-left: 8px;
 }
 QComboBox QAbstractItemView {
     color: #b0c4de;
     outline: 0;
-    font: 14px;
+    font: 15px;
     border: 1px solid #778ba5;
 }
 
@@ -71,25 +73,28 @@ QComboBox QAbstractItemView {
 QTableView{
     font-size: 18px;
     gridline-color: #0a0f18;
-    color: #b0c4de;
+    color: #9EB0C8;
     border-radius: 18px;
     border-color: none;
+    padding-left: 8px;
 }
 
 QHeaderView::section{
     background-color: #0a0f18;
-    padding : 3px;
-    border-radius: 8px;
-    color: #b0c4de;
-    border: 1px solid gray;
-    margin: 1px;
+    margin-left : -16x;
+    border-radius: 1px; 
+    color: #339AF0;
+    padding-bottom: 2px;
+    margin: 2px;
     font-size: 16px;
+    padding-bottom: 8px;
 }
 
 QTableView:item:selected{
     background: #353535;
-    color: #c5d4e7;
+    color: #339AF0;
     border-color: none;
+    border-radius: 1px;
 }
 
 /*  QPushButton */
@@ -102,6 +107,7 @@ QPushButton {
 
 QPushButton::menu-indicator {
     image: none;
+    width: 0px;
 }
 
 QMenu{
@@ -124,6 +130,7 @@ QMenu::item:selected {
     border-radius: 4px;
 }
 
+
 /*  QListView */
 QListView {
     font-size: 18px;
@@ -134,14 +141,15 @@ QListView {
 }
 QListView::item:hover {
     color: #90B3F3;
-    background: #363636;
+    background: #282828;
     border-radius: 8px;
+    padding-left: 4px;
 }
 QListView::item:selected {
     color: #90B3F3;
     background: #252627;
     border-radius: 8px;
- }
+}
 
 QMessageBox {
     font-size: 18px;

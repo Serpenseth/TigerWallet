@@ -44,7 +44,7 @@ QScrollBar::handle:vertical {
 
 /*  QToolTip */
 QToolTip{
-    background-color: #eff1f3;
+    background: #eff1f3;
     color: #28447C;
     border-radius: 4px;
     font: 15px;
@@ -59,6 +59,7 @@ QComboBox {
     border-radius: 4px;
     background: #eff1f3;
     color: #28447C;
+    padding-left: 8px;
 }
 QComboBox QAbstractItemView {
     color: #28447C;
@@ -136,12 +137,14 @@ QListView::item:hover {
     color: #28447C;
     background: #ced7e9;
     border-radius: 8px;
+    padding-left: 4px;
 }
 QListView::item:selected {
     color: #28447C;
     background: #ced7e9;
     border-radius: 8px;
- }
+}
+
 
 QMessageBox {
     font-size: 18px;
