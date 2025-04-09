@@ -1,11 +1,11 @@
 !define PRODUCT_NAME "TigerWallet"
-!define PRODUCT_VERSION "3.0"
-!define PY_VERSION "3.10.0"
-!define PY_MAJOR_VERSION "3.10"
+!define PRODUCT_VERSION "3.1"
+!define PY_VERSION "3.11.0"
+!define PY_MAJOR_VERSION "3.11"
 !define BITNESS "64"
 !define ARCH_TAG ".amd64"
-!define INSTALLER_NAME "tigerwallet-3.0-installer.exe"
-!define PRODUCT_ICON "eth.ico"
+!define INSTALLER_NAME "tigerwallet_3.1.exe"
+!define PRODUCT_ICON "tigerwallet_logo.ico"
 
 ; Marker file to tell the uninstaller that it's a user installation
 !define USER_INSTALL_MARKER _user_install_marker
@@ -29,8 +29,8 @@ SetCompressor lzma
 ; Modern UI installer stuff
 !include "MUI2.nsh"
 !define MUI_ABORTWARNING
-!define MUI_ICON "eth.ico"
-!define MUI_UNICON "eth.ico"
+!define MUI_ICON "tigerwallet_logo.ico"
+!define MUI_UNICON "tigerwallet_logo.ico"
 
 ; UI pages
 !insertmacro MUI_PAGE_WELCOME
@@ -71,13 +71,12 @@ Section "!${PRODUCT_NAME}" sec_app
 
       ; Install files
     SetOutPath "$INSTDIR"
-      File "eth.ico"
-      File "LICENSE"
-      File "tigerwallet.pyw"
-      File "README.md"
-      File "eth.ico"
+      File "tigerwallet_logo.ico"
       File "dark.css"
       File "light.css"
+      File "tigerwallet.pyw"
+      File "LICENSE"
+      File "README.md"
 
   ; Install directories
     SetOutPath "$INSTDIR\Python"
@@ -136,12 +135,10 @@ Section "!${PRODUCT_NAME}" sec_app
   ; Install shortcuts
   ; The output path becomes the working directory for shortcuts
   SetOutPath "%HOMEDRIVE%\%HOMEPATH%"
-      CreateShortCut "$INSTDIR\uninstall.exe.lnk" "$INSTDIR\uninstall.exe" \
-      '' "$INSTDIR\eth.ico"
-      CreateShortCut "$INSTDIR\TigerWallet.exe.lnk" "$INSTDIR\tigerwallet.pyw" \
-      '' "$INSTDIR\eth.ico"
+    CreateShortCut "$SMPROGRAMS\tigerwallet.lnk" "tigerwallet.pyw" \
+      '' "$INSTDIR\tigerwallet_logo.ico"
       CreateShortCut "$Desktop\TigerWallet.exe.lnk" "$INSTDIR\tigerwallet.pyw" \
-      '' "$INSTDIR\eth.ico"
+      '' "$INSTDIR\tigerwallet_logo.ico"
   SetOutPath "$INSTDIR"
 
 
@@ -187,18 +184,19 @@ Section "Uninstall"
   ; Remove ourselves from %PATH%
 
   ; Uninstall files
-    Delete "$INSTDIR\eth.ico"
-    Delete "$INSTDIR\LICENSE"
-    Delete "$INSTDIR\tigerwallet.pyw"
-    Delete "$INSTDIR\README.md"
-    Delete "$INSTDIR\light.css"
+    Delete "$INSTDIR\tigerwallet_logo.ico"
     Delete "$INSTDIR\dark.css"
+    Delete "$INSTDIR\light.css"
+    Delete "$INSTDIR\tigerwallet.pyw"
+    Delete "$INSTDIR\LICENSE"
+    Delete "$INSTDIR\README.md"
+    Delete "$Desktop\TigerWallet.exe.lnk"
   ; Uninstall directories
     RMDir /r "$INSTDIR\Python"
     RMDir /r "$INSTDIR\images"
 
   ; Uninstall shortcuts
-      Delete "$Desktop\TigerWallet.exe.lnk"
+      Delete "$SMPROGRAMS\tigerwallet.lnk"
   RMDir $INSTDIR
   DeleteRegKey SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 SectionEnd
