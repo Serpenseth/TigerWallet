@@ -49,13 +49,19 @@ python3 --version
 
 If the version is lower than `python3.11`, then you will need to update your Python.
 
-Execute the following list of commands by pasting them into the terminal (if you execute them one by one, remove `&& \` for every command):
+Try the following command:
+```bash
+sudo apt install python3.11
+```
+
+If you get an error, then execute the following list of commands by pasting them into the terminal (if you execute them one by one, remove `&& \` for every command):
 
 ```bash
 sudo add-apt-repository ppa:deadsnakes/ppa && \
 sudo apt update && \
 sudo apt install python3.11 && \
 sudo apt install python3.11-dev && \
+sudo apt install python3.11-venv && \
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11 && \
 exec /usr/bin/env python3.11 -m pip install --upgrade setuptools
 ```
@@ -117,7 +123,7 @@ cd ~/TigerWallet
 ```
 **Windows users**, issue the following command to change directories
 ```
-cd %userprofile%\\TigerWallet
+cd %homedrive%%homepath%\\TigerWallet
 ```
 
 3. Issue the following command to build the installer files:
@@ -162,11 +168,53 @@ cd ~/TigerWallet
 cd %userprofile%\\TigerWallet
 ```
 
-3. Issue the following command to build tigerwallet
+In order to use TigerWallet on another version of Linux (or another distro), you will need all of the requirements installed
+
+You can either do this with 
 ```
-pyinstaller tigerwallet.py --onefile --add-data "images/:images" --add-data "images/token_images/*:images/token_images" --add-data "README.md:." --add-data "LICENSE:." --add-data "dark.css:." --add-data "light.css:." -i "eth.ico" --windowed -n "tigerwallet-3.0-x86-64"
+pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
-The `-n` command gives the executable a name. Make sure you change the numbers `3.0` to the current version
+
+or
+```
+pip install -r requirements.txt
+```
+
+4. Issue the following command to build tigerwallet
+
+**Windows**
+```powershell
+`
+pyinstaller src/TigerWallet/tigerwallet.py --onedir `
+--add-data "src/TigerWallet/images/:images" `
+--add-data "src/TigerWallet/images/token_images/*:images/token_images" `
+--add-data "README.md:." `
+--add-data "LICENSE:." `
+--add-data "src/TigerWallet/dark.css:." `
+--add-data "src/TigerWallet/light.css:." `
+--add-data "english.txt:eth_account/hdaccount/wordlist" `
+--icon "src/TigerWallet/tigerwallet_logo.ico" `
+--windowed `
+--name "tigerwallet-3.1-x86-64"
+```
+
+**Linux**
+```bash
+pyinstaller src/TigerWallet/tigerwallet.py --onedir \
+--add-data "src/TigerWallet/images/:images" \
+--add-data "src/TigerWallet/images/token_images/*:images/token_images" \
+--add-data "README.md:." \
+--add-data "LICENSE:." \
+--add-data "src/TigerWallet/dark.css:." \
+--add-data "src/TigerWallet/light.css:." \
+--add-data "english.txt:eth_account/hdaccount/wordlist" \
+--icon "src/TigerWallet/tigerwallet_logo.ico" `
+--windowed `
+--name "tigerwallet-3.1-x86-64
+```
+
+The `-n` command gives the executable a name.
+The `--add-data "english.txt:eth_account/hdaccount/wordlist"` line is required, because pyinstaller has issues with adding that file automatically
 
 ## Running the executables
 To run tigerwallet, double click the executable
