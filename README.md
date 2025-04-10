@@ -176,9 +176,19 @@ cd ~/TigerWallet
 
 **Windows users**, issue the following command to change directories
 
-In order to use TigerWallet on another version of Linux (or another distro), you will need all of the requirements installed
+command prompt:
+```
+cd %userprofile% && cd TigerWallet
+```
+powershell:
+```powershell
+cd ~\\TigerWallet
+```
+
+In order to use TigerWallet on another version of your OS you will need all of the requirements installed
 
 You can either do this with 
+
 ```
 pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
@@ -188,13 +198,24 @@ or
 pip install -r requirements.txt
 ```
 
+**For Linux users**:
+```
+python3 -m pip install git+https://github.com/Serpenseth/TigerWallet.git
+```
+
+or
+```
+python3 -m pip install -r requirements.txt
+```
+
+
 4. Issue the following command to build tigerwallet
 
 **Windows**
-Powershell:
+powershell:
 ```powershell
 `
-pyinstaller src/TigerWallet/tigerwallet.py --onedir `
+py -m PyInstaller src/TigerWallet/tigerwallet.py --onedir `
 --add-data "src/TigerWallet/images/:images" `
 --add-data "src/TigerWallet/images/token_images/*:images/token_images" `
 --add-data "README.md:." `
@@ -202,28 +223,33 @@ pyinstaller src/TigerWallet/tigerwallet.py --onedir `
 --add-data "src/TigerWallet/dark.css:." `
 --add-data "src/TigerWallet/light.css:." `
 --add-data "english.txt:eth_account/hdaccount/wordlist" `
+--hidden-import="web3.utils.subscriptions" `
 --icon "src/TigerWallet/tigerwallet_logo.ico" `
 --windowed `
 --name "tigerwallet-3.1-x86-64"
 ```
-Command prompt:
+command prompt:
 ```cmd
-pyinstaller src/TigerWallet/tigerwallet.py --onedir ^
---add-data "src/TigerWallet/images/:images" ^
+py -m PyInstaller src/TigerWallet/tigerwallet.py --onedir ^
+--add-data "src/TigerWallet/images/:images" \
 --add-data "src/TigerWallet/images/token_images/*:images/token_images" ^
 --add-data "README.md:." ^
 --add-data "LICENSE:." ^
 --add-data "src/TigerWallet/dark.css:." ^
 --add-data "src/TigerWallet/light.css:." ^
 --add-data "english.txt:eth_account/hdaccount/wordlist" ^
+--hidden-import="web3.utils.subscriptions" ^
 --icon "src/TigerWallet/tigerwallet_logo.ico" ^
 --windowed ^
 --name "tigerwallet-3.1-x86-64"
 ```
 
 **Linux**
+
+*Make sure you replace `python3` with the python version that you've installed! (for example: `python3.11`)*
+
 ```bash
-pyinstaller src/TigerWallet/tigerwallet.py --onedir \
+python3 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
 --add-data "src/TigerWallet/images/:images" \
 --add-data "src/TigerWallet/images/token_images/*:images/token_images" \
 --add-data "README.md:." \
@@ -231,9 +257,10 @@ pyinstaller src/TigerWallet/tigerwallet.py --onedir \
 --add-data "src/TigerWallet/dark.css:." \
 --add-data "src/TigerWallet/light.css:." \
 --add-data "english.txt:eth_account/hdaccount/wordlist" \
+--hidden-import="web3.utils.subscriptions" \
 --icon "src/TigerWallet/tigerwallet_logo.ico" \
 --windowed \
---name "tigerwallet-3.1-x86-64
+--name "tigerwallet-3.1-x86-64"
 ```
 
 The `-n` command gives the executable a name.
