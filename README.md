@@ -268,17 +268,22 @@ powershell:
 ```powershell
 cd ~\\TigerWallet
 ```
-5. Issue the following command to build the installer
+5. Issue the following command to build the installer:
 ```
 pynsist pytest.cfg
 ```
-6. Copy the `installer.nsi` file, and paste it into the following directory
+6. Copy the `installer.nsi` file into the build directory using the following command:
 ```
 copy installer.nsi build\\nsis\\
 ```
 Overwrite the file that is already there
 
-7. Right-click the `installer.nsi` file, and select `Compile NSIS Script`
+7. Copy the TigerWallet logo into the build directory using the following command:
+```
+copy src\\TigerWallet\\tigerwallet_logo.ico build\\nsis\\
+```
+
+8. Right-click the `installer.nsi` file, and select `Compile NSIS Script`
 
 You will now have the same installer as in the release section of TigerWallet
 
