@@ -127,8 +127,14 @@ git clone https://github.com/Serpenseth/TigerWallet.git
 cd ~/TigerWallet
 ```
 **Windows users**, issue the following command to change directories
+
+command prompt:
 ```
-cd %homedrive%%homepath%\\TigerWallet
+cd %userprofile% && cd TigerWallet
+```
+powershell:
+```powershell
+cd ~\\TigerWallet
 ```
 
 3. Issue the following command to build the installer files:
@@ -169,9 +175,6 @@ cd ~/TigerWallet
 ```
 
 **Windows users**, issue the following command to change directories
-```
-cd %userprofile%\\TigerWallet
-```
 
 In order to use TigerWallet on another version of Linux (or another distro), you will need all of the requirements installed
 
@@ -188,6 +191,7 @@ pip install -r requirements.txt
 4. Issue the following command to build tigerwallet
 
 **Windows**
+Powershell:
 ```powershell
 `
 pyinstaller src/TigerWallet/tigerwallet.py --onedir `
@@ -200,6 +204,20 @@ pyinstaller src/TigerWallet/tigerwallet.py --onedir `
 --add-data "english.txt:eth_account/hdaccount/wordlist" `
 --icon "src/TigerWallet/tigerwallet_logo.ico" `
 --windowed `
+--name "tigerwallet-3.1-x86-64"
+```
+Command prompt:
+```cmd
+pyinstaller src/TigerWallet/tigerwallet.py --onedir ^
+--add-data "src/TigerWallet/images/:images" ^
+--add-data "src/TigerWallet/images/token_images/*:images/token_images" ^
+--add-data "README.md:." ^
+--add-data "LICENSE:." ^
+--add-data "src/TigerWallet/dark.css:." ^
+--add-data "src/TigerWallet/light.css:." ^
+--add-data "english.txt:eth_account/hdaccount/wordlist" ^
+--icon "src/TigerWallet/tigerwallet_logo.ico" ^
+--windowed ^
 --name "tigerwallet-3.1-x86-64"
 ```
 
@@ -241,8 +259,14 @@ pip install pynsist
 git clone https://github.com/Serpenseth/TigerWallet.git
 ```
 4. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
+
+command prompt:
 ```
-cd %userprofile%\\TigerWallet
+cd %userprofile% && cd TigerWallet
+```
+powershell:
+```powershell
+cd ~\\TigerWallet
 ```
 5. Issue the following command to build the installer
 ```
@@ -250,7 +274,7 @@ pynsist pytest.cfg
 ```
 6. Copy the `installer.nsi` file, and paste it into the following directory
 ```
-cd %userprofile%\\TigerWallet\\build\\nsis
+copy installer.nsi build\\nsis\\
 ```
 Overwrite the file that is already there
 
