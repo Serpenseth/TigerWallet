@@ -219,6 +219,7 @@ pyinstaller src/TigerWallet/tigerwallet.py --onedir \
 ```
 
 The `-n` command gives the executable a name.
+
 The `--add-data "english.txt:eth_account/hdaccount/wordlist"` line is required, because pyinstaller has issues with adding that file automatically
 
 ## Running the executables
