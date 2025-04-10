@@ -84,8 +84,15 @@ sudo apt install libxcb-cursor-dev
 # Installation
 
 TigerWallet is installed using:
+
+**Windows**:
 ```
 pip install git+https://github.com/Serpenseth/TigerWallet.git
+```
+
+**Linux**:
+```
+python3 -m pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
 
 TigerWallet also includes a traditional Windows installer (which can be found [here](https://github.com/Serpenseth/TigerWallet/releases))
@@ -94,17 +101,19 @@ TigerWallet also includes a traditional Windows installer (which can be found [h
 In order to build TigerWallet, you will to install a few requirements
 
 ## Build requirements
-1. You will need to install `setuptools`, which is installed by issuing the following command:
+1. You will need to install build tools `setuptools` and `build`, which you can install by issuing the following command:
+
+**Windows**
 ```
-pip install setuptools
+pip install setuptools && pip install build
 ```
 
-2. You will need `build`, which is installed by issuing the following command:
+**Linux**
 ```
-pip install build
+python3 -m pip install setuptools && pip install build
 ```
 
-3. Optional. You will need `git` if you don't want to download the source code as a `zip`.
+2. Optional. You will need `git` if you don't want to download the source code as a `zip`.
 
 Windows users: download and install `git` from the [official website](https://git-scm.com/downloads/win)
 
@@ -149,8 +158,14 @@ python3 -m build .
 ```
 
 4. Issue the following command to install TigerWallet:
+
+**Windows users**
 ```
-pip install .
+py install .
+```
+**Linux**
+```
+python3 -m pip install .
 ```
 
 To run tigerwallet, execute the following command:
@@ -163,8 +178,15 @@ tigerwallet
 To build the executables, you will need `pyinstaller`
 
 1. Install `pyinstaller` by using the following command:
+
+**Windows users**
 ```
-pip install pyinstaller
+py install pyinstaller
+```
+
+**Linux**
+```
+python3 -m pip install pyinstaller
 ```
 
 2. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
@@ -189,6 +211,7 @@ In order to use TigerWallet on another version of your OS you will need all of t
 
 You can either do this with 
 
+**Windows**
 ```
 pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
@@ -198,7 +221,7 @@ or
 pip install -r requirements.txt
 ```
 
-**For Linux users**:
+**Linux**:
 ```
 python3 -m pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
@@ -273,7 +296,7 @@ To run tigerwallet, double click the executable
 # Building the .exe installer
 
 The steps required to build the installer are tedious, unfortunately.
-This section is for **windows** only.
+This section is for **Windows** only.
 
 ## Build requirements
 1. Install `nsis` from the [official website](https://nsis.sourceforge.io/Download)
@@ -320,10 +343,15 @@ You will now have the same installer as in the release section of TigerWallet
 
 2. You might be missing dependencies.
 Install them using the following command:
-```
-pip install -r requirements.txt
-```
 
+**Windows users**
+```
+pip install -r requirements.txt.
+```
+**Linux**
+```
+python3 -m pip install -r requirements.txt.
+```
 
 # Contact
 All comments are welcome!
