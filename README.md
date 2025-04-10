@@ -32,7 +32,12 @@ It currently supports the Ethereum mainnet, and Base. Most* Ethereum/Base tokens
 ~~No in-app swap~~
 
 # Requirements for running TigerWallet
-TigerWallet requires `python3.11` or higher. 
+TigerWallet requires `python3.11`
+The highest version that I have tested is `python3.12`
+
+The latest version has not been tested, and may not work
+
+If you have issues, download `python3.11`
 
 Windows users can get `python3.11` from the official [python website](https://www.python.org/downloads/windows/)
 
@@ -208,8 +213,8 @@ pyinstaller src/TigerWallet/tigerwallet.py --onedir \
 --add-data "src/TigerWallet/dark.css:." \
 --add-data "src/TigerWallet/light.css:." \
 --add-data "english.txt:eth_account/hdaccount/wordlist" \
---icon "src/TigerWallet/tigerwallet_logo.ico" `
---windowed `
+--icon "src/TigerWallet/tigerwallet_logo.ico" \
+--windowed \
 --name "tigerwallet-3.1-x86-64
 ```
 
