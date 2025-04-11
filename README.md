@@ -131,11 +131,11 @@ git clone https://github.com/Serpenseth/TigerWallet.git
 ```
 2. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
 
-**Linux/mac users**, issue the following command to change directories
+**Linux/mac**, issue the following command to change directories
 ```
 cd ~/TigerWallet
 ```
-**Windows users**, issue the following command to change directories
+**Windows**, issue the following command to change directories
 
 command prompt:
 ```
@@ -196,7 +196,7 @@ python3 -m pip install pyinstaller
 cd ~/TigerWallet
 ```
 
-**Windows users**, issue the following command to change directories
+**Windows**, issue the following command to change directories
 
 command prompt:
 ```
@@ -235,6 +235,7 @@ python3 -m pip install -r requirements.txt
 4. Issue the following command to build tigerwallet
 
 **Windows**
+
 powershell:
 ```powershell
 `
