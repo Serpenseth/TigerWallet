@@ -9,7 +9,7 @@ It currently supports the Ethereum mainnet, and Base. Most* Ethereum/Base tokens
 
 2. Simple. The design choices were all geared towards simplicity.
 
-3. Lightweight. TigerWallet barely comsumes any resources. It is quite light, and easy to run.
+3. No signing when sending/swapping tokens. Forget having to sign transactions!
 
 4. You can add any coin* that is listed on a centralized exhange.
    * TigerWallet currently uses an API that is free, and it only fetches the price from centralized exchanges.
