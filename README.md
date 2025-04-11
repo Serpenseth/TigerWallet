@@ -284,7 +284,7 @@ python3 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
 --hidden-import="web3.utils.subscriptions" \
 --icon "src/TigerWallet/tigerwallet_logo.ico" \
 --windowed \
---name "tigerwallet-3.1-x86-64"
+--name "tigerwallet-3.1-x86-64-linux"
 ```
 
 The `-n` command gives the executable a name.
