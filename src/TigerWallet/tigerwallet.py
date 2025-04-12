@@ -3705,7 +3705,7 @@ def main():
 
             prog.eth_amount = float(w3.eth.get_balance(self.address))
             prog.eth_amount = round(prog.eth_amount, 14)
-            prog.eth_amount /= 10**18 if not 0 else 0
+            prog.eth_amount /= 10**18
             prog.eth_amount = rm_e_notation(prog.eth_amount)
 
             prog.base_eth_amount = base_w3.eth.get_balance(self.address)
