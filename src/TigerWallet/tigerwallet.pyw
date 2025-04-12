@@ -1055,7 +1055,6 @@ def main():
 
     # BEGIN Web3-related stuff
     web3_provider = Web3.HTTPProvider(
-        #endpoint_uri='https://eth-mainnet.g.alchemy.com/v2/AQCB0XL4kYRidnAaVmqs_uOxAY8MOmyB',
         endpoint_uri=prog.configs["rpc"]['eth'],
         exception_retry_configuration=None,
         request_kwargs={
