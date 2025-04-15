@@ -3,9 +3,9 @@ hexbytes==1.2.1
 mnemonic==0.21
 numpy==1.26.4
 orjson==3.10.15
-psutil==5.9.0
 PyQt6==6.8.1
 Requests==2.32.3
 segno==1.6.1
 uniswap_universal_router_decoder==1.2.1
-web3==7.6.1
+web3==7.9.0
+pillow==7.0.0
