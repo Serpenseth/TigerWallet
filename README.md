@@ -14,8 +14,8 @@ It currently supports the Ethereum mainnet, and Base. Most* Ethereum/Base tokens
 4. You can add any coin* that is listed on a centralized exhange.
    * TigerWallet currently uses an API that is free, and it only fetches the price from centralized exchanges.
 
-5. TigerWallet runs on Windows, Linux, and Mac*
-   * In theory, it should work in Mac, too, but that has not been tested, yet
+5. TigerWallet runs on Windows, Linux, and MacOS*
+   * Currently supports Monterey. Untested on M series Macs
 
 
 **Current cons of using TigerWallet (working on it!)**:
@@ -41,7 +41,7 @@ If you have issues, download `python3.11`
 
 Windows users can get `python3.11` from the official [python website](https://www.python.org/downloads/windows/)
 
-Mac users can get the installer from the official [python website](https://www.python.org/downloads/macos/)
+Mac users will need to install it using `homebrew`. Read the Mac section
 
 ## Linux
 Linux these days typically comes bundled with `python3` out of the box. 
@@ -81,6 +81,23 @@ Install it using:
 sudo apt install libxcb-cursor-dev
 ```
 
+## Mac
+While Macs tend to come with Python, it's recommended to install it using `homebrew`
+
+Here are the steps:
+
+1. Execute the following command in the terminal:
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+2. Once the installation has completed, execute the following command:
+```
+brew install python@3.11
+```
+
+Once it's installed, you are ready to go!
+
 # Installation
 
 TigerWallet is installed using:
@@ -107,10 +124,15 @@ In order to build TigerWallet, you will to install a few requirements
 ```
 pip install setuptools && pip install build
 ```
-
 **Linux**
 ```
 python3 -m pip install setuptools && pip install build
+```
+On mac, `setuptools` gets installed automatically. You'll need to install `build`
+
+**Mac**
+```
+pip3.11 install build
 ```
 
 2. Optional. You will need `git` if you don't want to download the source code as a `zip`.
@@ -157,6 +179,11 @@ py -m build .
 python3 -m build .
 ```
 
+**Mac**
+```
+python3.11 -m build .
+```
+
 4. Issue the following command to install TigerWallet:
 
 **Windows users**
@@ -166,6 +193,11 @@ py install .
 **Linux**
 ```
 python3 -m pip install .
+```
+
+**Mac**
+```
+pip3.11 install .
 ```
 
 To run tigerwallet, execute the following command:
@@ -187,6 +219,11 @@ py install pyinstaller
 **Linux**
 ```
 python3 -m pip install pyinstaller
+```
+
+**Mac**
+```
+pip3.11 install pyinstaller
 ```
 
 2. You will need to enter into the directory of the downloaded folder. Typically, this is in the `home` directory
@@ -231,6 +268,16 @@ or
 python3 -m pip install -r requirements.txt
 ```
 
+**Mac**:
+```
+pip3.11 install git+https://github.com/Serpenseth/TigerWallet.git
+```
+
+or
+```
+pip3.11 install -r requirements.txt
+```
+
 
 4. Issue the following command to build tigerwallet
 
@@ -265,12 +312,10 @@ py -m PyInstaller src/TigerWallet/tigerwallet.py --onedir ^
 --hidden-import="web3.utils.subscriptions" ^
 --icon "src/TigerWallet/tigerwallet_logo.ico" ^
 --windowed ^
---name "tigerwallet-3.1-x86-64"
+--name "tigerwallet-3.1-x86-64-windows"
 ```
 
 **Linux**
-
-*Make sure you replace `python3` with the python version that you've installed! (for example: `python3.11`)*
 
 ```bash
 python3 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
@@ -285,6 +330,23 @@ python3 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
 --icon "src/TigerWallet/tigerwallet_logo.ico" \
 --windowed \
 --name "tigerwallet-3.1-x86-64-linux"
+```
+
+**Mac**
+
+```
+python3.11 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
+--add-data "src/TigerWallet/images/:images" \
+--add-data "src/TigerWallet/images/token_images/*:images/token_images" \
+--add-data "README.md:." \
+--add-data "LICENSE:." \
+--add-data "src/TigerWallet/dark.css:." \
+--add-data "src/TigerWallet/light.css:." \
+--add-data "english.txt:eth_account/hdaccount/wordlist" \
+--hidden-import="web3.utils.subscriptions" \
+--icon "src/TigerWallet/tigerwallet_logo.ico" \
+--windowed \
+--name "tigerwallet-3.11-macos"
 ```
 
 The `-n` command gives the executable a name.
@@ -352,6 +414,11 @@ pip install -r requirements.txt.
 **Linux**
 ```
 python3 -m pip install -r requirements.txt.
+```
+
+**Mac**
+```
+pip3.11 install -r requirements.txt.
 ```
 
 # Contact
