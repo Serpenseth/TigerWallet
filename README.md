@@ -15,7 +15,7 @@ It currently supports the Ethereum mainnet, and Base. Most* Ethereum/Base tokens
    * TigerWallet currently uses an API that is free, and it only fetches the price from centralized exchanges.
 
 5. TigerWallet runs on Windows, Linux, and MacOS*
-   * Currently supports Monterey. Untested on M series Macs
+   * Currently supports Monterey and higher. Untested on M series Macs
 
 
 **Current cons of using TigerWallet (working on it!)**:
