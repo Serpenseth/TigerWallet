@@ -112,6 +112,11 @@ pip install git+https://github.com/Serpenseth/TigerWallet.git
 python3 -m pip install git+https://github.com/Serpenseth/TigerWallet.git
 ```
 
+**Mac**:
+```
+pip3.11 install git+https://github.com/Serpenseth/TigerWallet.git
+```
+
 TigerWallet also includes a traditional Windows installer (which can be found [here](https://github.com/Serpenseth/TigerWallet/releases))
 
 # Building from source code
