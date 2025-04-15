@@ -125,13 +125,7 @@ def main():
     )
 
     # BEGIN functions
-    def self_destruct() -> None:
-        import psutil
-
-        for proc in psutil.process_iter():
-            # check whether the process pid matches
-            if proc.pid == os.getpid():
-                proc.kill()
+    
     
     # New in v3.1
     def _platform() -> str:
@@ -3705,7 +3699,8 @@ def main():
 
             prog.eth_amount = float(w3.eth.get_balance(self.address))
             prog.eth_amount = round(prog.eth_amount, 14)
-            prog.eth_amount /= 10**18 if not 0 else 0
+            
+            prog.eth_amount /= 10**18
             prog.eth_amount = rm_e_notation(prog.eth_amount)
 
             prog.base_eth_amount = base_w3.eth.get_balance(self.address)
@@ -8017,23 +8012,23 @@ def main():
             self.thread2.quit()
 
             self.update_balance_thread.quit()
-            self.update_balance_thread.wait()
+            #self.update_balance_thread.wait()
 
             self.update_eth_gas.stop()
             self.update_base_gas.stop()
 
             self.update_price_thread.quit()
-            self.update_price_thread.wait()
+            #self.update_price_thread.wait()
 
             # End workers
             self.worker.quit()
             self.worker2.quit()
 
             self.update_balance_worker.quit()
-            self.update_balance_worker.wait()
+            #self.update_balance_worker.wait()
 
             self.update_price_worker.quit()
-            self.update_price_worker.wait()
+            #self.update_price_worker.wait()
 
             #  Stop timer
             self.tm.stop()
@@ -8072,7 +8067,9 @@ def main():
                     indent=4
                 )
 
-            self_destruct()
+            #self_destruct()
+            self._kill_threads()
+            app.closeAllWindows()
             event.accept()
 
         def mouseMoveEvent(self, event):
@@ -8471,20 +8468,20 @@ def main():
 
             def _fetch_token_info():
                 try:
-                    self.c = create_contract(
+                    c = create_contract(
                         self.coinaddr.text(),
                         chain=chain
                     )
 
                     self.coinname.setText(
-                        self.c.functions.name().call()
+                        c.functions.name().call()
                     )
 
                     self.coinsym.setText(
-                        self.c.functions.symbol().call()
+                        c.functions.symbol().call()
                     )
                     
-                    dec = self.c.functions.decimals().call()
+                    dec = c.functions.decimals().call()
 
                     self.coindec.setText(str(dec))
 
@@ -8969,7 +8966,7 @@ def main():
                 )
 
         def init_wallet_btn_options(self):
-            self.wallet_menu = QtWidgets.QMenu()
+            wallet_menu = QtWidgets.QMenu()
 
             _w_options = [
                 'Switch wallets',
@@ -8978,7 +8975,7 @@ def main():
                 'Delete wallet'
             ]
 
-            self.wallet_menu.addAction(
+            wallet_menu.addAction(
                 _w_options[0],
                 self.show_tab1
             )
@@ -8987,7 +8984,7 @@ def main():
                 prog.new_wallet = True
                 self.stacked_layout.setCurrentIndex(3)
                 
-            self.wallet_menu.addAction(
+            wallet_menu.addAction(
                 _w_options[1],
                 launch_create_wallet
             )
@@ -8997,17 +8994,17 @@ def main():
                 self.stacked_layout.setCurrentIndex(4)
                 
 
-            self.wallet_menu.addAction(
+            wallet_menu.addAction(
                 _w_options[2],
                 launch_import_wallet
             )
 
-            self.wallet_menu.addAction(
+            wallet_menu.addAction(
                 _w_options[3],
                 self.del_wallet_window
             )
 
-            self.sidebar_button[0].setMenu(self.wallet_menu)
+            self.sidebar_button[0].setMenu(wallet_menu)
 
         # FIRST button
         def init_change_wallet_window(self):
@@ -12163,13 +12160,6 @@ def main():
                 
                 self.val.setText('*' * 26)
                 
-                text = ''
-                
-                if prog.chain == 'eth':
-                    text = self.eth_amount  
-                else:
-                    text = prog.base_eth_amount
-                    
                 self.table.item(0, 1).setText('*' * 26)
                 
                 for i in range(items_len):
@@ -12180,10 +12170,20 @@ def main():
                 self.opt = 1
                 #self.btn_showhide.move(760, 142)
                 
-                self.table.item(0,1).setText(
-                    prog.eth_amount if prog.chain == 'eth'
-                    else prog.base_eth_amount
-                )
+                __eth = ''
+                
+                if prog.chain == 'eth':
+                    __eth = rm_e_notation(
+                        round(prog.eth_amount, 22)
+                    )
+                
+                elif prog.chain == 'base':
+                    __eth = rm_e_notation(
+                        round(prog.base_eth.amount, 22)
+                    )
+                
+                self.table.item(0,1).setText(__eth)
+                
                 self.val.setText(self.preserved_val)
 
                 for i in range(items_len):
