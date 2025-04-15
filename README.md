@@ -117,6 +117,13 @@ python3 -m pip install git+https://github.com/Serpenseth/TigerWallet.git
 pip3.11 install git+https://github.com/Serpenseth/TigerWallet.git
 ```
 
+To run tigerwallet, type
+```
+tigerwallet
+```
+
+into the terminal and press enter
+
 TigerWallet also includes a traditional Windows installer (which can be found [here](https://github.com/Serpenseth/TigerWallet/releases))
 
 # Building from source code
