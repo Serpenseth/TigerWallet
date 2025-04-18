@@ -240,6 +240,12 @@ def main():
         window.move(windowframegeo.topLeft())
 
     def fix_white_borders(comboboxes: list, theme='dark') -> None:
+        '''
+        On Linux and Macs, comboboxes
+        have a weird white border around them.
+
+        This function removes the border
+        '''
         if theme == 'dark':
             for item in comboboxes:
                 item.view().parentWidget().setStyleSheet(
@@ -251,11 +257,6 @@ def main():
                 item.view().parentWidget().setStyleSheet(
                     'background-color: #eff1f3;'
                 )
-    
-    def set_widget_font_size(widget, size) -> None:
-        font = widget.font()
-        font.setPointSize(size)
-        widget.setFont(font)
     # END functions
     
     # Variables
@@ -1034,8 +1035,8 @@ def main():
             self.eth_price = '0.0'
 
             # New in v2.0
-            self.eth_amount = '0.0'
-            self.base_eth_amount = '0.0'
+            self.eth_balance = '0.0'
+            self.base_eth_balance = '0.0'
 
             # New in v3.1
             self.eth_gas = '0.0'
@@ -1082,7 +1083,7 @@ def main():
         provider.decode_rpc_response = _fast_decode_rpc_response
 
     patch_provider(web3_provider)
-    #patch_provider(base_web3_provider)
+    patch_provider(base_web3_provider)
 
     w3 = Web3(web3_provider)
     base_w3 = Web3(base_web3_provider)
@@ -1609,7 +1610,7 @@ def main():
 
             self.btn1.setFixedSize(240, 56)
             self.btn1.setIconSize(QSize(28, 28))
-            self.btn1.move(32, 226)
+            self.btn1.move(32, 186)
 
         # Experienced user button
         def init_btn2(self):
@@ -1621,7 +1622,7 @@ def main():
 
             self.btn2.setFixedSize(266, 56)
             self.btn2.setIconSize(QSize(28, 28))
-            self.btn2.move(281, 226)
+            self.btn2.move(281, 186)
 
         def launchwalletname(self):
             prog.is_new = True
@@ -1806,7 +1807,7 @@ def main():
                 parent=self
             )
 
-            self.import_via_pkey.setGeometry(48, 226, 400, 70)
+            self.import_via_pkey.setGeometry(48, 186, 400, 70)
             self.import_via_pkey.toggled.connect(
                 lambda: self._setchoice(2)
             )
@@ -3703,16 +3704,16 @@ def main():
             prog.eth_amount /= 10**18
             prog.eth_amount = rm_e_notation(prog.eth_amount)
 
-            prog.base_eth_amount = base_w3.eth.get_balance(self.address)
+            prog.base_eth_balance = base_w3.eth.get_balance(self.address)
 
-            if not isinstance(prog.base_eth_amount, tuple):
-                prog.base_eth_amount = float(prog.base_eth_amount)
-                prog.base_eth_amount = round(prog.base_eth_amount, 14)
-                prog.base_eth_amount /= 10**18 if not 0 else 0
-                prog.base_eth_amount = rm_e_notation(prog.base_eth_amount)
+            if not isinstance(prog.base_eth_balance, tuple):
+                prog.base_eth_balance = float(prog.base_eth_balance)
+                prog.base_eth_balance = round(prog.base_eth_balance, 18)
+                prog.base_eth_balance /= 10**18
+                prog.base_eth_balance = rm_e_notation(prog.base_eth_balance)
 
             else:
-                prog.base_eth_amount = 0.0
+                prog.base_eth_balance = 0.0
 
 
         def _fetch_history_eth(self) -> None:
@@ -4304,7 +4305,7 @@ def main():
             gas += (gas * 0.25)
             #gas *= float(get_eth_price())
             gas *= 24000
-            gas = round(gas, 22)
+            gas = round(gas, 18)
 
             prog.base_gas = rm_e_notation(gas)
 
@@ -4343,36 +4344,52 @@ def main():
         def work(self):
             asyncio.run(self.async_events())
 
+    # Improved in v3.1
     class TimedUpdateTotalBalance(QThread):
-        balance = pyqtSignal(float)
-
         def __init__(self):
             super().__init__()
-            self.bal = 0.0
             self.address = prog.account.address
 
+            self.timer = QTimer()
+
         def work(self):
+            eth_price = float(get_eth_price())
+
+            prog.eth_amount = float(w3.eth.get_balance(self.address))
+            prog.eth_amount /= 10**18 # convert to ether
+
+            prog.base_eth_balance = float(
+                base_w3.eth.get_balance(self.address)
+            )
+            prog.base_eth_balance /= 10**18 # convert to ether
+
+            bal = 0.0
+
             for val, price in zip(
-                prog.asset_details[prog.chain]['value'],
-                prog.asset_details[prog.chain]['price']
+                prog.asset_details['eth']['value'],
+                prog.asset_details['eth']['price']
             ):
-                self.bal += (float(val) * float(price))
+                if val != '0.0':
+                    bal += (float(val) * float(price))
 
-            if prog.chain == 'eth':
-                prog.eth_amount = w3.eth.get_balance(self.address)
-                prog.eth_amount /= 10**18 # convert to ether
+                prog.total_balance = bal
 
-                prog.total_balance = self.bal + prog.eth_amount
+            for val, price in zip(
+                prog.asset_details['base']['value'],
+                prog.asset_details['base']['price']
+            ):
+                if val != '0.0':
+                    bal += (float(val) * float(price))
 
-            elif prog.chain == 'base':
-                prog.base_eth_amount = base_w3.eth.get_balance(self.address)
-                prog.eth_amount /= 10**18 # convert to ether
+                prog.total_base_balance  = bal
 
-                prog.total_balance = self.bal + prog.base_eth_amount
+            prog.total_balance = (prog.eth_amount * eth_price)
+            prog.total_base_balance += (prog.base_eth_balance * eth_price)
 
-
-            self.balance.emit(prog.total_balance)
-            time.sleep(10000)
+            prog.eth_amount = rm_e_notation(round(prog.eth_amount, 18))
+            prog.base_eth_balance = rm_e_notation(
+                round(prog.base_eth_balance, 18)
+            )
 
     # Updates the price of assets
     class TimedUpdatePriceOfAssetsWorker(QThread):
@@ -4719,6 +4736,7 @@ def main():
                         errbox("Invalid password")
                         return
 
+    # Cleaned up and added MacOS in v3.1
     class DownloadUpdateWorker(QThread):
         from zipfile import ZipFile
 
@@ -4729,207 +4747,136 @@ def main():
         def __init__(
             self,
             parent=None,
-            method_of_execution=None,
+            exec_method=None,
             version=0
         ):
             super(QThread, self).__init__()
-            self.method_of_execution = method_of_execution
-            self.version = version
+            self.exec_method = exec_method
+            self.ver = version
             self.parent = parent
+            self.dl_link = self.parent.dl_link
 
             if _platform() == 'nt':
                 self.extract_path = f"C:\\Users\\{prog.current_usr}\\"
 
-            else:
+            elif _platform() == 'linux':
                 self.extract_path = f"/home/{prog.current_usr}/"
-
+            
+            elif _platform() == 'mac':
+                self.extract_path = f"/Users/{prog.current_usr}/"
+                
         def work(self):
             self.dl_prog.emit(0)
             self.is_finished.emit(False)
             dl = 0
 
-            # Ran via pyinstaller's executable
-            if self.method_of_execution == 'pyinstaller-executable':
-                ver = self.version
-                tigerwallet_executable_file = \
-                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-x86-64"
-
+            # pyinstaller
+            if self.exec_method == 'pyinstaller-executable':
                 if _platform() == 'nt':
-                    dl_executable_link = (
-                        'https://github.com/Serpenseth/'
-                        + 'TigerWallet/releases/download/'
-                        + tigerwallet_executable_file
-                        + '.exe'
-                    )
+                    self.dl_link += "-x86-64-windows.zip"
+                
+                elif _platform() == 'linux':
+                    self.dl_link += "-x86-64-linux.tar.gz"
+                    
+                elif _platform() == 'mac':
+                    self.dl_link += "-macos.zip"
 
-                    with open(
-                        self.extract_path
-                        + f"tigerwallet-{ver[1:len(ver)]}-x86-64.exe",
-                        mode='wb'
-                    ) as exe_file:
-                        # Download the file as a stream
-                        downloaded_executable = s.get(
-                            url=dl_executable_link,
-                            stream=True
-                        )
-
-                        self.size = int(
-                            downloaded_executable.headers.get(
-                                'content-length'
-                            )
-                        )
-
-                        self.parent.total_file_size = self.size
-                        self.parent.bar.setRange(
-                            0,
-                            self.size
-                        )
-
-                        for data in downloaded_executable.iter_content(
-                            chunk_size=4096
-                        ):
-                            dl += len(data)
-                            exe_file.write(data)
-                            self.dl_prog.emit(dl)
-
-                        self.is_finished.emit(True)
-
-                else:
-                    dl_executable_link = (
-                        'https://github.com/Serpenseth/'
-                        + 'TigerWallet/releases/download/'
-                        + tigerwallet_executable_file
-                    )
-
-                    with open(
-                        self.extract_path
-                        + f"tigerwallet-{ver[1:len(ver)]}-x86-64",
-                        mode='wb'
-                    ) as file_:
-                        # Download the file as a stream
-                        downloaded_executable = s.get(
-                            url=dl_executable_link,
-                            stream=True
-                        )
-
-                        self.size = int(
-                            downloaded_executable.headers.get(
-                                'content-length'
-                            )
-                        )
-
-                        self.parent.total_file_size = self.size
-                        self.parent.bar.setRange(
-                            0,
-                            self.size
-                        )
-
-                        for data in downloaded_executable.iter_content(
-                            chunk_size=4096
-                        ):
-                            dl += len(data)
-                            file_.write(data)
-                            self.dl_prog.emit(dl)
-
-                        self.is_finished.emit(True)
-
-            # Ran via appimage
-            elif self.method_of_execution == 'appimage-executable':
-                ver = self.version
-                tigerwallet_executable_file = \
-                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-x86-64"
-
-                dl_executable_link = (
-                    'https://github.com/Serpenseth/'
-                    + 'TigerWallet/releases/download/'
-                    + tigerwallet_executable_file
-                    + '.AppImage'
-                )
-
-                with open(
-                    self.extract_path
-                    + f"tigerwallet-{self.version}-x86-64.AppImage",
-                    mode='wb'
-                ) as exe_file:
+                with BytesIO() as zip_:
                     # Download the file as a stream
-                    downloaded_executable = s.get(
-                        url=dl_executable_link,
+                    downloaded_zip = s.get(
+                        url=self.dl_link,
                         stream=True
                     )
-
+                    
                     self.size = int(
-                        downloaded_executable.headers.get(
+                        downloaded_zip.headers.get(
                             'content-length'
                         )
                     )
 
                     self.parent.total_file_size = self.size
-                    self.parent.bar.setRange(
-                        0,
-                        self.size
-                    )
+                    self.parent.bar.setRange(0, self.size)
 
-                    for data in downloaded_executable.iter_content(
+                    for data in downloaded_zip.iter_content(
                         chunk_size=4096
                     ):
                         dl += len(data)
-                        exe_file.write(data)
+                        zip_.write(data)
                         self.dl_prog.emit(dl)
+                    
+                    with self.ZipFile(zip_, mode='r') as zip_ref:
+                        zip_ref.extractall(self.extract_path)
 
                     self.is_finished.emit(True)
 
-            elif self.method_of_execution == 'exe-installer':
-                ver = self.version
-                tigerwallet_executable_file = \
-                    f"{ver}/tigerwallet-{ver[1:len(ver)]}-installer"
-
-                dl_executable_link = (
-                    'https://github.com/Serpenseth/'
-                    + 'TigerWallet/releases/download/'
-                    + tigerwallet_executable_file
-                    + '.exe '
-                )
-
-                with open(
-                    self.extract_path
-                    + f"tigerwallet-{self.version}-installer.exe",
-                    mode='wb'
-                ) as exe_file:
+            # appimage
+            elif self.exec_method == 'appimage-executable':
+                self.dl_link += "-x86-64.AppImage"
+                self.extract_path += "-x86-64.AppImage"
+                
+                with open(self.extract_path, mode='wb') as appimg:
                     # Download the file as a stream
-                    downloaded_executable = s.get(
-                        url=dl_executable_link,
+                    downloaded_appimg = s.get(
+                        url=self.dl_link,
                         stream=True
                     )
 
                     self.size = int(
-                        downloaded_executable.headers.get(
+                        downloaded_appimg.headers.get(
                             'content-length'
                         )
                     )
 
                     self.parent.total_file_size = self.size
-                    self.parent.bar.setRange(
-                        0,
-                        self.size
-                    )
+                    self.parent.bar.setRange(0, self.size)
 
-                    for data in downloaded_executable.iter_content(
+                    for data in downloaded_appimg.iter_content(
                         chunk_size=4096
                     ):
                         dl += len(data)
-                        exe_file.write(data)
+                        appimg.write(data)
                         self.dl_prog.emit(dl)
 
                     self.is_finished.emit(True)
 
-            # Ran via py/python
-            elif self.method_of_execution == 'python-command':
+            # Windows installer
+            elif self.exec_method == 'exe-installer':
+                self.dl_link += "-x86-64-installer.exe"
+                self.extract_path += "-x86-64-installer.exe"
+
+                with open(self.extract_path, mode='wb') as exe_inst:
+                    # Download the file as a stream
+                    downloaded_installer = s.get(
+                        url=self.dl_link,
+                        stream=True
+                    )
+
+                    self.size = int(
+                        downloaded_installer.headers.get(
+                            'content-length'
+                        )
+                    )
+
+                    self.parent.total_file_size = self.size
+                    self.parent.bar.setRange(0, self.size)
+
+                    for data in downloaded_installer.iter_content(
+                        chunk_size=4096
+                    ):
+                        dl += len(data)
+                        exe_inst.write(data)
+                        self.dl_prog.emit(dl)
+
+                    self.is_finished.emit(True)
+
+            # py/python3
+            elif self.exec_method == 'python-command':
                 dl_link = 'https://github.com/Serpenseth/TigerWallet'
                 dl_link += '/archive/refs/heads/main.zip'
 
                 with BytesIO() as zip_:
                     zipped_dl = s.get(
-                        url=dl_link,
+                        url=self.dl_link,
                         stream=True
                     )
 
@@ -4948,8 +4895,8 @@ def main():
 
                     self.is_finished.emit(True)
 
-            # Ran via tigerwallet (pip install  with git)
-            elif self.method_of_execution == 'pip-install-executable':
+            # pip install 
+            elif self.exec_method == 'pip-install-executable':
                 dl_link = 'https://github.com/Serpenseth/TigerWallet'
                 install_cmd = 'install git+'
 
@@ -4977,6 +4924,8 @@ def main():
 
     # New in v1.5
     # Added .exe installer in v2.1
+    # Cleaned up in v3.1
+    # Checks for file instead of trying to update in v3.1
     class CheckForUpdates(QWidget):
         def __init__(
             self,
@@ -4985,8 +4934,8 @@ def main():
             super().__init__()
             self.current_version = TigerWalletVersion
             self.url = url
-            self.local_path = prog.local_path
-            self.execution_method = self.__how_is_tigerwallet_running()
+            prog.local_path = prog.local_path
+            self.exec_method = self.__how_is_tigerwallet_running()
             self.total_file_size = 0
             self.init_self()
 
@@ -5027,24 +4976,27 @@ def main():
 
         def __how_is_tigerwallet_running(self):
             # Pyinstaller
-            if '_MEI' in self.local_path:
+            if (
+                '_MEI' in prog.local_path # --onefile
+                or '_internal' in prog.local_path # --onedir (current default)
+            ):
                 return 'pyinstaller-executable'
-
+            
             # Appimage
-            elif '/tmp/.mount' in self.local_path:
+            elif '/tmp/.mount' in prog.local_path:
                 return 'appimage-executable'
 
             # Pip install
             elif (
-                'AppData\\Local' in self.local_path
-                or 'site-packages' in self.local_path
+                'AppData\\Local' in prog.local_path
+                or 'site-packages' in prog.local_path
             ):
                 return 'pip-install-executable'
 
             # Pynsist (.exe installer)
             elif(
-                'Program Files' in self.local_path
-                or 'Local\\Programs\\TigerWallet' in self.local_path
+                'Program Files' in prog.local_path
+                or 'Local\\Programs\\TigerWallet' in prog.local_path
             ):
                 return 'exe-installer'
 
@@ -5052,7 +5004,39 @@ def main():
             return 'python-command'
 
         def check_if_update_is_available(self):
+            '''
+            Checks whenever a download file is available
+            Does nothing if a file isn't found
+            
+            py/python3 and pip install always receive updates
+            '''
             if float(self.current_version) < self.github_version:
+                # pyinstaller
+                if self.exec_method == 'pyinstaller-executable':
+                    if _platform() == 'nt':
+                        self.dl_link += "-x86-64-windows.zip"
+                    
+                    elif _platform() == 'linux':
+                        self.dl_link += "-x86-64-linux.tar.gz"
+                    
+                    else:
+                        self.dl_link += "macos.zip"
+                    
+                # appimage
+                elif self.exec_method == 'appimage-executable':
+                    self.dl_link += "-x86-64-AppImage"
+                
+                # windows installer
+                elif self.exec_method == 'exe-installer':
+                    self.dl_link += "-x86-64-installer.exe"
+                
+                with s.head(self.dl_link) as response:
+                    # Close if no updated files are found
+                    if response.status_code == 404:
+                        self.close()
+                        self.deleteLater()
+                        return
+                
                 resp = questionbox(
                     'A new update is available. '
                     + 'Install now?'
@@ -5101,6 +5085,15 @@ def main():
                 return
 
             self.github_version = float(self.github_version[11 : 14])
+            
+            ver = self.current_version
+            self.dl_link = (
+                'https://github.com/Serpenseth/'
+                + 'TigerWallet/releases/download/'
+                + f"tigerwallet-{ver[1:len(ver)]}"
+            )
+            
+            
 
         def init_progressbar(self):
             self.bar = QProgressBar(self)
@@ -5124,14 +5117,14 @@ def main():
             self.label2 = QLabel(self)
             self.label2.resize(680, 30)
             self.label2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.label2.move(0, 220)
+            self.label2.move(0, 180)
 
         def emit_progress(self, n):
             num = 0
 
             if (
-                self.execution_method != 'pip-install-executable'
-                and self.execution_method != 'python-command'
+                self.exec_method != 'pip-install-executable'
+                and self.exec_method != 'python-command'
             ):
                 if n <= 0:
                     num = 0
@@ -5155,50 +5148,92 @@ def main():
             ver = 'v' + str(self.github_version)
 
             # Using pyinstaller
-            if self.execution_method == 'pyinstaller-executable':
+            if self.exec_method == 'pyinstaller-executable':
                 self.duw = DownloadUpdateWorker(
                     parent=self,
-                    method_of_execution='pyinstaller-executable',
+                    exec_method='pyinstaller-executable',
                     version=ver
                 )
 
                 def is_done(res):
                     if res:
+                        path = ''
+                        
+                        if _platform() == 'nt':
+                            path = f"C:\\Users\\{prog.current_usr}\\"
+                        
+                        elif _platform() == 'linux':
+                            path = f"/home/{prog.current_usr}/"
+                        
+                        elif _platform() == 'mac':
+                            path = f"/Users/{prog.current_usr}"
+                            
+                        exec_file = f"tigerwallet-{ver[1:len(ver)]}"
+                        
                         if _platform() == 'nt':
                             msgbox(
-                                'New version downloaded to path: '
-                                + f"C:\\Users\\{prog.current_usr}\\"
-                                + f"tigerwallet-{ver[1 : len(ver)]}-x86-64.exe",
+                                f"New version downloaded to path: {path}"
                             )
 
                             subprocess.run(
                                 [
-                                    f"/home/{prog.current_usr}/"
-                                    f"tigerwallet-{ver[1 : len(ver)]}-x86-64.exe"
+                                    path
+                                    + f"{exec_file}-x86-64-windows"
+                                    + '\\TigerWallet\\'
+                                    + f"{exec_file}-x86-64-windows.exe"
                                 ]
                             )
 
-                        else:
+                        elif _platform() == 'linux':
                             msgbox(
-                                'New version downloaded to path: '
-                                + f"/home/{prog.current_usr}/"
-                                + f"tigerwallet-{ver[1 : len(ver)]}-x86-64",
+                                f"New version downloaded to path: {path}"
                             )
 
                             # Make it executable
                             subprocess.run(
                                 [
                                     'chmod',
-                                    '+x',
-                                    f"tigerwallet-{ver[1 : len(ver)]}-x86-64"
+                                    'u+x',
+                                    path
+                                    + f"{exec_file}-x86-64-linux"
+                                    + '/TigerWallet/'
+                                    + f"{exec_file}-x86-64-linux"
                                 ]
                             )
 
                             # Launch the updated version
                             subprocess.run(
                                 [
-                                    f"/home/{prog.current_usr}/"
-                                    f"tigerwallet-{ver[1 : len(ver)]}-x86-64"
+                                    path
+                                    + f"{exec_file}-x86-64-linux"
+                                    + '/TigerWallet/'
+                                    + f"{exec_file}-x86-64-linux"
+                                ]
+                            )
+                        
+                        elif _platform() == 'mac':
+                            msgbox(
+                                f"New version downloaded to path: {path}"
+                            )
+
+                            # Make it executable
+                            subprocess.run(
+                                [
+                                    'chmod',
+                                    'u+x',
+                                    path
+                                    + f"{exec_file}-x86-64-linux"
+                                    + '/TigerWallet/'
+                                    + f"{exec_file}-x86-64-linux"
+                                ]
+                            )
+
+                            # Launch the updated version
+                            subprocess.run(
+                                [
+                                    path
+                                    + f"{exec_file}-macos/TigerWallet/"
+                                    + f"{exec_file}-macos"
                                 ]
                             )
 
@@ -5217,10 +5252,10 @@ def main():
                 self.thread.start()
 
             # Using AppImage
-            elif self.execution_method == 'appimage-executable':
+            elif self.exec_method == 'appimage-executable':
                 self.duw = DownloadUpdateWorker(
                     parent=self,
-                    method_of_execution='appimage-executable',
+                    exec_method='appimage-executable',
                     version=ver
                 )
 
@@ -5254,10 +5289,10 @@ def main():
                 self.thread.start()
 
             # Using tigerwallet installed via git+pip
-            elif self.execution_method == 'pip-install-executable':
+            elif self.exec_method == 'pip-install-executable':
                 self.duw = DownloadUpdateWorker(
                     parent=self,
-                    method_of_execution='pip-install-executable'
+                    exec_method='pip-install-executable'
                 )
 
                 self.label.setText('Running pip install...')
@@ -5286,10 +5321,10 @@ def main():
                 self.thread.start()
 
             # Using source code directly
-            elif self.execution_method == 'python-command':
+            elif self.exec_method == 'python-command':
                 self.duw = DownloadUpdateWorker(
                     parent=self,
-                    method_of_execution='python-command',
+                    exec_method='python-command',
                     version=ver
                 )
 
@@ -5347,10 +5382,10 @@ def main():
                 self.thread.start()
 
             # Using .exe installer
-            elif self.execution_method == 'exe-installer':
+            elif self.exec_method == 'exe-installer':
                 self.duw = DownloadUpdateWorker(
                     parent=self,
-                    method_of_execution='exe-installer',
+                    exec_method='exe-installer',
                     version=ver
                 )
 
@@ -5358,7 +5393,7 @@ def main():
                     if res:
                         msgbox(
                             'New version downloaded to path: '
-                            + self.local_path
+                            + prog.local_path
                             + f"/tigerwallet-{ver[1:len(ver)]}-installer.exe"
                         )
 
@@ -5372,7 +5407,7 @@ def main():
 
                         subprocess.run(
                             [
-                                self.local_path
+                                prog.local_path
                                +  f"tigerwallet-{ver[1 : len(ver)]}-x86-64.AppImage"
                             ]
                         )
@@ -5387,6 +5422,7 @@ def main():
     # when adding an invalid RPC
     # Visual improvement to scrollbar
     # Changed visuals in v3.1
+    # Fixed 'return to wallet' button being truncated in v3.1
     class Settings(QWidget):
         """
         Settings window - used by UserWallet
@@ -5451,12 +5487,10 @@ def main():
                 parent=self,
                 icon=TigerWalletImage.receive_blue
             )
-            self.close_settings_window.resize(178, 34)
+            self.close_settings_window.resize(198, 34)
             self.close_settings_window.setIconSize(QSize(24, 24))
             self.close_settings_window.move(30, 15)
-            self.close_settings_window.clicked.connect(
-                self.master.clear_tab8
-            )
+            self.close_settings_window.clicked.connect(self.master.clear_tab8)
 
             self.close_prog = QPushButton(
                 text=" Quit",
@@ -7216,7 +7250,7 @@ def main():
             else:
                 self.notx.setText("No transactions found")
 
-            self.notx.resize(1310, 220)
+            self.notx.resize(1310, 180)
             self.notx.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.notx.move(0, 200)
             self.notx.hide()
@@ -7874,6 +7908,10 @@ def main():
     class UserWallet(QWidget):
         def __init__(self):
             super().__init__()
+
+            self.update_balance_thread = QThread()
+            self.update_balance_worker = TimedUpdateTotalBalance()
+            self.update_balance_worker.work()
             
             self.init_threads()
             self.setMouseTracking(True)
@@ -7906,13 +7944,9 @@ def main():
             self.stacked_layout.addWidget(self.launch_new_wallet_window)
             self.stacked_layout.addWidget(self.exp_user)
 
-            if prog.configs['currency'] == 'USD':
-                self.init_total_balance(0)
-            else:
-                self.init_total_balance(1)
-
             self.start_afk_timer()
             self.fill_up_table()
+            self.set_initial_balance()
 
             if "default" in prog.configs["theme"]:
                 self.box1.setStyleSheet("background: transparent;")
@@ -8096,13 +8130,13 @@ def main():
             self.val.setEchoMode(QLineEdit.EchoMode.Normal)
             self.val.setReadOnly(True)
             self.val.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            self.val.resize(1120, 40)
+            self.val.resize(1090, 40)
             self.val.move(0, 132)
             self.preserved_val = ''
 
             self.address = prog.account.address
             self.eth_price = prog.eth_price
-            self.eth_amount = prog.eth_amount
+            prog.eth_balance = prog.eth_amount
 
             # New in v3.0
             self.currency_box = QComboBox(self)
@@ -8117,8 +8151,18 @@ def main():
             )
             self.currency_box.resize(140, 34)
             self.currency_box.move(890, 136)
+
+            def __change_total_bal_currency(ind):
+                if ind == 1:
+                    prog.configs['currency'] = 'ETH'
+                    self.set_initial_balance()
+
+                elif ind == 0:
+                    prog.configs['currency'] = 'USD'
+                    self.set_initial_balance()
+
             self.currency_box.currentIndexChanged.connect(
-                self.init_total_balance
+               __change_total_bal_currency
             )
 
             if prog.configs['currency'] == 'USD':
@@ -8152,65 +8196,6 @@ def main():
 
             self.exp_user = UserWithExperience(self)
             self.launch_new_wallet_window = WalletNameAndPassword(self)
-
-
-        def init_total_balance(self, index):
-            total = 0.0
-
-            if index == 0:
-                total_list = [
-                    float(val)
-                    * float(price) if price != 'N/A' else 0.0
-                    for val, price in zip(
-                        prog.asset_details[prog.chain]['value'],
-                        prog.asset_details[prog.chain]['price']
-                    )
-                ]
-
-                for item in total_list:
-                    total += item
-
-                if prog.chain == 'eth':
-                    total += (
-                        float(prog.eth_amount)
-                        * float(self.eth_price)
-                    )
-                else:
-                    total += (
-                        float(prog.base_eth_amount)
-                        * float(self.eth_price)
-                    )
-                total = round(total, 14)
-                total = rm_e_notation(total)
-
-                self.val.setText(f"Balance: ${total}")
-                self.preserved_val = self.val.text()
-
-                prog.total_balance = total
-
-            else:
-                total_list = [
-                    float(val)
-                    / float(self.eth_price)
-                    if float(val) > 0  else 0
-                    for val in prog.asset_details[prog.chain]['value']
-                ]
-
-                for item in total_list:
-                    # convert to a positive decimal/integer
-                    if item < 0:
-                        item -= (item * 2)
-
-                    total += item
-
-                total += float(prog.eth_amount)
-                total = round(total, 14)
-                total = rm_e_notation(total)
-
-                self.val.setText(f"Balance: {total} ETH")
-                self.preserved_val = self.val.text()
-
-                prog.total_balance = total
 
         def init_afk_timer(self):
             self.afk_timer = QTimer()
@@ -8269,20 +8254,20 @@ def main():
 
             self.asset_timer = QTimer()
             self.asset_timer.timeout.connect(self._update_asset_balances)
-            self.asset_timer.start(1000)
-
-            self.update_balance_thread = QThread()
-            self.update_balance_worker = TimedUpdateTotalBalance()
+            self.asset_timer.start(10000)
 
             self.update_balance_worker.moveToThread(
                 self.update_balance_thread
             )
-            self.update_balance_worker.balance.connect(
-                self.update_balance
-            )
-            self.update_balance_thread.started.connect(
+            self.update_balance_worker.timer.timeout.connect(
                 self.update_balance_worker.work
             )
+            self.update_balance_thread.started.connect(
+                lambda: self.update_balance_worker.timer.start(10000)
+            )
+
+            self.update_total_bal = QTimer()
+            self.update_total_bal.timeout.connect(self.update_balance)
 
             self.update_eth_gas = QTimer()
             self.update_base_gas = QTimer()
@@ -8306,6 +8291,7 @@ def main():
             self.thread.start()
             self.thread2.start()
             self.update_balance_thread.start()
+            self.update_total_bal.start(10001)
             self.tm.start(15000)
             self.update_price_thread.start()
 
@@ -9108,7 +9094,7 @@ def main():
             self.ethamount = (
                 f"~{str(prog.eth_amount)[:18]} ETH"
                 if prog.chain == 'eth'
-                else f"~{str(prog.base_eth_amount)[:18]} ETH"
+                else f"~{str(prog.base_eth_balance)[:18]} ETH"
             )
 
             self.lblsize = [78, 30]
@@ -9178,7 +9164,7 @@ def main():
 
                 elif prog.chain == 'base':
                     self.estimate_amount.setText(
-                        f"~{prog.base_eth_amount} ETH"
+                        f"~{prog.base_eth_balance} ETH"
                     )
 
             else:
@@ -9351,7 +9337,7 @@ def main():
                 if self.asset_list.currentIndex() == 0:
                     bal = (
                         prog.eth_amount if prog.chain == 'eth'
-                        else prog.base_eth_amount
+                        else prog.base_eth_balance
                     )
 
                     if self.slider.value() == 0:
@@ -9731,7 +9717,7 @@ def main():
 
                     self.am = QLabel(self)
                     self.am.resize(400, 40)
-                    self.am.move(158, 220)
+                    self.am.move(158, 180)
 
                     def _quick_price_check():
                         self.p = float(get_price(self.sym))
@@ -10795,7 +10781,7 @@ def main():
                         return
 
                 elif prog.chain == 'base':
-                    _eth = float(prog.base_eth_amount) * 10**18
+                    _eth = float(prog.base_eth_balance) * 10**18
 
                     if _eth < gas:
                         self.text_area.append(
@@ -11305,7 +11291,7 @@ def main():
 
             self.btnwidget1 = QWidget(self)
             self.btnwidget1.resize(540, 36)
-            self.btnwidget1.move(286, 226)
+            self.btnwidget1.move(286, 186)
             self.btnwidget1.show()
 
             self.btnlayout1 = QHBoxLayout(self.btnwidget1)
@@ -11897,15 +11883,12 @@ def main():
 
             if prog.chain == 'eth':
                 prog.chain = 'base'
-                
-                #self._start_threads()
+
                 self.switch_network_button.setIcon(
                     TigerWalletImage.base_img
                 )
 
                 self.fill_up_table(chain='base')
-
-                #self.fill_up_table(chain='base')
 
                 self.asset_list.clear()
                 self.asset_list.insertItem(0, "ETHER (ETH)")
@@ -11926,14 +11909,8 @@ def main():
                 self.update_eth_gas.stop()
                 self.update_base_gas.start(500)
 
-                #base_eth_amount = w3.from_wei(
-                    #base_w3.eth.get_balance(self.address),
-                    #"ether"
-                #)
-
                 self.estimate_amount.setText(
-                    #f"~{rm_e_notation(base_eth_amount)[:18]} ETH"
-                    f"~{rm_e_notation(prog.base_eth_amount)[:18]} ETH"
+                    f"~{rm_e_notation(prog.base_eth_balance)[:18]} ETH"
                 )
 
                 self.from_droplist.clear()
@@ -11979,14 +11956,6 @@ def main():
                             i,
                             QIcon(file_contents['image']['base'][i])
                         )
-
-                #gas = float(base_w3.eth.gas_price)
-
-                #gas *= 500_000
-                #gas /= 10**18
-                #gas = float(w3.from_wei(gas, 'ether'))
-
-                #self.__gas = gas
 
                 self.swap_amount.clear()
                 self.total_fee_lbl.clear()
@@ -12038,11 +12007,6 @@ def main():
                 self.update_base_gas.stop()
                 self.update_eth_gas.start(500)
 
-                #eth_amount = w3.from_wei(
-                    #w3.eth.get_balance(self.address),
-                    #"ether"
-                #)
-
                 self.estimate_amount.setText(
                     f"~{rm_e_notation(prog.eth_amount)[:18]} ETH"
                 )
@@ -12091,14 +12055,6 @@ def main():
                             QIcon(file_contents['image']['eth'][i])
                         )
 
-                #gas = float(w3.eth.gas_price)
-
-                #gas *= 500_000
-                #gas /= 10**18
-                #gas = float(w3.from_wei(gas, 'ether'))
-
-                #self.__gas = gas
-
                 self.swap_amount.clear()
                 self.total_fee_lbl.clear()
                 self.min_received.clear()
@@ -12121,10 +12077,7 @@ def main():
                 self.eth_ns = ENS(web3_provider)
                 self.network = 'eth'
             
-            if prog.configs['currency'] == 'USD':
-                self.init_total_balance(0)
-            else:
-                self.init_total_balance(1)
+            self.update_balance()
 
         def close_add_coin_window(self):
             self.coinaddr.close()
@@ -12174,12 +12127,12 @@ def main():
                 
                 if prog.chain == 'eth':
                     __eth = rm_e_notation(
-                        round(prog.eth_amount, 22)
+                        round(float(prog.eth_balance), 18)
                     )
                 
                 elif prog.chain == 'base':
                     __eth = rm_e_notation(
-                        round(prog.base_eth.amount, 22)
+                        round(float(prog.base_eth_balance), 18)
                     )
                 
                 self.table.item(0,1).setText(__eth)
@@ -12188,7 +12141,7 @@ def main():
 
                 for i in range(items_len):
                     self.table.item(i+1, 1).setText(
-                        prog.asset_details['eth']['value'][i][:22]
+                        prog.asset_details['eth']['value'][i][:18]
                     )
 
         def del_wallet_window(self):
@@ -13478,14 +13431,14 @@ def main():
             #self.table.setCellWidget(0, 1, self.first_amount_cell)
             self.table.setItem(0, 0, QTableWidgetItem(" ETHER (ETH)"))
             
-            if chain != 'eth':
+            if chain == 'eth':
                 self.table.setItem(
-                    0, 1, QTableWidgetItem(self.eth_amount)
+                    0, 1, QTableWidgetItem(prog.eth_balance)
                 )
             else:
-               self.table.setItem(
+                self.table.setItem(
                    0, 1, QTableWidgetItem(
-                       rm_e_notation(prog.base_eth_amount)[:18]
+                       rm_e_notation(prog.base_eth_balance)[:18]
                     )
                 )
                                
@@ -13531,10 +13484,9 @@ def main():
                     )
 
                 else:
-                    #self.entry_table_cells[pos-1].setText('0')
                     self.table.setItem(pos, 0,QTableWidgetItem('0'))
 
-                    # Current valuation of asset
+                # Current valuation of asset
                 self.table.setItem(
                     pos,
                     2,
@@ -13548,19 +13500,65 @@ def main():
             self.table.resizeRowsToContents()
 
         # Update balance
-        def update_balance(self, number):
-            num = rm_e_notation(round(number, 14))
+        def update_balance(self):
+            eth_bal = prog.eth_balance
+            base_eth_bal = prog.base_eth_balance
 
             if prog.configs['currency'] == 'USD':
-                self.val.setText(f"Balance: ${num}")
+                total_bal = rm_e_notation(round(prog.total_balance, 18))
+                base_total_bal = rm_e_notation(
+                    round(prog.total_base_balance, 18)
+                )
 
-            else:
-                self.val.setText(f"Balance: {num} ETH")
+                if prog.chain == 'eth':
+                    self.table.item(0,1).setText(eth_bal)
 
-            if num == '0':
-                self.val.setText("Balance: $0.0")
+                    if total_bal == 0.0:
+                        self.val.setText("Balance: $0")
 
-            prog.total_balance = num
+                    else:
+                        self.val.setText(f"Balance: ${total_bal}")
+
+                elif prog.chain == 'base':
+                    self.table.item(0,1).setText(base_eth_bal)
+
+                    if base_total_bal == 0.0:
+                        self.val.setText("Balance: $0")
+
+                    else:
+                        self.val.setText(f"Balance: ${base_total_bal}")
+
+            elif prog.configs['currency'] == 'ETH':
+                eth_price = float(get_eth_price())
+
+                total_bal = float(prog.total_balance) / eth_price
+                total_bal = rm_e_notation(round(total_bal, 18))
+
+                base_total_bal = float(prog.total_base_balance) / eth_price
+                base_total_bal = rm_e_notation(round(base_total_bal, 18))
+
+                if prog.chain == 'eth':
+                    self.table.item(0,1).setText(eth_bal)
+
+                    if total_bal == 0.0:
+                        self.val.setText("Balance: 0 ETH")
+
+                    else:
+                        self.val.setText(f"Balance: {total_bal} ETH")
+
+                elif prog.chain == 'base':
+                    self.table.item(0,1).setText(base_eth_bal)
+
+                    if base_total_bal == 0.0:
+                        self.val.setText("Balance: 0")
+
+                    else:
+                        self.val.setText(f"Balance: {base_total_bal} ETH")
+
+            self.preserved_val = self.val.text()
+
+        def set_initial_balance(self):
+            self.update_balance()
 
         def update_price(self):
             list_size = len(prog.asset[prog.chain]['address'])
@@ -13638,7 +13636,7 @@ def main():
                 QTableWidgetItem(
                     str(
                         prog.eth_amount if chain == 'eth'
-                        else prog.base_eth_amount
+                        else prog.base_eth_balance
                     )
                 )
             )
@@ -14177,6 +14175,12 @@ def main():
         json_contents = json.load(f)
 
     number_of_wallets = len(json_contents["wallets"])
+    
+    updates = CheckForUpdates(
+        'https://raw.githubusercontent.com/Serpenseth/'
+        + 'TigerWallet/refs/heads/main/pyproject.toml'
+    )
+    
 
     if number_of_wallets != 0:
         login = Login()
@@ -14185,10 +14189,7 @@ def main():
         first = FirstWindow()
         first.show()
 
-    updates = CheckForUpdates(
-        'https://raw.githubusercontent.com/Serpenseth/'
-        + 'TigerWallet/refs/heads/main/pyproject.toml'
-    )
+    
 
     app.exec()
 
