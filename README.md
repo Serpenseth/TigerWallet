@@ -2,7 +2,7 @@ What is TigerWallet?
 
 TigerWallet is a non-custodial wallet, built in Python, that aims to be user-friendly, minimalistic, and easy to use.
 
-It currently supports the Ethereum mainnet, and Base. Most* Ethereum/Base tokens can be sent from/sent to TigerWallet.
+It currently supports the Ethereum mainnet, and Base. 
 
 **Pros of using TigerWallet**:
 1. Non-custodial. You own your crypto assets. Your private key is stored on your device, and it is also encrypted. Your private key does not leave your device while using TigerWallet as well.
