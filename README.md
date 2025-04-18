@@ -309,7 +309,7 @@ py -m PyInstaller src/TigerWallet/tigerwallet.py --onedir `
 --hidden-import="web3.utils.subscriptions" `
 --icon "src/TigerWallet/tigerwallet_logo.ico" `
 --windowed `
---name "tigerwallet-3.1-x86-64"
+--name "tigerwallet-3.1-x86-64-windows"
 ```
 command prompt:
 ```cmd
@@ -346,7 +346,7 @@ python3 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
 
 **Mac**
 
-```
+```zsh
 python3.11 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
 --add-data "src/TigerWallet/images/:images" \
 --add-data "src/TigerWallet/images/token_images/*:images/token_images" \
@@ -364,6 +364,8 @@ python3.11 -m PyInstaller src/TigerWallet/tigerwallet.py --onedir \
 The `-n` command gives the executable a name.
 
 The `--add-data "english.txt:eth_account/hdaccount/wordlist"` line is required, because pyinstaller has issues with adding that file automatically
+
+Same applies to `--hidden-import="web3.utils.subscriptions"`. Pyinstaller doesn't automatically include it in the finished executable
 
 ## Running the executables
 To run tigerwallet, double click the executable
