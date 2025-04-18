@@ -1,4 +1,4 @@
-What is TigerWallet?
+# What is TigerWallet?
 
 TigerWallet is a non-custodial wallet, built in Python
 
