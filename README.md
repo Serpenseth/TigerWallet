@@ -2,16 +2,16 @@
 
 TigerWallet is a non-custodial wallet, built in Python
 
-# Who is it for?
+## Who is it for?
 
 Everyone that is curious about Web3, and wants to try it out, 
 while also having some features that advanced users would appreciate (custom RPC)
 
-# What does it solve?
+## What does it solve?
 
 TigerWallet simplifies things by providing an easy to user interface. Every design element had "ease of use" in mind
 
-# What platforms does it support?
+## What platforms does it support?
 
 Currently, TigerWallet supports Windows 10 (untested on Windows 11), Linux (tested on Ubuntu/Debian, so all flavors of said distros should work),
 and MacOS Monterey and upper (untested on M series Macs, but it should work just fine)
