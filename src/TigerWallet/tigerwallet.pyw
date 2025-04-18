@@ -5,7 +5,7 @@
 ''' MIT License
 Copyright © 2024 Serpenseth
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:3182
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
@@ -3174,12 +3174,12 @@ def main():
         # Hide/show password
         def unhide(self):
             if self.opt == 1:
-                self.btn_showhide.setIcon(TigerWalletImage.opened_eye)
+                self.btn_showhide.setIcon(TigerWalletImage.opened_eye_blue)
                 self.entry.setEchoMode(QLineEdit.EchoMode.Normal)
                 self.opt = 0
 
             elif self.opt == 0:
-                self.btn_showhide.setIcon(TigerWalletImage.closed_eye)
+                self.btn_showhide.setIcon(TigerWalletImage.closed_eye_blue)
                 self.entry.setEchoMode(QLineEdit.EchoMode.Password)
                 self.opt = 1
 
@@ -4582,12 +4582,12 @@ def main():
 
         def unhide(self):
             if self.opt == 1:
-                self.btn_showhide.setIcon(TigerWalletImage.opened_eye)
+                self.btn_showhide.setIcon(TigerWalletImage.opened_eye_blue)
                 self.password.setEchoMode(QLineEdit.EchoMode.Normal)
                 self.opt = 0
 
             elif self.opt == 0:
-                self.btn_showhide.setIcon(TigerWalletImage.closed_eye)
+                self.btn_showhide.setIcon(TigerWalletImage.closed_eye_blue)
                 self.password.setEchoMode(QLineEdit.EchoMode.Password)
                 self.opt = 1
 
@@ -10054,12 +10054,12 @@ def main():
                 #
                 def unhide(self):
                     if self.opt == 1:
-                        self.btn_showhide.setIcon(TigerWalletImage.opened_eye)
+                        self.btn_showhide.setIcon(TigerWalletImage.opened_eye_blue)
                         self.send_field.setEchoMode(QLineEdit.EchoMode.Normal)
                         self.opt = 0
 
                     elif self.opt == 0:
-                        self.btn_showhide.setIcon(TigerWalletImage.closed_eye)
+                        self.btn_showhide.setIcon(TigerWalletImage.closed_eye_blue)
                         self.send_field.setEchoMode(
                             QLineEdit.EchoMode.Password
                         )
