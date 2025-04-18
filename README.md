@@ -16,6 +16,8 @@ TigerWallet simplifies things by providing an easy to user interface. Every desi
 Currently, TigerWallet supports Windows 10 (untested on Windows 11), Linux (tested on Ubuntu/Debian, so all flavors of said distros should work),
 and MacOS Monterey and upper (untested on M series Macs, but it should work just fine)
 
+##
+
 It currently supports the Ethereum mainnet, and Base. 
 
 **Pros of using TigerWallet**:
