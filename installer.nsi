@@ -4,7 +4,7 @@
 !define PY_MAJOR_VERSION "3.11"
 !define BITNESS "64"
 !define ARCH_TAG ".amd64"
-!define INSTALLER_NAME "tigerwallet_3.1-installer.exe"
+!define INSTALLER_NAME "tigerwallet-3.1-installer.exe"
 !define PRODUCT_ICON "tigerwallet_logo.ico"
 
 ; Marker file to tell the uninstaller that it's a user installation
