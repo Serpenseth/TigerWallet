@@ -1516,30 +1516,28 @@ def main():
             self.init_label()
             # Text in the middle
             self.init_label2()
-            # New to crypto button
-            self.init_btn1()
-            # User has previous experience button
-            self.init_btn2()
-
-            self.btn1.clicked.connect(self.launchwalletname)
-            self.btn2.clicked.connect(self.launchuserwithexperience)
-
-            if "default" in prog.configs["theme"]:
-                self.label.setStyleSheet(
-                    "font-size: 40px;"
-                    + "color: #627eea;"
-                    + 'background: transparent;'
-                )
+            # Buttons
+            self.init_buttons()
 
             # Default theme
             if prog.configs["theme"] == "default_dark":
                 self.setStyleSheet("background: #0a0f18")
 
+                self.border.setStyleSheet(
+                    "border: 1px solid #1e2b45;"
+                    + "border-radius: 16px;"
+                    + "background: transparent;"
+                )
+
+                self.label.setStyleSheet(
+                    "font-size: 40px;"
+                    + "color: #627eea;"
+                    + 'background: #0a0f18;'
+                )
+
                 self.label2.setStyleSheet(
                     "font-size: 16px;"
                     "color: #c5d4e7;"
-                    "border: 1px solid #1e2b45;;"
-                    "border-radius: 8px;"
                 )
 
                 self.btn1.setStyleSheet(
@@ -1554,11 +1552,21 @@ def main():
             elif prog.configs["theme"] == "default_light":
                 self.setStyleSheet("background-color: #eff1f3")
 
+                self.border.setStyleSheet(
+                    "border: 1px solid #bbc8e2;"
+                    + "border-radius: 16px;"
+                    + "background: transparent;"
+                )
+
+                self.label.setStyleSheet(
+                    "font-size: 40px;"
+                    + "color: #627eea;"
+                    + 'background: #eff1f3;'
+                )
+
                 self.label2.setStyleSheet(
                     "font-size: 17px;"
                     "color: #3c598e;"
-                    "border: 1px solid #1e2b45;;"
-                    "border-radius: 8px;"
                 )
 
                 self.btn1.setStyleSheet(
@@ -1571,22 +1579,27 @@ def main():
 
         # Window UI
         def setup_main(self):
-            self.setFixedWidth(580)
-            self.setFixedHeight(320)
+            self.setFixedWidth(540)
+            self.setFixedHeight(280)
             self.setWindowTitle("TigerWallet  -  Welcome")
             align_to_center(self)
 
         # Topmost label
         def init_label(self):
+            self.border = QLabel(self)
+            self.border.resize(520, 228)
+            self.border.move(9, 42)
+
             self.label = QLabel("Welcome! ", self)
-            self.label.resize(580, 80)
+            self.label.resize(240, 60)
             self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.label.move(150, 10)
 
         # Label in the middle
         def init_label2(self):
             text = (
-                "TigerWallet is a non-custodial wallet on the"
-                "Ethereum chain. \n You own your crypto assets!"
+                'TigerWallet is a non-custodial wallet.\n'
+                ' You own your crypto assets!\n\n'
                 "Your private key never leaves this device. \n"
                 "Your private key is encrypted."
             )
@@ -1595,34 +1608,40 @@ def main():
                 text=text,
                 parent=self
             )
-            self.label2.resize(540, 120)
+            self.label2.resize(504, 130)
             self.label2.setWordWrap(True)
             self.label2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.label2.move(20, 80)
+            self.label2.move(10, 66)
 
-        # New to crypto button
-        def init_btn1(self):
+        def init_buttons(self):
+            holder = QLabel(self)
+            holder.setStyleSheet('background: transparent;')
+            holder.resize(500, 68)
+            holder.move(20, 190)
+
+            btn_box = QHBoxLayout()
+
             self.btn1 = QPushButton(
-                text=" I'm new to crypto!",
+                text=" New to crypto!",
                 parent=self,
                 icon=TigerWalletImage.shocked_img,
             )
+            self.btn1.setFixedSize(220, 56)
+            self.btn1.setIconSize(QSize(32, 32))
+            self.btn1.clicked.connect(self.launchwalletname)
 
-            self.btn1.setFixedSize(240, 56)
-            self.btn1.setIconSize(QSize(28, 28))
-            self.btn1.move(32, 186)
-
-        # Experienced user button
-        def init_btn2(self):
             self.btn2 = QPushButton(
                 text="Import",
                 parent=self,
                 icon=TigerWalletImage.cool_blue
             )
+            self.btn2.setFixedSize(220, 56)
+            self.btn2.setIconSize(QSize(32, 32))
+            self.btn2.clicked.connect(self.launchuserwithexperience)
 
-            self.btn2.setFixedSize(266, 56)
-            self.btn2.setIconSize(QSize(28, 28))
-            self.btn2.move(281, 186)
+            btn_box.addWidget(self.btn1)
+            btn_box.addWidget(self.btn2)
+            holder.setLayout(btn_box)
 
         def launchwalletname(self):
             prog.is_new = True
@@ -1672,29 +1691,29 @@ def main():
                 )
 
                 self.import_via_pkey.setStyleSheet(
-                    "font-size: 17px;"
-                    + "color: #627eea;"
+                    "font-size: 16px;"
+                    + "color: #339af0;"
                     + "background: transparent;"
-                    + "padding: 12px;"
-                    + "border: 1px solid #1e2b45;;"
+                    + "padding: 24px;"
+                    + "border: 2px solid #1e2b45;;"
                     + "border-radius: 16px;"
                 )
 
                 self.import_via_phrase.setStyleSheet(
-                    "font-size: 17px;"
-                    + "color: #627eea;"
+                    "font-size: 16px;"
+                    + "color: #339af0;"
                     + "background: transparent;"
-                    + "padding: 12px;"
-                    + "border: 1px solid #1e2b45;;"
+                    + "padding: 24px;"
+                    + "border: 2px solid #1e2b45;;"
                     + "border-radius: 16px;"
                 )
 
                 self.import_tigw.setStyleSheet(
-                    "font-size: 17px;"
-                    + "color: #627eea;"
+                    "font-size: 16px;"
+                    + "color: #339af0;"
                     + "background: transparent;"
-                    + "padding: 12px;"
-                    + "border: 1px solid #1e2b45;;"
+                    + "padding: 24px;"
+                    + "border: 2px solid #1e2b45;;"
                     + "border-radius: 16px;"
                 )
 
@@ -1790,13 +1809,20 @@ def main():
             secret_phrase_text = \
                 "Import from secret phrase (12 words only)"
 
+            holder = QLabel(self)
+            holder.resize(400, 252)
+            holder.move(48, 134)
+            holder.setStyleSheet('background: transparent;')
+
+            box = QVBoxLayout()
+
             # Recovery phrase
             self.import_via_phrase = QRadioButton(
                 text=secret_phrase_text,
                 parent=self
             )
 
-            self.import_via_phrase.setGeometry(48, 157, 400, 70)
+            self.import_via_phrase.resize(0, 100)
             self.import_via_phrase.toggled.connect(
                 lambda: self._setchoice(1)
             )
@@ -1807,7 +1833,6 @@ def main():
                 parent=self
             )
 
-            self.import_via_pkey.setGeometry(48, 186, 400, 70)
             self.import_via_pkey.toggled.connect(
                 lambda: self._setchoice(2)
             )
@@ -1818,10 +1843,15 @@ def main():
                 parent=self
             )
 
-            self.import_tigw.setGeometry(48, 295, 400, 70)
             self.import_tigw.toggled.connect(
                 lambda: self._setchoice(3)
             )
+
+            box.addWidget(self.import_via_phrase)
+            box.addWidget(self.import_via_pkey)
+            box.addWidget(self.import_tigw)
+
+            holder.setLayout(box)
 
         def _setchoice(self, choice):
             self.opt = choice
@@ -8064,8 +8094,9 @@ def main():
             self.update_price_worker.quit()
             #self.update_price_worker.wait()
 
-            #  Stop timer
+            #  Stop timers
             self.tm.stop()
+            self.update_total_bal.stop()
 
         def _start_threads(self):
             self.thread.start()
