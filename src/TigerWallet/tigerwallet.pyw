@@ -2607,7 +2607,7 @@ def main():
                     + "color: #627eea;"
                     + "background: transparent;"
                     + "padding: 12px;"
-                    + "border: 1px solid #9fb1ca;"
+                    + "border: 1px solid #52647c;"
                     + "border-radius: 16px;"
                 )
 
@@ -2616,7 +2616,7 @@ def main():
                     + "color: #627eea;"
                     + "background: transparent;"
                     + "padding: 12px;"
-                    + "border: 1px solid #9fb1ca;"
+                    + "border: 1px solid #52647c;"
                     + "border-radius: 16px;"
                 )
 
@@ -2827,6 +2827,9 @@ def main():
                     + "border-radius: 16px;"
                 )
 
+                for item in self.field_number:
+                    item.setStyleSheet('color: #339af0;')
+
             elif prog.configs["theme"] == "default_light":
                 self.setStyleSheet("background-color: #eff1f3")
                 
@@ -2910,48 +2913,48 @@ def main():
                 self.field[i].setAlignment(Qt.AlignmentFlag.AlignCenter)
                 
                 self.field_number[i].setStyleSheet(
-                    'font: 16px;',
+                    'font: 22px;',
                 )
 
             # Row 1
             self.field[0].move(60, 200)
-            self.field_number[0].move(24, 208)
+            self.field_number[0].move(28, 208)
 
             self.field[1].move(250, 200)
-            self.field_number[1].move(216, 208)
+            self.field_number[1].move(220, 208)
 
             self.field[2].move(448, 200)
-            self.field_number[2].move(414, 208)
+            self.field_number[2].move(418, 208)
 
             # Row 2
             self.field[3].move(60, 262)
-            self.field_number[3].move(24, 270)
+            self.field_number[3].move(28, 270)
 
             self.field[4].move(250, 262)
-            self.field_number[4].move(216, 270)
+            self.field_number[4].move(220, 270)
 
             self.field[5].move(448, 262)
-            self.field_number[5].move(414, 270)
+            self.field_number[5].move(418, 270)
 
             # Row 3
             self.field[6].move(60, 324)
-            self.field_number[6].move(24, 332)
+            self.field_number[6].move(28, 332)
 
             self.field[7].move(250, 324)
-            self.field_number[7].move(216, 332)
+            self.field_number[7].move(220, 332)
 
             self.field[8].move(448, 324)
-            self.field_number[8].move(414, 332)
+            self.field_number[8].move(418, 332)
 
             # Row 4
             self.field[9].move(60, 386)
-            self.field_number[9].move(22, 394)
+            self.field_number[9].move(26, 394)
 
             self.field[10].move(250, 386)
-            self.field_number[10].move(212, 394)
+            self.field_number[10].move(216, 394)
 
             self.field[11].move(448, 386)
-            self.field_number[11].move(410, 394)
+            self.field_number[11].move(414, 394)
 
         def init_buttons(self):
             # Back
