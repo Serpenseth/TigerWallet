@@ -1,3 +1,5 @@
+[![Github All Releases](https://img.shields.io/github/downloads/serpenseth/tigerwallet/total.svg)]()
+
 # What is TigerWallet❓
 
 TigerWallet is a non-custodial wallet, built in Python
