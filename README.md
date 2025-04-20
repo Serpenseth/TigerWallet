@@ -2,7 +2,7 @@
 
 # What is TigerWallet❓
 
-TigerWallet is a non-custodial wallet, built in Python
+TigerWallet is a non-custodial wallet, built in Python3
 
 ## Who is it for❓
 
