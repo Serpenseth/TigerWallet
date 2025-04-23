@@ -1266,7 +1266,7 @@ def main():
         
         return result_list
 
-    # BEGIN kkk
+    # BEGIN
     def __load_base_assets_price() -> None:
         price_list = get_price_from_list(
             prog.asset['eth']['symbol']
@@ -1294,9 +1294,8 @@ def main():
 
     _load_eth_asset_prices = Thread(
         target=__load_eth_asset_prices,
-        daemon=True
     )
-    # END kkk
+    # END
 
     _load_eth_asset_prices.start()
     # END Web3-related stuff
