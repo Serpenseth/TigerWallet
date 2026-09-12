@@ -1,3 +1,7 @@
+This was my very first public Github project. Not only that, but it was also my first Python project! 
+While this program works 90% of the way (there are bugs), I've decided to no longer maintain TigerWallet.
+
+
 [![Github All Releases](https://img.shields.io/github/downloads/serpenseth/tigerwallet/total.svg)]()
 
 # What is TigerWallet❓
